@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/bluetooth"
+        android:title="@string/bluetooth_status"
+        android:icon="@drawable/ic_bluetooth_waiting_black_24dp"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/sync"
+        android:title="@string/sync"
+        android:icon="@drawable/ic_sync_black_24dp"
+        app:showAsAction="ifRoom"/>
+</menu>
