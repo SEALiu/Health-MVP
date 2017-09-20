@@ -1,18 +1,27 @@
 package cn.sealiu.health.data.bean;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.io.Serializable;
 
 /**
  * Created by liuyang
  * on 2017/9/12.
  */
 
-public class User {
+public class User implements Serializable {
     @Nullable
     private final String userUid;
 
     @Nullable
     private final String username;
+
+    @Nullable
+    private final Integer gender;
+
+    @Nullable
+    private final Integer age;
 
     @Nullable
     private final String typeId;
@@ -27,20 +36,27 @@ public class User {
     private final String phone;
 
     @Nullable
+    private final String email;
+
+    @Nullable
     private final String pwd;
 
     @Nullable
     private String mid;
 
-    public User(@Nullable String userUid, @Nullable String username, @Nullable String typeId,
-                @Nullable String userId, @Nullable Boolean logged, @Nullable String phone,
+    public User(@Nullable String userUid, @Nullable String username, @NonNull Integer gender,
+                @Nullable Integer age, @Nullable String typeId, @Nullable String userId,
+                @Nullable Boolean logged, @Nullable String phone, @Nullable String email,
                 @Nullable String pwd, @Nullable String mid) {
         this.userUid = userUid;
         this.username = username;
+        this.gender = gender;
+        this.age = age;
         this.typeId = typeId;
         this.userId = userId;
         this.logged = logged;
         this.phone = phone;
+        this.email = email;
         this.pwd = pwd;
         this.mid = mid;
     }
@@ -87,5 +103,20 @@ public class User {
 
     public void setMid(@Nullable String mid) {
         this.mid = mid;
+    }
+
+    @Nullable
+    public Integer getGender() {
+        return gender;
+    }
+
+    @Nullable
+    public Integer getAge() {
+        return age;
+    }
+
+    @Nullable
+    public String getEmail() {
+        return email;
     }
 }

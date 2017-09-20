@@ -12,15 +12,21 @@ import android.view.MenuItem;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.R;
+import cn.sealiu.health.data.bean.User;
 import cn.sealiu.health.forum.ForumActivity;
-import cn.sealiu.health.main.DoctorPresenter;
-import cn.sealiu.health.main.HomeDoctorFragment;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.message.MessageActivity;
 import cn.sealiu.health.setting.SettingActivity;
 import cn.sealiu.health.util.ActivityUtils;
 
 public class ProfileActivity extends BaseActivity {
+    public static final String PROFILE_SAVED = "profile_saved";
+    public static final String PROFILE_USERNAME = "profile_username";
+    public static final String PROFILE_GENDER = "profile_gender";
+    public static final String PROFILE_AGE = "profile_age";
+    public static final String PROFILE_PHONE = "profile_phone";
+    public static final String PROFILE_EMAIL = "profile_email";
+    public static final String PROFILE_MID = "profile_mid";
 
     private DrawerLayout mDrawerLayout;
 
@@ -47,11 +53,26 @@ public class ProfileActivity extends BaseActivity {
             setupDrawerContent(navigationView);
         }
 
+        User user = null;
+        if (sharedPref.getBoolean(PROFILE_SAVED, true)) {
+            String uid = sharedPref.getString(MainActivity.USER_ID, "");
+            String type = sharedPref.getString(MainActivity.USER_TYPE, "-1");
+            String username = sharedPref.getString(PROFILE_USERNAME, "");
+            int gender = sharedPref.getInt(PROFILE_GENDER, -1);
+            int age = sharedPref.getInt(PROFILE_AGE, -1);
+            String phone = sharedPref.getString(PROFILE_PHONE, "");
+            String email = sharedPref.getString(PROFILE_EMAIL, "");
+            String mid = sharedPref.getString(PROFILE_MID, "");
+
+            user = new User(null, username, gender, age, type, uid, true, phone,
+                    email, null, mid);
+        }
+
         ProfileFragment profileFragment =
                 (ProfileFragment) getSupportFragmentManager().findFragmentById(R.id.contentFrame);
         if (profileFragment == null) {
             // create the fragment
-            profileFragment = ProfileFragment.newInstance();
+            profileFragment = ProfileFragment.newInstance(user);
             ActivityUtils.addFragmentToActivity(
                     getSupportFragmentManager(), profileFragment, R.id.contentFrame);
         }

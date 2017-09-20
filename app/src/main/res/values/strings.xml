@@ -20,6 +20,7 @@
     <string name="error_pwd">密码错误，请检查</string>
     <string name="login_success">登录成功</string>
     <string name="re_password">确认密码</string>
+    <string name="re_password_not_same">确认密码不一致</string>
     <string name="register">注册</string>
     <string name="error_network">无网络连接</string>
     <string name="empty_re_pwd">确认密码不能为空</string>
@@ -101,4 +102,21 @@
     <string name="bluetooth_disconnected">蓝牙设备断开连接</string>
     <string name="verifing">设备已连接，认证中…</string>
     <string name="no_fix_type_selected">请先选择定标类型</string>
+    <string name="undefine">未设置</string>
+    <string name="female">女</string>
+    <string name="male">男</string>
+    <string name="load_userinfo_failed">用户信息获取失败</string>
+    <string name="old_password">原密码</string>
+    <string name="new_password">新密码</string>
+    <string name="confirm_new_password">确认新密码</string>
+    <string name="username">用户名</string>
+    <string name="change_name">修改用户名</string>
+    <string name="cancel">取消</string>
+    <string name="change">修改</string>
+    <string name="profile_changed">资料已修改</string>
+    <string name="profile_unchanged">资料未修改</string>
+    <string name="change_phone">修改登录手机号</string>
+    <string name="change_email">修改邮箱</string>
+    <string name="change_age">修改年龄</string>
+    <string name="change_gender">修改性别</string>
 </resources>
