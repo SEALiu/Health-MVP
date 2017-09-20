@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * 数据类型 = 0x22
  * 状态类型 = 0x01 设备状态
  * -----------------------------------------------------------------------------------
- * |         |  数据类型  |   状态类型    | 时 | 分 | 秒 | 电池电量 | SD卡容量 | 传感器状态 |
+ * |         |  数据类型  |   状态类型    | 时 | 分 | 秒 | 电池电量 | SD卡容量 |  系统日期 |
  * -----------------------------------------------------------------------------------
  * |   长度   |     1    |      1       |  1 | 1  | 1 |    1    |    2    |     4    |
  * -----------------------------------------------------------------------------------
@@ -87,6 +87,14 @@ public class UnboxResponseProtocol extends ProtocolMsg {
         return this.type;
     }
 
+    public boolean isStatus() {
+        return this.msg.substring(4, 6).equals(RS_STATUS);
+    }
+
+    public boolean isParam() {
+        return this.msg.substring(4, 6).equals(RS_PARAM);
+    }
+
     /**
      * 获取"0x21"类型响应报文的时间
      *
@@ -121,9 +129,9 @@ public class UnboxResponseProtocol extends ProtocolMsg {
         int minute = Integer.parseInt(msg.substring(offset + 2, offset + 4), 16);
         int second = Integer.parseInt(msg.substring(offset + 4, offset + 6), 16);
 
-        return leftPad(hour+"", 2, '0') + ":" +
-                leftPad(minute + "", 2, '0') + ":" +
-                leftPad(second + "", 2, '0');
+        return leftPad(hour + "", 2) + ":" +
+                leftPad(minute + "", 2) + ":" +
+                leftPad(second + "", 2);
     }
 
     /**
@@ -178,24 +186,31 @@ public class UnboxResponseProtocol extends ProtocolMsg {
         return this.msg.substring(14, 18);
     }
 
-    /**
-     * 获取"0x22"，状态类型为："0x01"类型响应报文中的传感器状态
-     *
-     * @return String[] 4个传感器状态
-     */
-    public String[] getSensorStatus() {
-        if (!this.type.equals(RS_STATUS_OR_PARAM)) return new String[]{};
-        if (!this.msg.substring(4, 6).equals(RS_STATUS)) return new String[]{};
+    public String getSystemTime() {
+        if (!this.type.equals(RS_STATUS_OR_PARAM)) return "";
+        if (!this.msg.substring(4, 6).equals(RS_STATUS)) return "";
 
-        int offset = 18;
-        String[] result = new String[4];
-        result[0] = msg.substring(offset, offset + 2);
-        result[1] = msg.substring(offset + 2, offset + 4);
-        result[2] = msg.substring(offset + 4, offset + 6);
-        result[3] = msg.substring(offset + 6, offset + 8);
-
-        return result;
+        return this.msg.substring(18, 26);
     }
+
+//    /**
+//     * 获取"0x22"，状态类型为："0x01"类型响应报文中的传感器状态
+//     *
+//     * @return String[] 4个传感器状态
+//     */
+//    public String[] getSensorStatus() {
+//        if (!this.type.equals(RS_STATUS_OR_PARAM)) return new String[]{};
+//        if (!this.msg.substring(4, 6).equals(RS_STATUS)) return new String[]{};
+//
+//        int offset = 18;
+//        String[] result = new String[4];
+//        result[0] = msg.substring(offset, offset + 2);
+//        result[1] = msg.substring(offset + 2, offset + 4);
+//        result[2] = msg.substring(offset + 4, offset + 6);
+//        result[3] = msg.substring(offset + 6, offset + 8);
+//
+//        return result;
+//    }
 
     /**
      * 获取"0x22"，状态类型为："0x02"类型响应报文中的参数类型

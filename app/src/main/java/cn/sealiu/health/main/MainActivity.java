@@ -2,6 +2,7 @@ package cn.sealiu.health.main;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -15,7 +16,6 @@ import cn.sealiu.health.R;
 import cn.sealiu.health.bluetooth.FindBluetoothActivity;
 import cn.sealiu.health.fixcriterion.FixCriterionActivity;
 import cn.sealiu.health.forum.ForumActivity;
-import cn.sealiu.health.forum.ForumFragment;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.message.MessageActivity;
 import cn.sealiu.health.profile.ProfileActivity;
@@ -23,9 +23,32 @@ import cn.sealiu.health.setting.SettingActivity;
 import cn.sealiu.health.util.ActivityUtils;
 
 public class MainActivity extends BaseActivity {
+    public static final String USER_LOGIN = "user_login";
+    public static final String USER_ID = "user_id";
+    public static final String USER_TYPE = "user_type";
 
-    private DoctorContract.Presenter mDoctorPresenter;
-    private UserContract.Presenter mUserPresenter;
+    public static final String FIX_CRITERION_BLANK = "fix_blank";
+    public static final String FIX_CRITERION_LOOSE = "fix_loose";
+    public static final String FIX_CRITERION_COMFORT = "fix_comfort";
+    public static final String FIX_CRITERION_TIGHT = "fix_tight";
+
+    public static final String DEVICE_NAME = "device_name";
+    public static final String DEVICE_ADDRESS = "device_address";
+    public static final String DEVICE_ENABLE_DATE = "device_enable_date";
+    public static final String DEVICE_SLOPE = "device_slope";
+    public static final String DEVICE_OFFSET = "device_offset";
+    public static final String DEVICE_CHANNEL_NUM = "device_channel_num";
+    public static final String DEVICE_CHANNEL_ONE = "device_channel_one";
+    public static final String DEVICE_CHANNEL_TWO = "device_channel_two";
+    public static final String DEVICE_CHANNEL_THREE = "device_channel_three";
+    public static final String DEVICE_CHANNEL_FOUR = "device_channel_four";
+    public static final String DEVICE_SAMPLING_FREQUENCY = "device_sampling_frequency";
+    public static final String DEVICE_MID = "device_mid";
+    public static final String DEVICE_COMPLETED_MID = "device_completed_mid";
+    public static final String DEVICE_POWER = "device_power";
+    public static final String DEVICE_STORAGE = "device_storage";
+    public static final String DEVICE_TIME = "device_time";
+
     private DrawerLayout mDrawerLayout;
 
     @Override
@@ -51,37 +74,41 @@ public class MainActivity extends BaseActivity {
         }
 
         // TODO: 2017/9/19 remove below fake info
-        sharedPref.edit().putBoolean("user-login", true).apply();
-        sharedPref.edit().putString("user-id", "0").apply();
-        sharedPref.edit().putString("user-type", "1").apply();
-        sharedPref.edit().putString("user-mid", "fake-mid").apply();
-        sharedPref.edit().putString("user-mac", "fake-mac").apply();
+//        sharedPref.edit().putBoolean(USER_LOGIN, true).apply();
+//        sharedPref.edit().putString(USER_ID, "0").apply();
+//        sharedPref.edit().putString(USER_TYPE, "1").apply();
+        sharedPref.edit().putString(DEVICE_MID, "fake-mid").apply();
+        sharedPref.edit().putString(DEVICE_NAME, "CH-08").apply();
+        sharedPref.edit().putString(DEVICE_ADDRESS, "E8:EB:11:0A:CE:7F").apply();
 
         // TODO: 2017/9/19 change below code
-        //sharedPref.edit().putBoolean("user-fixed", false).apply();
-        if (!sharedPref.getBoolean("user-fixed", false)) {
-            if (D) Log.e(TAG, "user never fix criterion");
+        if (!(sharedPref.getBoolean(MainActivity.FIX_CRITERION_BLANK, false) ||
+                sharedPref.getBoolean(MainActivity.FIX_CRITERION_LOOSE, false) ||
+                sharedPref.getBoolean(MainActivity.FIX_CRITERION_COMFORT, false) ||
+                sharedPref.getBoolean(MainActivity.FIX_CRITERION_TIGHT, false))) {
+
+            if (D) Log.d(TAG, "user never fix criterion");
             startActivity(new Intent(this, FixCriterionActivity.class));
             finish();
         }
 
         // check is logged in
-        if (!sharedPref.getBoolean("user-login", false)) {
+        if (!sharedPref.getBoolean(USER_LOGIN, false)) {
             if (D) Log.e(TAG, "user not logged in");
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
 
         // check mid is exist?
-        if (sharedPref.getString("user-mid", "").equals("") ||
-                sharedPref.getString("user-mac", "").equals("")) {
+        if (sharedPref.getString(DEVICE_MID, "").equals("") ||
+                sharedPref.getString(DEVICE_ADDRESS, "").equals("")) {
             startActivity(new Intent(this, FindBluetoothActivity.class));
             finish();
         }
 
         // check logged user's identity and
         // create the presenter
-        String identity = sharedPref.getString("user-type", "-1");
+        String identity = sharedPref.getString(USER_TYPE, "-1");
         switch (identity) {
             case IDENTITY_DOCTOR:
                 HomeDoctorFragment doctorFragment =
@@ -92,7 +119,7 @@ public class MainActivity extends BaseActivity {
                     ActivityUtils.addFragmentToActivity(
                             getSupportFragmentManager(), doctorFragment, R.id.contentFrame);
                 }
-                mDoctorPresenter = new DoctorPresenter(doctorFragment);
+                new DoctorPresenter(doctorFragment);
                 break;
             case IDENTITY_USER:
                 HomeUserFragment userFragment =
@@ -103,11 +130,11 @@ public class MainActivity extends BaseActivity {
                     ActivityUtils.addFragmentToActivity(
                             getSupportFragmentManager(), userFragment, R.id.contentFrame);
                 }
-                mUserPresenter = new UserPresenter(userFragment);
+                new UserPresenter(userFragment);
                 break;
             default:
                 if (D) Log.e(TAG, "user identity error");
-                sharedPref.edit().putBoolean("user-login", false).apply();
+                sharedPref.edit().putBoolean(USER_LOGIN, false).apply();
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
                 break;
@@ -134,7 +161,7 @@ public class MainActivity extends BaseActivity {
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
                     @Override
-                    public boolean onNavigationItemSelected(MenuItem menuItem) {
+                    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                         switch (menuItem.getItemId()) {
                             case R.id.home_menu_item:
                                 // Do nothing, we're already on that screen

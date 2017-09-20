@@ -1,6 +1,8 @@
 package cn.sealiu.health.main;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.content.Context;
+import android.support.annotation.Nullable;
 
 import cn.sealiu.health.BasePresenter;
 import cn.sealiu.health.BaseView;
@@ -15,9 +17,9 @@ public interface UserContract {
     interface View extends BaseView<Presenter> {
         boolean isActive();
 
-        void showError(String msg);
+        void showInfo(String msg);
 
-        void showError(int strId);
+        void showInfo(int strId);
 
         void gotoLogin();
 
@@ -27,12 +29,58 @@ public interface UserContract {
 
         void updateStorage(String storageLeft);
 
-        void updateSync(String syncTime);
+        void updateTime(@Nullable String time);
+
+        void delayExit();
+
+        void openBluetooth();
+
+        void showNoAvailableService();
+
+        void changeMenuBluetoothIcon(int resourceId);
+
+        void setSyncTime();
+
+        void requestDeviceParam(String paramName);
+
+        void setDeviceParam(String paramName, String value);
+
+        void requestDeviceStatus();
+
+        void displayRealtimeLinearChart(boolean active);
+
+        void requestRealtime(boolean active);
+
+        void updateLineChartRT(float value, String comfort, int sequence);
     }
 
     interface Presenter extends BasePresenter {
+        void checkBluetoothSupport(Context context);
+
         // request battery left, storage left, last sync time
         void requestBaseInfo();
+
+        void requestDeviceHighMID();
+
+        void requestDeviceLowMID();
+
+        void requestDeviceEnableDate();
+
+        void requestChannelNum();
+
+        void requestChannelOne();
+
+        void requestChannelTwo();
+
+        void requestChannelThree();
+
+        void requestChannelFour();
+
+        void requestDeviceSlope();
+
+        void requestDeviceOffset();
+
+        void requestSamplingFrequency();
 
         void startRealtime();
 
@@ -42,6 +90,12 @@ public interface UserContract {
 
         void syncLocalData();
 
+        void onGattServicesDiscovered();
+
         void doSentRequest(BluetoothGattCharacteristic c, BluetoothLeService s, String d);
+
+        BluetoothGattCharacteristic discoverCharacteristic(BluetoothLeService service);
+
+        void analyzeData(String data);
     }
 }

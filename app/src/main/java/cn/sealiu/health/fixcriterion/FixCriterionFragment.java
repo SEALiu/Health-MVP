@@ -101,15 +101,15 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
     }
 
     @Override
-    public void showError(String msg) {
+    public void showInfo(String msg) {
         if (getView() == null)
             return;
         Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG).show();
     }
 
     @Override
-    public void showError(int strId) {
-        showError(getString(strId));
+    public void showInfo(int strId) {
+        showInfo(getString(strId));
     }
 
     @Override
@@ -172,12 +172,18 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
                 break;
             case R.id.skip:
                 // TODO: 2017/9/19 remove one line code below
-                sharedPref.edit().putBoolean("user-fixed", true).apply();
+                sharedPref.edit().putBoolean(MainActivity.FIX_CRITERION_BLANK, true).apply();
 
                 getActivity().startActivity(new Intent(getActivity(), MainActivity.class));
                 getActivity().finish();
                 break;
             case R.id.fix_criterion_btn:
+                if (fixBlankRB.isChecked() || fixLooseRB.isChecked() || fixComfortRB.isChecked() ||
+                        fixTightRB.isChecked()) {
+                    showInfo(R.string.no_fix_type_selected);
+                    return;
+                }
+
                 mPresenter.doSentRequest(null, null, "");
                 break;
         }

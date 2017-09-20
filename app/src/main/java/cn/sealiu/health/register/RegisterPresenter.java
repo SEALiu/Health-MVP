@@ -6,12 +6,12 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.data.bean.BaseResponse;
+import cn.sealiu.health.login.LoginActivity;
+import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.ActivityUtils;
 import cn.sealiu.health.util.Fun;
 import okhttp3.Call;
@@ -213,13 +213,13 @@ public class RegisterPresenter implements RegisterContract.Presenter {
                 }
 
                 if (result.getStatus().equals("200")) {
-                    sharedPref.edit().putString("user-uuid", uuid).apply();
-                    sharedPref.edit().putString("user-uid", result.getUserId()).apply();
-                    sharedPref.edit().putString("user-type", identity).apply();
-                    sharedPref.edit().putBoolean("user-login", true).apply();
+                    //sharedPref.edit().putString("user-uuid", uuid).apply();
+                    sharedPref.edit().putString(MainActivity.USER_ID, result.getUserId()).apply();
+                    sharedPref.edit().putString(MainActivity.USER_TYPE, identity).apply();
+                    sharedPref.edit().putBoolean(MainActivity.USER_LOGIN, true).apply();
 
-                    sharedPref.edit().putString("user-phone", phone).apply();
-                    sharedPref.edit().putString("user-pwd", pwd).apply();
+                    sharedPref.edit().putString(LoginActivity.USER_PHONE, phone).apply();
+                    sharedPref.edit().putString(LoginActivity.USER_PASSWROD, pwd).apply();
 
                     mRegisterView.showRegisterSuccess();
 

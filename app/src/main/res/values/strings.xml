@@ -96,4 +96,9 @@
     <string name="skip">跳过，以后再进行定标</string>
     <string name="bluetooth_status">蓝牙状态</string>
     <string name="sync">同步</string>
+    <string name="connect_failed">无法连接到 %1$s</string>
+    <string name="connect_success">已连接到 %1$s</string>
+    <string name="bluetooth_disconnected">蓝牙设备断开连接</string>
+    <string name="verifing">设备已连接，认证中…</string>
+    <string name="no_fix_type_selected">请先选择定标类型</string>
 </resources>

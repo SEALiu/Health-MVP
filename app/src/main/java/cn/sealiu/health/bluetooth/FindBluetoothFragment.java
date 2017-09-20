@@ -52,6 +52,10 @@ import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
+ * functions:
+ * 1. find bluetooth device，and connection.
+ * 2. verify user.
+ *
  * Created by liuyang
  * on 2017/9/14.
  */
@@ -82,7 +86,7 @@ public class FindBluetoothFragment extends Fragment
      * 1: searching
      * 2: connected
      */
-    //private int mConnected = BluetoothLeService.STATE_DISCONNECTED;
+    private int mConnected = BluetoothLeService.STATE_DISCONNECTED;
 
     private BluetoothAdapter mBluetoothAdapter;
     private String mChosenBTName, mChosenBTAddress;
@@ -105,10 +109,10 @@ public class FindBluetoothFragment extends Fragment
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                //mConnected = BluetoothLeService.STATE_CONNECTED;
+                mConnected = BluetoothLeService.STATE_CONNECTED;
                 showMessage(getString(R.string.device_connected));
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                //mConnected = BluetoothLeService.STATE_DISCONNECTED;
+                mConnected = BluetoothLeService.STATE_DISCONNECTED;
                 showMessage(getString(R.string.device_disconnected), R.string.reconnect,
                         new View.OnClickListener() {
                             @Override
@@ -143,34 +147,44 @@ public class FindBluetoothFragment extends Fragment
 
             if (D) Log.d(TAG, mChosenBTName + "||" + mChosenBTAddress);
 
-            if (mChosenBTAddress != null && !mChosenBTAddress.isEmpty()) {
-                mServiceConnection = new ServiceConnection() {
-                    @Override
-                    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-                        mBluetoothLeService = ((BluetoothLeService.LocalBinder) iBinder).getService();
-                        if (!mBluetoothLeService.initialize()) {
-                            if (D) Log.e(TAG, "Unable to initialize Bluetooth");
-                            getActivity().finish();
+            if (mConnected == BluetoothLeService.STATE_CONNECTED) {
+                if (D) Log.d(TAG, "connected");
+                if (mWantedCharacteristic != null) {
+                    if (D) Log.d(TAG, "wanted characteristic is not null");
+                    mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                            BoxRequestProtocol.boxRequestCertification(""));
+                }
+            } else {
+                if (D) Log.d(TAG, "disconnected");
+                if (mChosenBTAddress != null && !mChosenBTAddress.isEmpty()) {
+                    mServiceConnection = new ServiceConnection() {
+                        @Override
+                        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+                            mBluetoothLeService = ((BluetoothLeService.LocalBinder) iBinder).getService();
+                            if (!mBluetoothLeService.initialize()) {
+                                if (D) Log.e(TAG, "Unable to initialize Bluetooth");
+                                getActivity().finish();
+                            }
+                            // Automatically connects to the device upon successful start-up initialization.
+                            mBluetoothLeService.connect(mChosenBTAddress);
                         }
-                        // Automatically connects to the device upon successful start-up initialization.
-                        mBluetoothLeService.connect(mChosenBTAddress);
+
+                        @Override
+                        public void onServiceDisconnected(ComponentName componentName) {
+                            mBluetoothLeService = null;
+                        }
+                    };
+
+                    Intent gattServiceIntent = new Intent(getActivity(), BluetoothLeService.class);
+                    getActivity()
+                            .bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+                    getActivity().registerReceiver(mGattUpdateReceiver,
+                            BaseActivity.gattUpdateIntentFilter());
+                    if (mBluetoothLeService != null) {
+                        final boolean result = mBluetoothLeService.connect(mChosenBTAddress);
+                        if (D) Log.d(TAG, "Connect request result=" + result);
                     }
-
-                    @Override
-                    public void onServiceDisconnected(ComponentName componentName) {
-                        mBluetoothLeService = null;
-                    }
-                };
-
-                Intent gattServiceIntent = new Intent(getActivity(), BluetoothLeService.class);
-                getActivity()
-                        .bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-
-                getActivity().registerReceiver(mGattUpdateReceiver,
-                        BaseActivity.gattUpdateIntentFilter());
-                if (mBluetoothLeService != null) {
-                    final boolean result = mBluetoothLeService.connect(mChosenBTAddress);
-                    if (D) Log.d(TAG, "Connect request result=" + result);
                 }
             }
         }
@@ -233,7 +247,7 @@ public class FindBluetoothFragment extends Fragment
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mServiceConnection != null) {
+        if (mServiceConnection != null && mBluetoothLeService != null) {
             getActivity().unbindService(mServiceConnection);
             mBluetoothLeService.disconnect();
             getActivity().unregisterReceiver(mGattUpdateReceiver);
@@ -251,12 +265,12 @@ public class FindBluetoothFragment extends Fragment
     }
 
     @Override
-    public void showError(int stringId) {
+    public void showInfo(int stringId) {
         showMessage(getString(stringId));
     }
 
     @Override
-    public void showError(String errorMsg) {
+    public void showInfo(String errorMsg) {
         showMessage(errorMsg);
     }
 
@@ -376,8 +390,8 @@ public class FindBluetoothFragment extends Fragment
 
     @Override
     public void gotoHome() {
-        sharedPref.edit().putString("device-name", mChosenBTName).apply();
-        sharedPref.edit().putString("device-address", mChosenBTAddress).apply();
+        sharedPref.edit().putString(MainActivity.DEVICE_NAME, mChosenBTName).apply();
+        sharedPref.edit().putString(MainActivity.DEVICE_ADDRESS, mChosenBTAddress).apply();
 
         getActivity().startActivity(new Intent(getActivity(), MainActivity.class));
         getActivity().finish();
@@ -471,19 +485,21 @@ public class FindBluetoothFragment extends Fragment
     }
 
     private void showMessage(String msg) {
-        checkNotNull(getView());
+        if (getView() == null)
+            return;
         Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG).show();
     }
 
     private void showMessage(String msg, int actionId, View.OnClickListener clickListener) {
-        checkNotNull(getView());
+        if (getView() == null)
+            return;
         Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG).setAction(actionId, clickListener).show();
     }
 
     private void manualConnect() {
         if (mBluetoothLeService != null) {
             mBluetoothLeService.connect(mChosenBTAddress);
-            //mConnected = BluetoothLeService.STATE_CONNECTING;
+            mConnected = BluetoothLeService.STATE_CONNECTING;
         }
     }
 }

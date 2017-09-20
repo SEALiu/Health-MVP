@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
+import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
 
 import static cn.sealiu.health.BaseActivity.sharedPref;
@@ -41,7 +42,7 @@ public class FixCriterionPresenter implements FixCriterionContract.Presenter {
 
     @Override
     public void doSentRequest(BluetoothGattCharacteristic c, BluetoothLeService s, String d) {
-        String uid = sharedPref.getString("user-id", "");
+        String uid = sharedPref.getString(MainActivity.USER_ID, "");
         if (uid.equals("")) {
             mFixCriterionView.gotoLogin();
             return;
@@ -53,7 +54,7 @@ public class FixCriterionPresenter implements FixCriterionContract.Presenter {
             c.setValue(buff);
             s.writeCharacteristic(c);
         } else {
-            mFixCriterionView.showError(R.string.empty_data);
+            mFixCriterionView.showInfo(R.string.empty_data);
         }
 
         // TODO: 2017/9/19 remove one line code below

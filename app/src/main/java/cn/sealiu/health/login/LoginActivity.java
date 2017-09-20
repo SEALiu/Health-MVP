@@ -9,6 +9,8 @@ import cn.sealiu.health.R;
 import cn.sealiu.health.util.ActivityUtils;
 
 public class LoginActivity extends BaseActivity {
+    public static final String USER_PHONE = "user_phone";
+    public static final String USER_PASSWROD = "user_pwd";
 
     private LoginPresenter mLoginPresenter;
 

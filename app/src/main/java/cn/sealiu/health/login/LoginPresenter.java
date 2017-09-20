@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.data.bean.BaseResponse;
+import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.ActivityUtils;
 import cn.sealiu.health.util.Fun;
 import okhttp3.Call;
@@ -45,8 +46,8 @@ public class LoginPresenter implements LoginContract.Presenter {
 
     @Override
     public void restore() {
-        String phone = sharedPref.getString("user-phone", "");
-        String pwd = sharedPref.getString("user-pwd", "");
+        String phone = sharedPref.getString(LoginActivity.USER_PHONE, "");
+        String pwd = sharedPref.getString(LoginActivity.USER_PASSWROD, "");
 
         mLoginView.restorePhone(phone);
         mLoginView.restorePwd(pwd);
@@ -96,25 +97,25 @@ public class LoginPresenter implements LoginContract.Presenter {
                 }
 
                 if (result.getStatus().equals("200")) {
-                    sharedPref.edit().putString("user-uuid", result.getUserUid()).apply();
-                    sharedPref.edit().putString("user-uid", result.getUserId()).apply();
-                    sharedPref.edit().putString("user-type", result.getTypeId()).apply();
-                    sharedPref.edit().putBoolean("user-login", true).apply();
+                    //sharedPref.edit().putString("user-uuid", result.getUserUid()).apply();
+                    sharedPref.edit().putString(MainActivity.USER_ID, result.getUserId()).apply();
+                    sharedPref.edit().putString(MainActivity.USER_TYPE, result.getTypeId()).apply();
+                    sharedPref.edit().putBoolean(MainActivity.USER_LOGIN, true).apply();
                     // TODO: 2017/9/15 登录接口返回用户的 mid
-                    sharedPref.edit().putString("user-mid", result.getMid()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_MID, result.getMid()).apply();
 
                     if (isRemember) {
-                        sharedPref.edit().putString("user-phone", phone).apply();
-                        sharedPref.edit().putString("user-pwd", pwd).apply();
+                        sharedPref.edit().putString(LoginActivity.USER_PHONE, phone).apply();
+                        sharedPref.edit().putString(LoginActivity.USER_PASSWROD, pwd).apply();
                     } else {
-                        sharedPref.edit().putString("user-phone", "").apply();
-                        sharedPref.edit().putString("user-pwd", "").apply();
+                        sharedPref.edit().putString(LoginActivity.USER_PHONE, "").apply();
+                        sharedPref.edit().putString(LoginActivity.USER_PASSWROD, "").apply();
                     }
 
                     mLoginView.showLoginSuccess();
 
                     if (result.getTypeId().equals(IDENTITY_USER) &&
-                            sharedPref.getString("user-mid", "").equals("")) {
+                            sharedPref.getString(MainActivity.DEVICE_MID, "").equals("")) {
                         // logged user's role is patient
                         // AND
                         // there is no bluetooth mac address in shardPref

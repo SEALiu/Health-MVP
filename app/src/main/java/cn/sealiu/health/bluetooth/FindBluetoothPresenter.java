@@ -21,6 +21,7 @@ import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
 import cn.sealiu.health.data.bean.MiniResponse;
+import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.SampleGattAttributes;
 import cn.sealiu.health.util.UnboxResponseProtocol;
@@ -129,13 +130,13 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
 
         mBluetoothAdapter = bm.getAdapter();
         if (mBluetoothAdapter == null) {
-            mFindBluetoothView.showError(R.string.bt_not_support);
+            mFindBluetoothView.showInfo(R.string.bt_not_support);
             mFindBluetoothView.delayExit();
             return;
         }
 
         if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            mFindBluetoothView.showError(R.string.ble_not_support);
+            mFindBluetoothView.showInfo(R.string.ble_not_support);
             mFindBluetoothView.delayExit();
             return;
         }
@@ -161,7 +162,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
             @Override
             public void onFailure(Call call, IOException e) {
                 if (D) Log.e(TAG, e.getLocalizedMessage());
-                mFindBluetoothView.showError("bind machine interface error");
+                mFindBluetoothView.showInfo("bind machine interface error");
             }
 
             @Override
@@ -181,7 +182,10 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
 
     @Override
     public void doSentRequest(BluetoothGattCharacteristic c, BluetoothLeService s, String d) {
-        String uid = sharedPref.getString("user-id", "");
+        if (D) Log.d(TAG, "data: " + d);
+        mFindBluetoothView.showInfo(R.string.verifing);
+
+        String uid = sharedPref.getString(MainActivity.USER_ID, "");
         if (uid.equals("")) {
             mFindBluetoothView.gotoLogin();
             return;
@@ -189,11 +193,14 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
 
         if (d.length() > 0) {
             String protocol = BoxRequestProtocol.boxProtocol(d, uid);
+
+            if (D) Log.d(TAG, "protocol: " + protocol);
+
             byte[] buff = BoxRequestProtocol.convertHex2Bytes(protocol);
             c.setValue(buff);
             s.writeCharacteristic(c);
         } else {
-            mFindBluetoothView.showError(R.string.empty_data);
+            mFindBluetoothView.showInfo(R.string.empty_data);
         }
     }
 
@@ -212,9 +219,11 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                 switch (result) {
                     case EXECUTE_SUCCESS:
                         String mid = protocol.getExecuteBindedData().substring(10, 18);
-                        String userId = sharedPref.getString("user-id", "");
+                        String userId = sharedPref.getString(MainActivity.USER_ID, "");
                         if (!userId.equals("")) {
                             bindDevice2User(userId, mid);
+                        } else {
+                            if (D) Log.e(TAG, "user id is empty");
                         }
                         break;
                     case EXECUTE_FAILED_WRONG_UID:
@@ -222,13 +231,13 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                         mFindBluetoothView.gotoLogin();
                         break;
                     case EXECUTE_FAILED_NUMBER_LIMIT:
-                        mFindBluetoothView.showError(R.string.upto_bind_number_limit);
+                        mFindBluetoothView.showInfo(R.string.upto_bind_number_limit);
                         break;
                     case EXECUTE_FAILED_UID_EXIST:
                         mFindBluetoothView.bindWithMid();
                         break;
                     case EXECUTE_FAILED_WRONG_MID:
-                        mFindBluetoothView.showError(R.string.input_mid_error);
+                        mFindBluetoothView.showInfo(R.string.input_mid_error);
                         break;
                 }
             }

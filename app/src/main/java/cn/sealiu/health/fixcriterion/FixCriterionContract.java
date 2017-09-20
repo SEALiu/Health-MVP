@@ -15,9 +15,9 @@ public interface FixCriterionContract {
     interface View extends BaseView<Presenter> {
         boolean isActive();
 
-        void showError(String msg);
+        void showInfo(String msg);
 
-        void showError(int strId);
+        void showInfo(int strId);
 
         void gotoLogin();
 

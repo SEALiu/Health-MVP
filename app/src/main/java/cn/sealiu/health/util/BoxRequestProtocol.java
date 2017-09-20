@@ -54,7 +54,7 @@ public class BoxRequestProtocol extends ProtocolMsg {
      */
     public static String boxProtocol(String data, @NonNull String uid) {
         // 包头+数据信息+用户ID+包尾+指令结束
-        return EOF + data + leftPad(uid, 8, '0') + EOF + END;
+        return EOF + data + leftPad(uid, 8) + EOF + END;
     }
 
     public static String boxProtocolOnlyForTest(String data) {
@@ -68,7 +68,7 @@ public class BoxRequestProtocol extends ProtocolMsg {
      * @return 数据包 0x01
      */
     public static String boxStartUpload() {
-        return rightPad(RE_RT_DATA_START, DATA_LEN, '0');
+        return rightPad(RE_RT_DATA_START, DATA_LEN);
     }
 
     /**
@@ -77,7 +77,7 @@ public class BoxRequestProtocol extends ProtocolMsg {
      * @return 数据包 0x02
      */
     public static String boxStopUpload() {
-        return rightPad(RE_RT_DATA_STOP, DATA_LEN, '0');
+        return rightPad(RE_RT_DATA_STOP, DATA_LEN);
     }
 
     /**
@@ -97,14 +97,13 @@ public class BoxRequestProtocol extends ProtocolMsg {
 
             dataArray[i] = leftPad(
                     Integer.toHexString(Integer.parseInt(item)),
-                    i == 0 ? 4 : 2,
-                    '0'
+                    i == 0 ? 4 : 2
             );
 
             result.append(dataArray[i]);
         }
 
-        return rightPad(RE_HISTORY_DATA + result.toString(), DATA_LEN, '0');
+        return rightPad(RE_HISTORY_DATA + result.toString(), DATA_LEN);
     }
 
     /**
@@ -113,7 +112,7 @@ public class BoxRequestProtocol extends ProtocolMsg {
      * @return 数据包 0x04
      */
     public static String boxRequestStatus() {
-        return rightPad(RE_STATUS, DATA_LEN, '0');
+        return rightPad(RE_STATUS, DATA_LEN);
     }
 
     /**
@@ -136,14 +135,13 @@ public class BoxRequestProtocol extends ProtocolMsg {
 
             dataArray[i] = leftPad(
                     Integer.toHexString(Integer.parseInt(item)),
-                    i == 0 ? 4 : 2,
-                    '0'
+                    i == 0 ? 4 : 2
             );
 
             result.append(dataArray[i]);
         }
 
-        return rightPad(RE_SYNC_TIME + result.toString(), DATA_LEN, '0');
+        return rightPad(RE_SYNC_TIME + result.toString(), DATA_LEN);
     }
 
     public static String boxSyncTime() {
@@ -157,7 +155,7 @@ public class BoxRequestProtocol extends ProtocolMsg {
      * @return 数据包 0x06
      */
     public static String boxRequestFixNorm() {
-        return rightPad(RE_FIX_NORM, DATA_LEN, '0');
+        return rightPad(RE_FIX_NORM, DATA_LEN);
     }
 
     /**
@@ -182,9 +180,9 @@ public class BoxRequestProtocol extends ProtocolMsg {
      */
     public static String boxRequestDeviceParam(String paramName, @Nullable String paramValue) {
         if (paramValue == null) {
-            return rightPad(RE_DEVICE_PARAM + paramName, DATA_LEN, '0');
+            return rightPad(RE_DEVICE_PARAM + paramName, DATA_LEN);
         }
-        return rightPad(RE_DEVICE_PARAM + paramName + paramValue, DATA_LEN, '0');
+        return rightPad(RE_DEVICE_PARAM + paramName + paramValue, DATA_LEN);
     }
 
     /**
@@ -194,7 +192,7 @@ public class BoxRequestProtocol extends ProtocolMsg {
      * @return 数据包 0x08
      */
     public static String boxRequestCertification(@NonNull String machineID) {
-        return rightPad(RE_CERTIFICATION + machineID, DATA_LEN, '0');
+        return rightPad(RE_CERTIFICATION + machineID, DATA_LEN);
     }
 
 
@@ -218,11 +216,11 @@ public class BoxRequestProtocol extends ProtocolMsg {
         String second = String.valueOf(now.get(Calendar.SECOND));
 
         String data = RS_DATA +
-                leftPad(hour, 2, '0') +
-                leftPad(minute, 2, '0') +
-                leftPad(second, 2, '0') +
+                leftPad(hour, 2) +
+                leftPad(minute, 2) +
+                leftPad(second, 2) +
                 i + AA + BB + CC + DD;
-        return rightPad(data, TEST_DATA_LEN, '0');
+        return rightPad(data, TEST_DATA_LEN);
     }
 
     /**
@@ -237,12 +235,12 @@ public class BoxRequestProtocol extends ProtocolMsg {
         String second = String.valueOf(now.get(Calendar.SECOND));
 
         String data = RS_STATUS_OR_PARAM + RS_STATUS +
-                leftPad(hour, 2, '0') +
-                leftPad(minute, 2, '0') +
-                leftPad(second, 2, '0') +
+                leftPad(hour, 2) +
+                leftPad(minute, 2) +
+                leftPad(second, 2) +
                 power + storage + statuses[0] + statuses[1] + statuses[2] + statuses[3];
 
-        return rightPad(data, TEST_DATA_LEN, '0');
+        return rightPad(data, TEST_DATA_LEN);
     }
 
     /**
@@ -253,7 +251,7 @@ public class BoxRequestProtocol extends ProtocolMsg {
      * @return
      */
     public static String boxResponseExecuteStatusOnlyForTest(@NonNull String RE_Type, @NonNull String status) {
-        String data = RS_EXECUTE_STATUS + RE_Type + leftPad(status, 2, '0');
-        return rightPad(data, TEST_DATA_LEN, '0');
+        String data = RS_EXECUTE_STATUS + RE_Type + leftPad(status, 2);
+        return rightPad(data, TEST_DATA_LEN);
     }
 }

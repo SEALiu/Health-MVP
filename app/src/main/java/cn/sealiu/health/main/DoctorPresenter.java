@@ -7,7 +7,6 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import cn.sealiu.health.BaseActivity;
@@ -43,7 +42,7 @@ public class DoctorPresenter implements DoctorContract.Presenter {
     public void loadUsers() {
         mDoctorView.setLoadingIndicator(true);
 
-        String doctorId = sharedPref.getString("user-id", "");
+        String doctorId = sharedPref.getString(MainActivity.USER_ID, "");
         if (doctorId.equals("")) {
             mDoctorView.gotoLogin();
             return;

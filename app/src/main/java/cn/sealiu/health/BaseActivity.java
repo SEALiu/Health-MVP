@@ -2,26 +2,17 @@ package cn.sealiu.health;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 
-import cn.sealiu.health.data.bean.BaseResponse;
 import okhttp3.Request;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by liuyang
@@ -37,7 +28,7 @@ public class BaseActivity extends AppCompatActivity {
     // 模拟器调试地址
     //public static final String REMOTE_URL = "http://10.0.2.2:8080";
     // 真机调试地址
-    public static final String REMOTE_URL = "http://192.168.1.137:8080";
+    public static final String REMOTE_URL = "http://192.168.1.127:8080";
 
     public static SharedPreferences sharedPref, settingPref;
     public static ProgressDialog mProgressDialog;
