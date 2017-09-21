@@ -24,7 +24,11 @@ public interface ForumContract {
 
         void showInterfaceError();
 
-        void showError(String error);
+        void showInfo(String error);
+
+        void showInfo(int strId);
+
+        void showRefresh();
     }
 
     interface Presenter extends BasePresenter {
@@ -32,6 +36,6 @@ public interface ForumContract {
 
         void result(int requestCode, int resultCode);
 
-        void addNewPost();
+        void addNewPost(String title, String content);
     }
 }

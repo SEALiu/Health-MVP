@@ -15,7 +15,7 @@ public class User implements Serializable {
     private final String userUid;
 
     @Nullable
-    private final String username;
+    private final String userName;
 
     @Nullable
     private final Integer gender;
@@ -49,7 +49,7 @@ public class User implements Serializable {
                 @Nullable Boolean logged, @Nullable String phone, @Nullable String email,
                 @Nullable String pwd, @Nullable String mid) {
         this.userUid = userUid;
-        this.username = username;
+        this.userName = username;
         this.gender = gender;
         this.age = age;
         this.typeId = typeId;
@@ -68,7 +68,7 @@ public class User implements Serializable {
 
     @Nullable
     public String getUsername() {
-        return username;
+        return userName;
     }
 
     @Nullable

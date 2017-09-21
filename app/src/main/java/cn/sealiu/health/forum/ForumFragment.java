@@ -1,5 +1,7 @@
 package cn.sealiu.health.forum;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -45,7 +48,7 @@ public class ForumFragment extends Fragment implements ForumContract.View {
         @Override
         public void onPostClick(Post post) {
             if (post == null){
-                showError(getString(R.string.request_post_cannot_be_null));
+                showInfo(getString(R.string.request_post_cannot_be_null));
                 return;
             }
 
@@ -85,7 +88,9 @@ public class ForumFragment extends Fragment implements ForumContract.View {
         getActivity().findViewById(R.id.fab_add_post)
                 .setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {mPresenter.addNewPost();}
+            public void onClick(View view) {
+                onAddPost();
+            }
         });
 
         // set up no post view
@@ -131,10 +136,15 @@ public class ForumFragment extends Fragment implements ForumContract.View {
     }
 
     @Override
-    public void showPosts(List<Post> posts) {
-        mListAdapter.replaceData(posts);
+    public void showPosts(final List<Post> posts) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mListAdapter.replaceData(posts);
 
-        mNoPostsView.setVisibility(View.GONE);
+                mNoPostsView.setVisibility(View.GONE);
+            }
+        });
     }
 
     @Override
@@ -149,8 +159,18 @@ public class ForumFragment extends Fragment implements ForumContract.View {
     }
 
     @Override
-    public void showError(String error) {
+    public void showInfo(String error) {
         showMessage(error);
+    }
+
+    @Override
+    public void showInfo(int strId) {
+        showMessage(getString(strId));
+    }
+
+    @Override
+    public void showRefresh() {
+        mPresenter.loadPosts(startNum);
     }
 
     @Override
@@ -230,5 +250,41 @@ public class ForumFragment extends Fragment implements ForumContract.View {
         if (getView() != null) {
             Snackbar.make(getView(), message, Snackbar.LENGTH_LONG).show();
         }
+    }
+
+    private void onAddPost() {
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View view = inflater.inflate(R.layout.addpost_comment_dia, null);
+        final EditText title = view.findViewById(R.id.title);
+        final EditText content = view.findViewById(R.id.content);
+
+        title.setHint(R.string.post_title);
+        content.setHint(R.string.write_something);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+        builder.setTitle(getString(R.string.add_post))
+                .setView(view)
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                    }
+                })
+                .setPositiveButton(R.string.change, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        String titleStr = title.getText().toString();
+                        String contentStr = content.getText().toString();
+
+                        if (titleStr.isEmpty() || contentStr.isEmpty()) {
+                            showMessage(getString(R.string.post_title_or_content_empty));
+                        } else {
+                            mPresenter.addNewPost(titleStr, contentStr);
+                            dialogInterface.dismiss();
+                        }
+                    }
+                });
+        builder.show();
     }
 }

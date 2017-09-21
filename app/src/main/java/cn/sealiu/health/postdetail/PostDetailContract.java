@@ -8,7 +8,7 @@ import cn.sealiu.health.BaseView;
  * on 2017/9/18.
  */
 
-public class PostDetailContract {
+public interface PostDetailContract {
     interface View extends BaseView<Presenter> {
         boolean isActive();
     }

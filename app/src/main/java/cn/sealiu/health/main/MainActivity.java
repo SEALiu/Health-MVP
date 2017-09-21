@@ -135,8 +135,9 @@ public class MainActivity extends BaseActivity {
             default:
                 if (D) Log.e(TAG, "user identity error");
                 sharedPref.edit().putBoolean(USER_LOGIN, false).apply();
-                startActivity(new Intent(this, LoginActivity.class));
-                finish();
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
                 break;
         }
     }

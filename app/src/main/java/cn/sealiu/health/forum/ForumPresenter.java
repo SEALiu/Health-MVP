@@ -2,7 +2,6 @@ package cn.sealiu.health.forum;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.util.TimeUtils;
 
 import com.google.gson.Gson;
 
@@ -12,8 +11,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import cn.sealiu.health.BaseActivity;
+import cn.sealiu.health.R;
+import cn.sealiu.health.data.bean.BaseResponse;
 import cn.sealiu.health.data.bean.Post;
 import cn.sealiu.health.data.bean.PostListResponse;
+import cn.sealiu.health.main.MainActivity;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -21,6 +23,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static cn.sealiu.health.BaseActivity.D;
+import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -52,14 +55,14 @@ public class ForumPresenter implements ForumContract.Presenter {
             @Override
             public void onFailure(Call call, IOException e) {
                 if (D) Log.e(TAG, e.getMessage());
-                mForumView.showError(e.getLocalizedMessage());
+                mForumView.showInfo(e.getLocalizedMessage());
                 mForumView.setLoadingIndicator(false);
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 String json = response.body().string();
-                if (D) Log.e(TAG, json);
+                if (D) Log.d(TAG, json);
 
                 PostListResponse postListResponse = new Gson().fromJson(json, PostListResponse.class);
 
@@ -82,6 +85,8 @@ public class ForumPresenter implements ForumContract.Presenter {
                 mForumView.showPosts(posts);
             }
         });
+
+        mForumView.setLoadingIndicator(false);
     }
 
     @Override
@@ -90,8 +95,33 @@ public class ForumPresenter implements ForumContract.Presenter {
     }
 
     @Override
-    public void addNewPost() {
+    public void addNewPost(String title, String content) {
+        String userId = sharedPref.getString(MainActivity.USER_ID, "");
 
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request sendCommentRequest = BaseActivity.buildHttpGetRequest("/post/sendPosts?author_id=" +
+                userId + "&title=" + title + "&content=" + content + "&type_id=0");
+
+        okHttpClient.newCall(sendCommentRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                if (D) Log.e(TAG, e.getLocalizedMessage());
+                mForumView.showInfo("send post interface error");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resultJson = response.body().string();
+
+                BaseResponse base = new Gson().fromJson(resultJson, BaseResponse.class);
+
+                if (base.getStatus().equals("200")) {
+                    mForumView.showRefresh();
+                } else {
+                    mForumView.showInfo(R.string.add_post_error);
+                }
+            }
+        });
     }
 
     @Override
