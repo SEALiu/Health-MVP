@@ -120,11 +120,14 @@
     <string name="change_age">修改年龄</string>
     <string name="change_gender">修改性别</string>
     <string name="write_something">写点什么...</string>
-    <string name="post">发送</string>
+    <string name="post">发布</string>
     <string name="post_title">帖子标题</string>
     <string name="add_post">发布帖子</string>
     <string name="add_post_error">帖子发布失败</string>
     <string name="post_title_or_content_empty">帖子标题和内容不能为空</string>
     <string name="logout_confirm">注销后需要重新登录，您确定吗？</string>
     <string name="ok">确定</string>
+    <string name="add_comment">发布评论</string>
+    <string name="add_comment_error">评论失败</string>
+    <string name="comment_content_empty">评论内容不能为空</string>
 </resources>

@@ -1,13 +1,12 @@
 package cn.sealiu.health.register;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.R;
-import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.util.ActivityUtils;
 
 public class RegisterActivity extends BaseActivity {
@@ -53,8 +52,12 @@ public class RegisterActivity extends BaseActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        startActivity(new Intent(this, LoginActivity.class));
-        finish();
+        NavUtils.navigateUpFromSameTask(RegisterActivity.this);
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        NavUtils.navigateUpFromSameTask(RegisterActivity.this);
     }
 }

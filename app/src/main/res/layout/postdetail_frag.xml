@@ -4,6 +4,7 @@
 <cn.sealiu.health.main.ScrollChildSwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/refresh_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/textOrIcons">
@@ -20,8 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:text="Post Title"
+            android:layout_marginTop="16dp"
             android:textColor="@color/primaryText"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -34,7 +34,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
-            android:text="sealiu0217"
             android:textColor="@color/lightText"
             android:textSize="12sp"
             app:layout_constraintStart_toStartOf="parent"
@@ -45,7 +44,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
-            android:text="2017-09-17"
             android:textColor="@color/lightText"
             android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -64,15 +62,13 @@
             app:layout_constraintTop_toBottomOf="@+id/time" />
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
-            android:paddingBottom="16dp"
-            android:paddingTop="8dp"
-            android:text="Since Android 6.0 (API 23), Android has offered the Auto Backup for Apps feature as a way for developers to quickly add backup functionality to their apps. Auto Backup preserves app data by uploading it to the user's Google Drive account, where it is protected by the user's Google account credentials. The amount of data is limited to 25MB per user of your app and there is no charge for storing backup data."
+            android:paddingBottom="32dp"
             android:textColor="@color/primaryText"
             android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -88,7 +84,7 @@
             android:background="@color/lightBg"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView" />
+            app:layout_constraintTop_toBottomOf="@+id/content" />
 
         <TextView
             android:id="@+id/textView2"
@@ -144,7 +140,7 @@
 
         <ListView
             android:id="@+id/comment_list"
-            android:layout_width="368dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="0dp"
             android:layout_marginStart="0dp"

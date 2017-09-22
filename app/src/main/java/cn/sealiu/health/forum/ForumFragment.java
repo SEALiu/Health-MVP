@@ -34,6 +34,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 
 public class ForumFragment extends Fragment implements ForumContract.View {
+    private static final String TAG = "ForumFragment";
 
     public static final int ITEM_PER_PAGE = 500;
     public static int startNum = 0;
@@ -52,8 +53,9 @@ public class ForumFragment extends Fragment implements ForumContract.View {
                 return;
             }
 
+            //Log.d(TAG, "post id: " + post.getP_id());
             Intent intent = new Intent(getContext(), PostDetailActivity.class);
-            intent.putExtra(PostDetailActivity.EXTRA_POST_ID, post.getP_id());
+            intent.putExtra(PostDetailActivity.EXTRA_POST_ID, post.getP_id() + "");
             startActivity(intent);
         }
     };
@@ -270,7 +272,7 @@ public class ForumFragment extends Fragment implements ForumContract.View {
                     public void onClick(DialogInterface dialogInterface, int i) {
                     }
                 })
-                .setPositiveButton(R.string.change, new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.post, new DialogInterface.OnClickListener() {
 
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {

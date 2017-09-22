@@ -25,7 +25,7 @@ public class LoginActivity extends BaseActivity {
 
         ActionBar ab = getSupportActionBar();
         if (ab != null) {
-            ab.setTitle(R.string.login);
+            ab.setTitle("");
         }
 
         // create the fragment

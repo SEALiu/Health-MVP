@@ -37,12 +37,15 @@
         <activity android:name=".BaseActivity" />
         <activity android:name=".login.LoginActivity" />
         <activity android:name=".bluetooth.FindBluetoothActivity" />
-        <activity android:name=".register.RegisterActivity" />
         <activity android:name=".userdetail.UserDetailActivity" />
 
         <service
             android:name=".SyncService"
             android:enabled="true" />
+
+        <activity
+            android:name=".register.RegisterActivity"
+            android:parentActivityName=".login.LoginActivity" />
 
         <activity
             android:name=".profile.ProfileActivity"
@@ -53,9 +56,6 @@
         <activity
             android:name=".forum.ForumActivity"
             android:parentActivityName=".main.MainActivity" />
-        <activity
-            android:name=".addpost.AddPostActivity"
-            android:parentActivityName=".forum.ForumActivity" />
         <activity
             android:name=".postdetail.PostDetailActivity"
             android:parentActivityName=".forum.ForumActivity" />
