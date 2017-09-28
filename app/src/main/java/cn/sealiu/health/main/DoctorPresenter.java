@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.sealiu.health.BaseActivity;
-import cn.sealiu.health.data.bean.ResponsibleBean;
-import cn.sealiu.health.data.bean.ResponsibleResponse;
+import cn.sealiu.health.data.bean.Responsible;
 import cn.sealiu.health.data.bean.User;
+import cn.sealiu.health.data.response.ResponsibleResponse;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -77,7 +77,7 @@ public class DoctorPresenter implements DoctorContract.Presenter {
 
                 List<User> users = new ArrayList<>();
 
-                for (ResponsibleBean bean : resResponse.getBondUser()) {
+                for (Responsible bean : resResponse.getBondUser()) {
                     users.add(bean.getUser()[0]);
                 }
 

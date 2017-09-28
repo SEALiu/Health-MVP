@@ -1,10 +1,10 @@
 package cn.sealiu.health.setting;
 
-import java.util.List;
+import android.bluetooth.BluetoothGattCharacteristic;
 
 import cn.sealiu.health.BasePresenter;
 import cn.sealiu.health.BaseView;
-import cn.sealiu.health.data.bean.Post;
+import cn.sealiu.health.BluetoothLeService;
 
 /**
  * Created by liuyang
@@ -13,17 +13,20 @@ import cn.sealiu.health.data.bean.Post;
 
 public interface SettingContract {
 
-    interface View extends BaseView<Presenter>{
+    interface View extends BaseView<Presenter> {
         boolean isActive();
 
         void setLoadingIndicator(boolean active);
 
-        void showInterfaceError();
+        void gotoLogin();
 
-        void showError(String error);
+        void showInfo(String msg);
+
+        void showInfo(int strId);
     }
 
     interface Presenter extends BasePresenter {
 
+        void doSentRequest(BluetoothGattCharacteristic c, BluetoothLeService s, String d);
     }
 }

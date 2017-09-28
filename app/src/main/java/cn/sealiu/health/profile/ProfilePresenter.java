@@ -9,9 +9,9 @@ import java.io.IOException;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.R;
-import cn.sealiu.health.data.bean.BaseResponse;
-import cn.sealiu.health.data.bean.ProfileResponse;
 import cn.sealiu.health.data.bean.User;
+import cn.sealiu.health.data.response.MiniResponse;
+import cn.sealiu.health.data.response.ProfileResponse;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.Fun;
 import okhttp3.Call;
@@ -57,7 +57,7 @@ public class ProfilePresenter implements ProfileContract.Presenter {
             @Override
             public void onFailure(Call call, IOException e) {
                 if (D) Log.e(TAG, e.getMessage());
-                mProfileView.showInfo("login interface error");
+                mProfileView.showInfo("get profile interface error");
                 mProfileView.setLoadingIndicator(false);
             }
 
@@ -72,16 +72,16 @@ public class ProfilePresenter implements ProfileContract.Presenter {
                 if (result.getStatus().equals("200")) {
                     String username = result.getUserName();
                     int gender = Integer.parseInt(result.getUserGender());
-                    int age = result.getAge();
+                    String age = result.getUserAge();
                     String phone = result.getUserPhone();
                     String email = result.getUserEmail();
-                    String mid = result.getMid();
+                    String mid = result.getUserMid();
 
                     // 给用户资料做一个本地存储，避免每次都从服务器请求数据
                     BaseActivity.sharedPref.edit().putBoolean(ProfileActivity.PROFILE_SAVED, true).apply();
                     BaseActivity.sharedPref.edit().putString(ProfileActivity.PROFILE_USERNAME, username).apply();
                     BaseActivity.sharedPref.edit().putInt(ProfileActivity.PROFILE_GENDER, gender).apply();
-                    BaseActivity.sharedPref.edit().putInt(ProfileActivity.PROFILE_AGE, age).apply();
+                    BaseActivity.sharedPref.edit().putString(ProfileActivity.PROFILE_AGE, age).apply();
                     BaseActivity.sharedPref.edit().putString(ProfileActivity.PROFILE_PHONE, phone).apply();
                     BaseActivity.sharedPref.edit().putString(ProfileActivity.PROFILE_EMAIL, email).apply();
                     BaseActivity.sharedPref.edit().putString(ProfileActivity.PROFILE_MID, mid).apply();
@@ -169,8 +169,7 @@ public class ProfilePresenter implements ProfileContract.Presenter {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                mProfileView.showInfo("unfinished interface");
-                //onInterfaceSuccess(response);
+                onInterfaceSuccess(response);
             }
         });
     }
@@ -254,7 +253,7 @@ public class ProfilePresenter implements ProfileContract.Presenter {
     private void onInterfaceSuccess(Response response) throws IOException {
         String resultJson = response.body().string();
         if (D) Log.d(TAG, resultJson);
-        BaseResponse result = new Gson().fromJson(resultJson, BaseResponse.class);
+        MiniResponse result = new Gson().fromJson(resultJson, MiniResponse.class);
 
         if (result.getStatus().equals("200")) {
             loadUserInfo();

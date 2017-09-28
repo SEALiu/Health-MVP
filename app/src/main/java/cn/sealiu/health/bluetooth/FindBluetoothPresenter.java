@@ -16,11 +16,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
-import cn.sealiu.health.data.bean.MiniResponse;
+import cn.sealiu.health.data.response.MiniResponse;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.SampleGattAttributes;
@@ -39,7 +40,6 @@ import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_FAILED_WRONG_MID;
 import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_FAILED_WRONG_UID;
 import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_SUCCESS;
 import static cn.sealiu.health.util.ProtocolMsg.RE_CERTIFICATION;
-import static cn.sealiu.health.util.ProtocolMsg.RS_EXECUTE_STATUS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -51,6 +51,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
     private static final String TAG = "FindBluetoothPresenter";
 
     private BluetoothAdapter mBluetoothAdapter;
+    private String dataCache = "";
 
     @NonNull
     private final FindBluetoothContract.View mFindBluetoothView;
@@ -149,15 +150,18 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
     }
 
     @Override
-    public void bindDevice2User(@NonNull String userId, @NonNull String machineId) {
-        String uid = checkNotNull(userId);
+    public void bindDevice2User(@NonNull String uuid, @NonNull String machineId) {
+        String id = checkNotNull(uuid);
         final String mid = checkNotNull(machineId);
 
         Request bindRequest = BaseActivity.buildHttpGetRequest("/user/bindMachine?" +
-                "userId=" + uid + "&" +
+                "userUid=" + id + "&" +
                 "userMid=" + mid);
 
         OkHttpClient okHttpClient = new OkHttpClient();
+
+        if (D) Log.d(TAG, bindRequest.url().toString());
+
         okHttpClient.newCall(bindRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -171,7 +175,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                         response.body().string(), MiniResponse.class);
 
                 if (miniResponse.getStatus().equals("200")) {
-                    sharedPref.edit().putString("mid", mid).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_MID, mid).apply();
                     mFindBluetoothView.gotoHome();
                 } else {
                     if (D) Log.e(TAG, "can not upload bind info to remote database");
@@ -206,22 +210,34 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
 
     @Override
     public void analyzeData(String data) {
-        if (D) Log.d(TAG, "receive data: " + data);
+        if (D) Log.d(TAG, "data: " + data + "\n length: " + data.length());
 
-        UnboxResponseProtocol protocol = new UnboxResponseProtocol(data);
-        if (data.length() >= 34 &&
-                protocol.getIsValidate() &&
-                protocol.getType().equals(RS_EXECUTE_STATUS)) {
+        // TODO: 2017/9/28 由于收到的报文错位：20字节 + 14字节
+        Pattern p24 = Pattern.compile("^FF24[\\dA-F]{24}FF0D0AFF23[\\dA-F]{2}");
+        Pattern p = Pattern.compile("[\\dA-F]{22}FF0D0A$");
+
+        if (p24.matcher(data.toUpperCase()).find()) {
+            dataCache = data;
+        } else if (p.matcher(data.toUpperCase()).find() && !dataCache.equals("")) {
+            data = dataCache + data;
+            dataCache = "";
+
+            UnboxResponseProtocol protocol = new UnboxResponseProtocol(data.substring(34, 68));
+
             String resultType = protocol.getExecuteResultType();
             String result = protocol.getExecuteResult();
+
+            if (D) Log.d(TAG, "type: " + resultType);
+            if (D) Log.d(TAG, "result: " + result);
+
+            String mid = protocol.getExecuteBindedData().substring(10, 18);
+            String uuid = sharedPref.getString(MainActivity.USER_UID, "");
 
             if (resultType.equals(RE_CERTIFICATION)) {
                 switch (result) {
                     case EXECUTE_SUCCESS:
-                        String mid = protocol.getExecuteBindedData().substring(10, 18);
-                        String userId = sharedPref.getString(MainActivity.USER_ID, "");
-                        if (!userId.equals("")) {
-                            bindDevice2User(userId, mid);
+                        if (!uuid.equals("")) {
+                            bindDevice2User(uuid, mid);
                         } else {
                             if (D) Log.e(TAG, "user id is empty");
                         }
@@ -237,11 +253,42 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                         mFindBluetoothView.bindWithMid();
                         break;
                     case EXECUTE_FAILED_WRONG_MID:
-                        mFindBluetoothView.showInfo(R.string.input_mid_error);
+                        // TODO: 2017/9/28 代码完成后需要恢复
+                        //mFindBluetoothView.showInfo(R.string.input_mid_error);
+                        //mFindBluetoothView.bindWithMid();
+
+                        // TODO: 2017/9/28 移除下面的代码
+                        if (!uuid.equals("")) {
+                            bindDevice2User(uuid, mid);
+                        }
                         break;
                 }
             }
+
         }
+        /*
+        switch (data) {
+            case "00":
+                mFindBluetoothView.requestCompleteMid();
+                sharedPref.edit().putString(MainActivity.DEVICE_MID, BIND_SUCCESS).apply();
+                mFindBluetoothView.gotoHome();
+                break;
+            case "01":
+                mFindBluetoothView.gotoLogin();
+                break;
+            case "02":
+                mFindBluetoothView.showInfo("该设备绑定用户已达到限制");
+                break;
+            case "03":
+                mFindBluetoothView.showInfo("请输入设备ID后8位进行验证");
+                mFindBluetoothView.bindWithMid();
+                break;
+            case "04":
+                mFindBluetoothView.showInfo("设备ID输入错误，请重新输入");
+                mFindBluetoothView.bindWithMid();
+                break;
+        }
+        */
     }
 
     @Override

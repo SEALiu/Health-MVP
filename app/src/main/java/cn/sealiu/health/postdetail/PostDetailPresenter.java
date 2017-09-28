@@ -12,13 +12,13 @@ import java.util.List;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.R;
-import cn.sealiu.health.data.bean.BaseResponse;
 import cn.sealiu.health.data.bean.Comment;
-import cn.sealiu.health.data.bean.CommentsResponse;
 import cn.sealiu.health.data.bean.Post;
-import cn.sealiu.health.data.bean.PostResponse;
-import cn.sealiu.health.data.bean.PostsDetailResponse;
 import cn.sealiu.health.data.bean.User;
+import cn.sealiu.health.data.response.CommentsResponse;
+import cn.sealiu.health.data.response.MiniResponse;
+import cn.sealiu.health.data.response.PostResponse;
+import cn.sealiu.health.data.response.PostsDetailResponse;
 import cn.sealiu.health.main.MainActivity;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -159,7 +159,7 @@ public class PostDetailPresenter implements PostDetailContract.Presenter {
             public void onResponse(Call call, Response response) throws IOException {
                 String resultJson = response.body().string();
 
-                BaseResponse base = new Gson().fromJson(resultJson, BaseResponse.class);
+                MiniResponse base = new Gson().fromJson(resultJson, MiniResponse.class);
                 if (base.getStatus().equals("200")) {
                     loadComment(mPostId, 0);
                 } else {

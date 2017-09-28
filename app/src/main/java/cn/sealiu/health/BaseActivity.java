@@ -3,7 +3,6 @@ package cn.sealiu.health;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,22 +27,13 @@ public class BaseActivity extends AppCompatActivity {
     // 模拟器调试地址
     //public static final String REMOTE_URL = "http://10.0.2.2:8080";
     // 真机调试地址
-    public static final String REMOTE_URL = "http://192.168.1.127:8080";
+    public static final String REMOTE_URL = "http://192.168.1.100:8080";
 
     public static SharedPreferences sharedPref, settingPref;
     public static ProgressDialog mProgressDialog;
 
     @SuppressLint("StaticFieldLeak")
     private static Context context;
-
-    public static IntentFilter gattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        return intentFilter;
-    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

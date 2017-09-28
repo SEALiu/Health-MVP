@@ -21,7 +21,7 @@ public class User implements Serializable {
     private final Integer gender;
 
     @Nullable
-    private final Integer age;
+    private final String age;
 
     @Nullable
     private final String typeId;
@@ -45,7 +45,7 @@ public class User implements Serializable {
     private String mid;
 
     public User(@Nullable String userUid, @Nullable String username, @NonNull Integer gender,
-                @Nullable Integer age, @Nullable String typeId, @Nullable String userId,
+                @Nullable String age, @Nullable String typeId, @Nullable String userId,
                 @Nullable Boolean logged, @Nullable String phone, @Nullable String email,
                 @Nullable String pwd, @Nullable String mid) {
         this.userUid = userUid;
@@ -111,7 +111,7 @@ public class User implements Serializable {
     }
 
     @Nullable
-    public Integer getAge() {
+    public String getAge() {
         return age;
     }
 

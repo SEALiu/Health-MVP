@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import java.io.IOException;
 
 import cn.sealiu.health.BaseActivity;
-import cn.sealiu.health.data.bean.BaseResponse;
+import cn.sealiu.health.data.response.LoginAndRegisterResponse;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.ActivityUtils;
 import cn.sealiu.health.util.Fun;
@@ -19,6 +19,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static cn.sealiu.health.BaseActivity.D;
+import static cn.sealiu.health.BaseActivity.IDENTITY_DOCTOR;
 import static cn.sealiu.health.BaseActivity.IDENTITY_USER;
 import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -88,21 +89,31 @@ public class LoginPresenter implements LoginContract.Presenter {
                 String json = response.body().string();
                 if (D) Log.d(TAG, json);
 
-                BaseResponse result;
+                LoginAndRegisterResponse result;
                 try {
-                    result = new Gson().fromJson(json, BaseResponse.class);
+                    result = new Gson().fromJson(json, LoginAndRegisterResponse.class);
                 } catch (Exception e) {
                     mLoginView.showLoginError("login interface error");
                     return;
                 }
 
                 if (result.getStatus().equals("200")) {
-                    //sharedPref.edit().putString("user-uuid", result.getUserUid()).apply();
+                    sharedPref.edit().putBoolean(MainActivity.USER_LOGIN, true).apply();
+                    sharedPref.edit().putString(MainActivity.USER_UID, result.getUserUid()).apply();
                     sharedPref.edit().putString(MainActivity.USER_ID, result.getUserId()).apply();
                     sharedPref.edit().putString(MainActivity.USER_TYPE, result.getTypeId()).apply();
-                    sharedPref.edit().putBoolean(MainActivity.USER_LOGIN, true).apply();
-                    // TODO: 2017/9/15 登录接口返回用户的 mid
-                    sharedPref.edit().putString(MainActivity.DEVICE_MID, result.getMid()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_MID, result.getUserMid()).apply();
+
+                    sharedPref.edit().putString(MainActivity.DEVICE_START_USING_DATE,
+                            result.getFirst_calibtime()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A, result.getComfort_A())
+                            .apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B, result.getComfort_B())
+                            .apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C, result.getComfort_C())
+                            .apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D, result.getComfort_D())
+                            .apply();
 
                     if (isRemember) {
                         sharedPref.edit().putString(LoginActivity.USER_PHONE, phone).apply();
@@ -114,13 +125,15 @@ public class LoginPresenter implements LoginContract.Presenter {
 
                     mLoginView.showLoginSuccess();
 
-                    if (result.getTypeId().equals(IDENTITY_USER) &&
-                            sharedPref.getString(MainActivity.DEVICE_MID, "").equals("")) {
-                        // logged user's role is patient
-                        // AND
-                        // there is no bluetooth mac address in shardPref
-                        mLoginView.gotoFindBluetooth();
-                    } else {
+                    if (result.getTypeId().equals(IDENTITY_USER)) {
+                        if (sharedPref.getString(MainActivity.DEVICE_ADDRESS, "").equals("") ||
+                                sharedPref.getString(MainActivity.DEVICE_MID, "").equals("")) {
+                            // there is no bluetooth mac address or
+                            // device machine id in shardPref
+                            mLoginView.gotoFindBluetooth();
+                        }
+
+                    } else if (result.getTypeId().equals(IDENTITY_DOCTOR)) {
                         mLoginView.gotoHome();
                     }
                 } else {

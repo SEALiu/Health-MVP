@@ -21,7 +21,9 @@ public interface FixCriterionContract {
 
         void gotoLogin();
 
-        void updateUI(int[] fixFlags);
+        int getCurrentFix();
+
+        void updateUI(boolean[] fixFlags);
     }
 
     interface Presenter extends BasePresenter {
@@ -30,5 +32,9 @@ public interface FixCriterionContract {
         void uploadFixResult();
 
         void doSentRequest(BluetoothGattCharacteristic c, BluetoothLeService s, String d);
+
+        BluetoothGattCharacteristic discoverCharacteristic(BluetoothLeService service);
+
+        void analyzeData(String data);
     }
 }

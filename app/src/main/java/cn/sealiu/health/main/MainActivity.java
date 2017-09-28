@@ -14,7 +14,6 @@ import android.view.MenuItem;
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.R;
 import cn.sealiu.health.bluetooth.FindBluetoothActivity;
-import cn.sealiu.health.fixcriterion.FixCriterionActivity;
 import cn.sealiu.health.forum.ForumActivity;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.message.MessageActivity;
@@ -24,6 +23,7 @@ import cn.sealiu.health.util.ActivityUtils;
 
 public class MainActivity extends BaseActivity {
     public static final String USER_LOGIN = "user_login";
+    public static final String USER_UID = "user_uid";
     public static final String USER_ID = "user_id";
     public static final String USER_TYPE = "user_type";
 
@@ -48,6 +48,11 @@ public class MainActivity extends BaseActivity {
     public static final String DEVICE_POWER = "device_power";
     public static final String DEVICE_STORAGE = "device_storage";
     public static final String DEVICE_TIME = "device_time";
+    public static final String DEVICE_START_USING_DATE = "device_start_using_date";
+    public static final String DEVICE_COMFORT_A = "COMFORT_A";
+    public static final String DEVICE_COMFORT_B = "COMFORT_B";
+    public static final String DEVICE_COMFORT_C = "COMFORT_C";
+    public static final String DEVICE_COMFORT_D = "COMFORT_D";
 
     private DrawerLayout mDrawerLayout;
 
@@ -77,34 +82,29 @@ public class MainActivity extends BaseActivity {
 //        sharedPref.edit().putBoolean(USER_LOGIN, true).apply();
 //        sharedPref.edit().putString(USER_ID, "0").apply();
 //        sharedPref.edit().putString(USER_TYPE, "1").apply();
-        sharedPref.edit().putString(DEVICE_MID, "fake-mid").apply();
-        sharedPref.edit().putString(DEVICE_NAME, "CH-08").apply();
-        sharedPref.edit().putString(DEVICE_ADDRESS, "E8:EB:11:0A:CE:7F").apply();
+//        sharedPref.edit().putString(DEVICE_MID, "fake-mid").apply();
+//        sharedPref.edit().putString(DEVICE_NAME, "CH-08").apply();
+//        sharedPref.edit().putString(DEVICE_ADDRESS, "E8:EB:11:0A:CE:7F").apply();
 
-        // TODO: 2017/9/19 change below code
-        if (!(sharedPref.getBoolean(MainActivity.FIX_CRITERION_BLANK, false) ||
-                sharedPref.getBoolean(MainActivity.FIX_CRITERION_LOOSE, false) ||
-                sharedPref.getBoolean(MainActivity.FIX_CRITERION_COMFORT, false) ||
-                sharedPref.getBoolean(MainActivity.FIX_CRITERION_TIGHT, false))) {
-
-            if (D) Log.d(TAG, "user never fix criterion");
-            startActivity(new Intent(this, FixCriterionActivity.class));
-            finish();
-        }
-
-        // check is logged in
+        // check mid is exist?
         if (!sharedPref.getBoolean(USER_LOGIN, false)) {
             if (D) Log.e(TAG, "user not logged in");
             startActivity(new Intent(this, LoginActivity.class));
             finish();
-        }
-
-        // check mid is exist?
-        if (sharedPref.getString(DEVICE_MID, "").equals("") ||
+        } else if (sharedPref.getString(DEVICE_MID, "").equals("") ||
                 sharedPref.getString(DEVICE_ADDRESS, "").equals("")) {
             startActivity(new Intent(this, FindBluetoothActivity.class));
             finish();
         }
+//        else if (!(sharedPref.getBoolean(MainActivity.FIX_CRITERION_BLANK, false) ||
+//                sharedPref.getBoolean(MainActivity.FIX_CRITERION_LOOSE, false) ||
+//                sharedPref.getBoolean(MainActivity.FIX_CRITERION_COMFORT, false) ||
+//                sharedPref.getBoolean(MainActivity.FIX_CRITERION_TIGHT, false))) {
+//
+//            if (D) Log.d(TAG, "user never fix criterion");
+//            startActivity(new Intent(this, FixCriterionActivity.class));
+//            finish();
+//        }
 
         // check logged user's identity and
         // create the presenter

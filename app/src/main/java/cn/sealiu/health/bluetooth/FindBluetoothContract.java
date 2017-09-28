@@ -16,17 +16,26 @@ public interface FindBluetoothContract {
 
     interface View extends BaseView<Presenter> {
         boolean isActive();
+
         void showNoAvailableService();
 
         void showInfo(int stringId);
 
         void showInfo(String errorMsg);
+
         void delayExit();
+
         void openBluetooth();
+
         void scanLeDevice(boolean enable);
+
         void gotoHome();
+
         void gotoLogin();
+
         void bindWithMid();
+
+        void requestCompleteMid();
     }
 
     interface Presenter extends BasePresenter {

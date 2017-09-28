@@ -176,6 +176,8 @@ public class BoxRequestProtocol extends ProtocolMsg {
      *                  传感器的位置名称2：0x000C               6
      *                  传感器的位置名称3：0x000D               6
      *                  传感器的位置名称4：0x000E               6
+     *                  获取设备ID高6字节 0x0010
+     *                  获取设备ID低6字节 0x0011
      * @return 数据包 0x07
      */
     public static String boxRequestDeviceParam(String paramName, @Nullable String paramValue) {

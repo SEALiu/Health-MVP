@@ -12,9 +12,9 @@ import java.util.List;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.R;
-import cn.sealiu.health.data.bean.BaseResponse;
 import cn.sealiu.health.data.bean.Post;
-import cn.sealiu.health.data.bean.PostListResponse;
+import cn.sealiu.health.data.response.MiniResponse;
+import cn.sealiu.health.data.response.PostListResponse;
 import cn.sealiu.health.main.MainActivity;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -113,7 +113,7 @@ public class ForumPresenter implements ForumContract.Presenter {
             public void onResponse(Call call, Response response) throws IOException {
                 String resultJson = response.body().string();
 
-                BaseResponse base = new Gson().fromJson(resultJson, BaseResponse.class);
+                MiniResponse base = new Gson().fromJson(resultJson, MiniResponse.class);
 
                 if (base.getStatus().equals("200")) {
                     mForumView.showRefresh();

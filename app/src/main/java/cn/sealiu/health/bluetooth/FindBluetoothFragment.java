@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -37,12 +38,12 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
+import cn.sealiu.health.util.ProtocolMsg;
 
 import static android.app.Activity.RESULT_OK;
 import static android.content.ContentValues.TAG;
@@ -104,6 +105,15 @@ public class FindBluetoothFragment extends Fragment
         }
     };
 
+    public static IntentFilter gattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        return intentFilter;
+    }
+
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -128,6 +138,15 @@ public class FindBluetoothFragment extends Fragment
 
                 mWantedCharacteristic = mPresenter.discoverCharacteristic(mBluetoothLeService);
                 if (mWantedCharacteristic != null) {
+                    final int charaProp = mWantedCharacteristic.getProperties();
+                    if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                        mBluetoothLeService.readCharacteristic(mWantedCharacteristic);
+                    }
+                    if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                        mBluetoothLeService.setCharacteristicNotification(
+                                mWantedCharacteristic, true);
+                    }
+
                     mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
                             BoxRequestProtocol.boxRequestCertification(""));
                 }
@@ -179,8 +198,9 @@ public class FindBluetoothFragment extends Fragment
                     getActivity()
                             .bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-                    getActivity().registerReceiver(mGattUpdateReceiver,
-                            BaseActivity.gattUpdateIntentFilter());
+                    //getActivity().startService(gattServiceIntent);
+
+                    getActivity().registerReceiver(mGattUpdateReceiver, gattUpdateIntentFilter());
                     if (mBluetoothLeService != null) {
                         final boolean result = mBluetoothLeService.connect(mChosenBTAddress);
                         if (D) Log.d(TAG, "Connect request result=" + result);
@@ -247,8 +267,11 @@ public class FindBluetoothFragment extends Fragment
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mServiceConnection != null && mBluetoothLeService != null) {
+        if (mServiceConnection != null) {
             getActivity().unbindService(mServiceConnection);
+        }
+
+        if (mBluetoothLeService != null) {
             mBluetoothLeService.disconnect();
             getActivity().unregisterReceiver(mGattUpdateReceiver);
         }
@@ -386,6 +409,14 @@ public class FindBluetoothFragment extends Fragment
         mBluetoothListView.setVisibility(View.GONE);
         mMachineIdET.setVisibility(View.VISIBLE);
         mVerifyBtn.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void requestCompleteMid() {
+        mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                BoxRequestProtocol.boxRequestDeviceParam(ProtocolMsg.DEVICE_PARAM_HIGH_MID, null));
+        mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                BoxRequestProtocol.boxRequestDeviceParam(ProtocolMsg.DEVICE_PARAM_LOW_MID, null));
     }
 
     @Override

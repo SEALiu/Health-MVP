@@ -5,7 +5,7 @@ package cn.sealiu.health.data.bean;
  * on 2017/7/24.
  */
 
-public class ResponsibleBean {
+public class Responsible {
     private int rId;
     private int docId;
     private int patId;

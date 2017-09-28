@@ -83,6 +83,7 @@
     <string name="no_message">没有消息</string>
     <string name="fix_criterion">定标</string>
     <string name="set_show_channel">设置显示通道数</string>
+    <string name="channel_number">显示的通道数量</string>
     <string name="logout">注销登录</string>
     <string name="about">关于 Health-MVP</string>
     <string name="request_post_cannot_be_null">帖子没有内容</string>
@@ -130,4 +131,6 @@
     <string name="add_comment">发布评论</string>
     <string name="add_comment_error">评论失败</string>
     <string name="comment_content_empty">评论内容不能为空</string>
+    <string name="channel_number_unchanged">显示通道数量未改变</string>
+    <string name="channel_number_error">设置通道数量最小为1，最大为4</string>
 </resources>

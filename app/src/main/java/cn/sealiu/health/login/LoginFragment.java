@@ -59,6 +59,8 @@ public class LoginFragment extends Fragment implements
         mPwdET = root.findViewById(R.id.password);
         mRememberCB = root.findViewById(R.id.remember_me);
 
+        mRememberCB.setChecked(true);
+
         root.findViewById(R.id.login_btn).setOnClickListener(this);
         root.findViewById(R.id.register_btn).setOnClickListener(this);
 

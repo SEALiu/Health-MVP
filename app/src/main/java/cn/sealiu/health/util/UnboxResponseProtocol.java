@@ -229,14 +229,14 @@ public class UnboxResponseProtocol extends ProtocolMsg {
         if (!this.type.equals(RS_STATUS_OR_PARAM)) return "";
         if (!this.msg.substring(4, 6).equals(RS_PARAM)) return "";
 
-        return msg.substring(10, 14);
+        return msg.substring(10, 28);
     }
 
     /**
      * 获取"0x23"类型报文中响应的请求指令类型。
      */
     public String getExecuteResultType() {
-        if (!this.type.equals(RS_EXECUTE_STATUS)) return "";
+        if (!this.type.equals(RS_EXECUTE_STATUS) && !this.type.equals(RS_ACK)) return "";
         return this.msg.substring(4, 6);
     }
 
@@ -244,7 +244,7 @@ public class UnboxResponseProtocol extends ProtocolMsg {
      * 获取"0x23"类型报文中响应的指令执行结果。
      */
     public String getExecuteResult() {
-        if (!this.type.equals(RS_EXECUTE_STATUS)) return "";
+        if (!this.type.equals(RS_EXECUTE_STATUS) && !this.type.equals(RS_ACK)) return "";
         return this.msg.substring(6, 8);
     }
 
@@ -253,7 +253,8 @@ public class UnboxResponseProtocol extends ProtocolMsg {
      * 例如：设备认证返回的设备id
      */
     public String getExecuteBindedData() {
-        if (!this.type.equals(RS_EXECUTE_STATUS)) return "";
+        // TODO: 2017/9/28 uncomment code below when 0x23 08 is done
+        //if (!this.type.equals(RS_EXECUTE_STATUS)) return "";
         return this.msg.substring(10, 28);
     }
 

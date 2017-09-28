@@ -12,6 +12,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
@@ -22,6 +23,7 @@ import cn.sealiu.health.util.UnboxResponseProtocol;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
+import static cn.sealiu.health.util.ProtocolMsg.RS_ACK;
 import static cn.sealiu.health.util.ProtocolMsg.RS_EXECUTE_STATUS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,6 +34,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class UserPresenter implements UserContract.Presenter {
     private static final String TAG = "UserPresenter";
+    private String dataCache = "";
+    private String highMid = "", lowMid = "";
 
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -162,13 +166,13 @@ public class UserPresenter implements UserContract.Presenter {
 
     @Override
     public void startRealtime() {
-        mUserView.showInfo("start realtime");
+        //mUserView.showInfo("start realtime");
         mUserView.requestRealtime(true);
     }
 
     @Override
     public void stopRealtime() {
-        mUserView.showInfo("stop realtime");
+        //mUserView.showInfo("stop realtime");
         mUserView.requestRealtime(false);
     }
 
@@ -399,7 +403,26 @@ public class UserPresenter implements UserContract.Presenter {
     public void analyzeData(String data) {
         if (D) Log.d(TAG, "receive data: " + data);
 
+        // TODO: 2017/9/28 由于收到的报文错位：20字节 + 14字节
+        Pattern p20 = Pattern.compile("^FF24[\\dA-F]{24}FF0D0AFF[\\dA-F]{4}");
+        Pattern p14 = Pattern.compile("[\\dA-F]{22}FF0D0A$");
+        //Pattern p17 = Pattern.compile("^FF[\\dA-F]{26}FF0D0A$");
+
+
+        if (p20.matcher(data.toUpperCase()).find()) {
+            dataCache = data;
+            return;
+        } else if (data.length() < 34 && p14.matcher(data.toUpperCase()).find() && !dataCache.equals("")) {
+            data = (dataCache + data).substring(34, 68);
+            dataCache = "";
+        }
+
+        if (D) Log.e(TAG, "data: " + data);
+
         UnboxResponseProtocol unboxResponseProtocol = new UnboxResponseProtocol(data);
+
+        if (D) Log.d(TAG, unboxResponseProtocol.getType());
+
         // 如果报文长度小于17字节，或者其无法匹配"FF[\\dA-F]{26}FF0D0A" 说明数据无效，丢弃不处理。
         if (data.length() >= 34 && unboxResponseProtocol.getIsValidate()) {
             switch (unboxResponseProtocol.getType()) {
@@ -414,6 +437,9 @@ public class UserPresenter implements UserContract.Presenter {
                 case RS_EXECUTE_STATUS:
                     // 处理指令执行结果
                     onExecutedResponse(unboxResponseProtocol);
+                    break;
+                case RS_ACK:
+                    onACKResponse(unboxResponseProtocol);
                     break;
             }
         }
@@ -439,8 +465,8 @@ public class UserPresenter implements UserContract.Presenter {
             return;
         }
 
-        Float slope = sharedPref.getFloat(MainActivity.DEVICE_SLOPE, 1f);
-        Float offset = sharedPref.getFloat(MainActivity.DEVICE_OFFSET, 0f);
+        Float slope = sharedPref.getFloat(MainActivity.DEVICE_SLOPE, 27.5f);
+        Float offset = sharedPref.getFloat(MainActivity.DEVICE_OFFSET, 89.5f);
 
         int indexTemp = 0;
         for (String item : unboxResponseProtocol.getData()) {
@@ -459,34 +485,50 @@ public class UserPresenter implements UserContract.Presenter {
 
         if (D) Log.d(TAG, "realtime lineChart updated --- " + "AA: " + voltages[0] + "\nBB: " +
                 voltages[1] + "\nCC: " + voltages[2] + "\nDD: " + voltages[3]);
+
+        if (D)
+            Log.d(TAG, "realtime lineChart updated --- " + "AA: " + voltages_status[0] + "\nBB: " +
+                    voltages_status[1] + "\nCC: " + voltages_status[2] + "\nDD: " + voltages_status[3]);
     }
 
     /**
-     * 收到"0x22"类型报文，处理（更新界面的电池余量，SD剩余容量，传感器状态）
+     * 收到"0x22"类型报文，处理（更新界面的电池余量，SD剩余容量，系统时间）
      *
      * @param unboxResponseProtocol 解析报文
      */
     private void onStatusOrParamResponse(UnboxResponseProtocol unboxResponseProtocol) {
         if (unboxResponseProtocol.isStatus()) {
-            String powerLeft = Integer.valueOf(unboxResponseProtocol.getPowerLeft(), 16) + "%";
-            String storageLeft = Integer.valueOf(unboxResponseProtocol.getStorageLeft(), 16) + " MB";
+            String powerLeft = Integer.valueOf(unboxResponseProtocol.getPowerLeft(), 16) + "";
+            String storageLeft = Integer.valueOf(unboxResponseProtocol.getStorageLeft(), 16) + "";
             String systemTime = unboxResponseProtocol.getSystemTime();
+
+            String year = Integer.valueOf(systemTime.substring(0, 4), 16) + "";
+            String month = Integer.valueOf(systemTime.substring(4, 6), 16) + "";
+            String day = Integer.valueOf(systemTime.substring(6, 8), 16) + "";
+
+            systemTime = year + "-" + month + "-" + day;
 
             sharedPref.edit().putString(MainActivity.DEVICE_POWER, powerLeft).apply();
             sharedPref.edit().putString(MainActivity.DEVICE_STORAGE, storageLeft).apply();
             sharedPref.edit().putString(MainActivity.DEVICE_TIME, systemTime).apply();
 
-            mUserView.updateBattery(powerLeft);
-            mUserView.updateStorage(storageLeft);
+            mUserView.updateBattery(powerLeft + "%");
+            mUserView.updateStorage(storageLeft + "MB");
             mUserView.updateTime(systemTime);
         }
 
         if (unboxResponseProtocol.isParam()) {
+            String data = unboxResponseProtocol.getParamContent();
+
             // 请求设备设置参数的响应
             switch (unboxResponseProtocol.getParamType()) {
                 case ProtocolMsg.DEVICE_PARAM_ENABLE_DATE:
+                    //FF220200010108E1070000000500FF0D0A
+                    sharedPref.edit().putString(MainActivity.DEVICE_ENABLE_DATE, "").apply();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_CHANNEL_NUM:
+                    int channelNum = Integer.valueOf(data.substring(0, 2), 16);
+                    sharedPref.edit().putInt(MainActivity.DEVICE_CHANNEL_NUM, channelNum).apply();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_ONE:
                     break;
@@ -497,10 +539,16 @@ public class UserPresenter implements UserContract.Presenter {
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR:
                     break;
                 case ProtocolMsg.DEVICE_PARAM_SLOPE:
+                    float slope = Integer.valueOf(data.substring(0, 4), 16) / 1000f;
+                    sharedPref.edit().putFloat(MainActivity.DEVICE_SLOPE, slope).apply();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_OFFSET:
+                    float offset = Integer.valueOf(data.substring(0, 4), 16) / 1000f;
+                    sharedPref.edit().putFloat(MainActivity.DEVICE_OFFSET, offset).apply();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_SAMPLING_RATE:
+                    int frequency = Integer.valueOf(data.substring(0, 4), 16);
+                    sharedPref.edit().putInt(MainActivity.DEVICE_SAMPLING_FREQUENCY, frequency).apply();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_CHANNEL_ONE:
                     break;
@@ -511,8 +559,16 @@ public class UserPresenter implements UserContract.Presenter {
                 case ProtocolMsg.DEVICE_PARAM_CHANNEL_FOUR:
                     break;
                 case ProtocolMsg.DEVICE_PARAM_HIGH_MID:
+                    highMid = data.substring(0, 12);
+                    if (!lowMid.equals("")) {
+                        sharedPref.edit().putString(MainActivity.DEVICE_COMPLETED_MID, highMid + lowMid).apply();
+                    }
                     break;
                 case ProtocolMsg.DEVICE_PARAM_LOW_MID:
+                    lowMid = unboxResponseProtocol.getParamContent().substring(0, 12);
+                    if (!highMid.equals("")) {
+                        sharedPref.edit().putString(MainActivity.DEVICE_COMPLETED_MID, highMid + lowMid).apply();
+                    }
                     break;
                 case ProtocolMsg.DEVICE_PARAM_DOCTOR_ID:
                     break;
@@ -532,19 +588,29 @@ public class UserPresenter implements UserContract.Presenter {
         if (executeResultType.equals(ProtocolMsg.RE_SYNC_TIME)) {
             if (executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
                 mUserView.updateTime(null);
+                mUserView.showInfo("时间已同步");
             }
         }
+    }
 
-        if (executeResultType.equals(ProtocolMsg.RE_RT_DATA_START)) {
-            if (executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
-                mUserView.displayRealtimeLinearChart(true);
-            }
+    private void onACKResponse(UnboxResponseProtocol unboxResponseProtocol) {
+        String executeResultType = unboxResponseProtocol.getExecuteResultType();
+        String executeResult = unboxResponseProtocol.getExecuteResult();
+
+        if (executeResultType.equals(ProtocolMsg.RE_SYNC_TIME) &&
+                executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
+            mUserView.updateTime(null);
+            mUserView.showInfo("时间已同步");
         }
 
-        if (executeResultType.equals(ProtocolMsg.RE_RT_DATA_STOP)) {
-            if (executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
-                mUserView.displayRealtimeLinearChart(false);
-            }
+        if (executeResultType.equals(ProtocolMsg.RE_RT_DATA_START) &&
+                executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
+            mUserView.showInfo("开始接收实时数据");
+        }
+
+        if (executeResultType.equals(ProtocolMsg.RE_RT_DATA_STOP) &&
+                executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
+            mUserView.showInfo("停止接收实时数据");
         }
     }
 }

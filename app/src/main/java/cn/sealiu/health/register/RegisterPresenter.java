@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 import cn.sealiu.health.BaseActivity;
-import cn.sealiu.health.data.bean.BaseResponse;
+import cn.sealiu.health.data.response.LoginAndRegisterResponse;
+import cn.sealiu.health.data.response.MiniResponse;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.ActivityUtils;
@@ -71,8 +72,8 @@ public class RegisterPresenter implements RegisterContract.Presenter {
 
         if (checkPhoneRegistered(okHttpClient, phone)) {
             mRegisterView.showPhoneRegistered();
-        } else if (!checkDoctorCode(okHttpClient, code)) {
-            mRegisterView.showRegisterError("code is incorrect");
+        } else if (isDoctor && !checkDoctorCode(okHttpClient, code)) {
+            mRegisterView.showRegisterError("身份验证码错误");
         } else {
             doRegister(okHttpClient, phone, pwd, isDoctor);
         }
@@ -142,7 +143,7 @@ public class RegisterPresenter implements RegisterContract.Presenter {
                 String json = response.body().string();
                 if (D) Log.d(TAG, json);
 
-                BaseResponse result = new Gson().fromJson(json, BaseResponse.class);
+                MiniResponse result = new Gson().fromJson(json, MiniResponse.class);
                 isRegistered = result.getResult().equals("true");
             }
         });
@@ -153,7 +154,7 @@ public class RegisterPresenter implements RegisterContract.Presenter {
     // check doctor code is correct
     // return a boolean value
     private boolean checkDoctorCode(OkHttpClient okHttp, String code) {
-        final boolean[] isCorrect = {true};
+        final boolean[] isCorrect = {false};
         Request checkCodeRequest = BaseActivity.buildHttpGetRequest("/sys/isCorrectCode?" +
                 "svalue=" + code);
 
@@ -169,7 +170,7 @@ public class RegisterPresenter implements RegisterContract.Presenter {
                 String json = response.body().string();
                 if (D) Log.d(TAG, json);
 
-                BaseResponse result = new Gson().fromJson(json, BaseResponse.class);
+                MiniResponse result = new Gson().fromJson(json, MiniResponse.class);
                 isCorrect[0] = result.getStatus().equals("200");
             }
         });
@@ -190,7 +191,7 @@ public class RegisterPresenter implements RegisterContract.Presenter {
                 "userPhone=" + phone + "&" +
                 "userPwd=" + Fun.encode("MD5", pwd) + "&" +
                 "t_id=" + identity + "&" +
-                "uuid=" + uuid);
+                "userUid=" + uuid);
         if (D) Log.d(TAG, registerRequest.url().toString());
 
         okHttp.newCall(registerRequest).enqueue(new Callback() {
@@ -204,16 +205,16 @@ public class RegisterPresenter implements RegisterContract.Presenter {
             public void onResponse(Call call, Response response) throws IOException {
                 String json = response.body().string();
 
-                BaseResponse result;
+                LoginAndRegisterResponse result;
                 try {
-                    result = new Gson().fromJson(json, BaseResponse.class);
+                    result = new Gson().fromJson(json, LoginAndRegisterResponse.class);
                 } catch (Exception e) {
                     mRegisterView.showRegisterError("register interface error");
                     return;
                 }
 
                 if (result.getStatus().equals("200")) {
-                    //sharedPref.edit().putString("user-uuid", uuid).apply();
+                    sharedPref.edit().putString(MainActivity.USER_UID, uuid).apply();
                     sharedPref.edit().putString(MainActivity.USER_ID, result.getUserId()).apply();
                     sharedPref.edit().putString(MainActivity.USER_TYPE, identity).apply();
                     sharedPref.edit().putBoolean(MainActivity.USER_LOGIN, true).apply();

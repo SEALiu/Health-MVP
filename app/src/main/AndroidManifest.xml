@@ -32,16 +32,17 @@
 
         <service
             android:name=".BluetoothLeService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <service
+            android:name=".SyncService"
             android:enabled="true" />
 
         <activity android:name=".BaseActivity" />
         <activity android:name=".login.LoginActivity" />
         <activity android:name=".bluetooth.FindBluetoothActivity" />
         <activity android:name=".userdetail.UserDetailActivity" />
-
-        <service
-            android:name=".SyncService"
-            android:enabled="true" />
 
         <activity
             android:name=".register.RegisterActivity"
@@ -57,16 +58,19 @@
             android:name=".forum.ForumActivity"
             android:parentActivityName=".main.MainActivity" />
         <activity
-            android:name=".postdetail.PostDetailActivity"
-            android:parentActivityName=".forum.ForumActivity" />
-        <activity
             android:name=".statistic.StatisticActivity"
             android:parentActivityName=".main.MainActivity" />
         <activity
             android:name=".setting.SettingActivity"
             android:parentActivityName=".main.MainActivity" />
 
-        <activity android:name=".fixcriterion.FixCriterionActivity"/>
+        <activity
+            android:name=".fixcriterion.FixCriterionActivity"
+            android:parentActivityName=".setting.SettingActivity" />
+
+        <activity
+            android:name=".postdetail.PostDetailActivity"
+            android:parentActivityName=".forum.ForumActivity" />
     </application>
 
 </manifest>

@@ -47,8 +47,6 @@ public interface UserContract {
 
         void requestDeviceStatus();
 
-        void displayRealtimeLinearChart(boolean active);
-
         void requestRealtime(boolean active);
 
         void updateLineChartRT(float value, String comfort, int sequence);

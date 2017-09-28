@@ -1,7 +1,14 @@
 package cn.sealiu.health.fixcriterion;
 
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -17,9 +24,11 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
+import cn.sealiu.health.util.BoxRequestProtocol;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
@@ -40,6 +49,82 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
     private List<RadioButton> fixRBs = new ArrayList<>();
     private List<TextView> fixResultTVs = new ArrayList<>();
 
+    private int currentFix = 0;
+    private boolean[] flags = {false, false, false, false};
+
+    /**
+     * -1: bluetooth isn't open
+     * 0: disconnected
+     * 1: searching
+     * 2: connected
+     */
+    public int mConnected = BluetoothLeService.STATE_DISCONNECTED;
+    public BluetoothLeService mBluetoothLeService;
+    public BluetoothGattCharacteristic mWantedCharacteristic;
+    public String mChosenBTName, mChosenBTAddress;
+
+    public ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            mBluetoothLeService = ((BluetoothLeService.LocalBinder) iBinder).getService();
+            if (!mBluetoothLeService.initialize()) {
+                if (D) Log.e(TAG, "Unable to initialize Bluetooth");
+                getActivity().finish();
+            }
+
+            if (mChosenBTAddress == null) {
+                mChosenBTName = sharedPref.getString(MainActivity.DEVICE_NAME, "未知设备");
+                mChosenBTAddress = sharedPref.getString(MainActivity.DEVICE_ADDRESS, "");
+            }
+
+            // Automatically connects to the device upon successful start-up initialization.
+            mBluetoothLeService.connect(mChosenBTAddress);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mBluetoothLeService = null;
+        }
+    };
+
+    public static IntentFilter gattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        return intentFilter;
+    }
+
+    public final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+                mConnected = BluetoothLeService.STATE_CONNECTED;
+                showMessage(getString(R.string.device_connected));
+            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                mConnected = BluetoothLeService.STATE_DISCONNECTED;
+                showMessage(getString(R.string.device_disconnected), R.string.reconnect,
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                manualConnect();
+                            }
+                        });
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                // Show all the supported services and characteristics on the user interface.
+                // You can get List<BluetoothGattService>
+                // through function: mBluetoothLeService.getSupportedGattServices()
+                if (D) Log.d(TAG, "BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED");
+
+                mWantedCharacteristic = mPresenter.discoverCharacteristic(mBluetoothLeService);
+            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+                mPresenter.analyzeData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+            }
+        }
+    };
+
     public FixCriterionFragment() {
     }
 
@@ -48,9 +133,15 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        mPresenter.start();
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Intent gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);
+        getContext().bindService(gattServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        getContext().registerReceiver(mGattUpdateReceiver, gattUpdateIntentFilter());
+        if (mBluetoothLeService != null) {
+            final boolean result = mBluetoothLeService.connect(mChosenBTAddress);
+            if (D) Log.d(TAG, "Connect request result=" + result);
+        }
     }
 
     @Nullable
@@ -88,11 +179,24 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
         fixButton.setOnClickListener(this);
         skipButton.setOnClickListener(this);
 
+        flags[0] = sharedPref.getBoolean(MainActivity.FIX_CRITERION_BLANK, false);
+        flags[1] = sharedPref.getBoolean(MainActivity.FIX_CRITERION_LOOSE, false);
+        flags[2] = sharedPref.getBoolean(MainActivity.FIX_CRITERION_COMFORT, false);
+        flags[3] = sharedPref.getBoolean(MainActivity.FIX_CRITERION_TIGHT, false);
+
         // init UI
         skipButton.setVisibility(View.GONE);
+        updateUI(flags);
 
         mPresenter.loadFixInfo();
         return root;
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mPresenter.start();
     }
 
     @Override
@@ -119,7 +223,12 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
     }
 
     @Override
-    public void updateUI(int[] fixFlag) {
+    public int getCurrentFix() {
+        return currentFix;
+    }
+
+    @Override
+    public void updateUI(boolean[] fixFlag) {
         if (fixFlag.length != 4) {
             if (D) Log.e(TAG, "func: updateUI(fixFlag) the size of elements in fixFlag is not 4");
             return;
@@ -127,8 +236,8 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
 
         int index = 0;
         boolean isSomeoneFixed = false;
-        for (int flag : fixFlag) {
-            if (flag == 0) { //unfixed
+        for (boolean flag : fixFlag) {
+            if (!flag) { //unfixed
                 fixResultTVs.get(index).setText(R.string.unfixed);
                 fixRBs.get(index).setEnabled(true);
             } else { //fixed
@@ -157,34 +266,46 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
             case R.id.fix_blank:
                 resetAllRadioButton();
                 fixBlankRB.setChecked(true);
+                currentFix = 1;
                 break;
             case R.id.fix_loose:
                 resetAllRadioButton();
                 fixLooseRB.setChecked(true);
+                currentFix = 2;
                 break;
             case R.id.fix_comfort:
                 resetAllRadioButton();
                 fixComfortRB.setChecked(true);
+                currentFix = 3;
                 break;
             case R.id.fix_tight:
                 resetAllRadioButton();
                 fixTightRB.setChecked(true);
+                currentFix = 4;
                 break;
             case R.id.skip:
-                // TODO: 2017/9/19 remove one line code below
-                sharedPref.edit().putBoolean(MainActivity.FIX_CRITERION_BLANK, true).apply();
-
-                getActivity().startActivity(new Intent(getActivity(), MainActivity.class));
-                getActivity().finish();
+//                getActivity().startActivity(new Intent(getActivity(), MainActivity.class));
+//                getActivity().finish();
                 break;
             case R.id.fix_criterion_btn:
-                if (fixBlankRB.isChecked() || fixLooseRB.isChecked() || fixComfortRB.isChecked() ||
-                        fixTightRB.isChecked()) {
+                if (!fixBlankRB.isChecked() && !fixLooseRB.isChecked() && !fixComfortRB.isChecked() &&
+                        !fixTightRB.isChecked()) {
                     showInfo(R.string.no_fix_type_selected);
                     return;
                 }
+                if (mWantedCharacteristic != null) {
+                    final int charaProp = mWantedCharacteristic.getProperties();
+                    if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                        mBluetoothLeService.readCharacteristic(mWantedCharacteristic);
+                    }
+                    if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                        mBluetoothLeService.setCharacteristicNotification(
+                                mWantedCharacteristic, true);
+                    }
 
-                mPresenter.doSentRequest(null, null, "");
+                    mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                            BoxRequestProtocol.boxRequestFixNorm());
+                }
                 break;
         }
     }
@@ -196,4 +317,24 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
         fixTightRB.setChecked(false);
     }
 
+    private void showMessage(String msg) {
+        if (getView() == null)
+            return;
+        Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG).show();
+    }
+
+    private void showMessage(String msg, int actionId, View.OnClickListener clickListener) {
+        if (getView() == null)
+            return;
+        Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG).setAction(actionId, clickListener).show();
+    }
+
+    private void manualConnect() {
+        if (D)
+            Log.d(TAG, "mBluetoothLeService is " + (mBluetoothLeService == null ? "is" : "is not") + " null");
+        if (mBluetoothLeService != null) {
+            mBluetoothLeService.connect(mChosenBTAddress);
+            mConnected = BluetoothLeService.STATE_CONNECTING;
+        }
+    }
 }

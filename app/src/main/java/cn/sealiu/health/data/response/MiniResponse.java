@@ -1,4 +1,4 @@
-package cn.sealiu.health.data.bean;
+package cn.sealiu.health.data.response;
 
 /**
  * Created by liuyang

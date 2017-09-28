@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -48,7 +49,6 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
 import cn.sealiu.health.login.LoginActivity;
@@ -61,16 +61,17 @@ import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class HomeUserFragment extends Fragment implements UserContract.View, View.OnClickListener {
+public class HomeUserFragment extends Fragment implements
+        UserContract.View,
+        View.OnClickListener {
     private static final int REQUEST_ENABLE_BT = 2;
+    public static final String BIND_SUCCESS = "00000000";
 
     private UserContract.Presenter mPresenter;
     private TextView batteryLeftTV, storageLeftTV, timeTV;
     private BarChart weekBarChart;
     private LineChart realtimeLineChart;
     private SwitchCompat realtimeSwitch;
-    private View noRealTimeView;
-    private View dotsHolder;
     Menu menu;
 
     private List<ImageView> dots = new ArrayList<>();
@@ -84,11 +85,11 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
      * 1: searching
      * 2: connected
      */
-    private int mConnected = BluetoothLeService.STATE_DISCONNECTED;
-    private BluetoothLeService mBluetoothLeService;
-    private BluetoothGattCharacteristic mWantedCharacteristic;
-    private String mChosenBTName, mChosenBTAddress;
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
+    public int mConnected = BluetoothLeService.STATE_DISCONNECTED;
+    public BluetoothLeService mBluetoothLeService;
+    public BluetoothGattCharacteristic mWantedCharacteristic;
+    public String mChosenBTName, mChosenBTAddress;
+    public ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) iBinder).getService();
@@ -112,7 +113,16 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
         }
     };
 
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+    public static IntentFilter gattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        return intentFilter;
+    }
+
+    public final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -120,7 +130,10 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
                 mConnected = BluetoothLeService.STATE_CONNECTED;
                 showMessage(getString(R.string.device_connected));
                 changeMenuBluetoothIcon(R.drawable.ic_bluetooth_connected_black_24dp);
-                realtimeSwitch.setEnabled(true);
+                if (realtimeSwitch != null) {
+                    realtimeSwitch.setEnabled(true);
+                    realtimeSwitch.setChecked(true);
+                }
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = BluetoothLeService.STATE_DISCONNECTED;
                 showMessage(getString(R.string.device_disconnected), R.string.reconnect,
@@ -141,7 +154,16 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
 
                 mWantedCharacteristic = mPresenter.discoverCharacteristic(mBluetoothLeService);
                 if (mWantedCharacteristic != null) {
-                    mPresenter.requestBaseInfo();
+                    final int charaProp = mWantedCharacteristic.getProperties();
+                    if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                        mBluetoothLeService.readCharacteristic(mWantedCharacteristic);
+                    }
+                    if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                        mBluetoothLeService.setCharacteristicNotification(
+                                mWantedCharacteristic, true);
+                    }
+
+                    mPresenter.onGattServicesDiscovered();
                 }
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 mPresenter.analyzeData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
@@ -162,18 +184,16 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        mPresenter.start();
-    }
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Intent gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);
+        getContext().bindService(gattServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+//        getActivity().startService(gattServiceIntent);
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mServiceConnection != null && mBluetoothLeService != null) {
-            getActivity().unbindService(mServiceConnection);
-            mBluetoothLeService.disconnect();
-            getActivity().unregisterReceiver(mGattUpdateReceiver);
+        getContext().registerReceiver(mGattUpdateReceiver, gattUpdateIntentFilter());
+        if (mBluetoothLeService != null) {
+            final boolean result = mBluetoothLeService.connect(mChosenBTAddress);
+            if (D) Log.d(TAG, "Connect request result=" + result);
         }
     }
 
@@ -207,21 +227,15 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
         storageLeftTV = root.findViewById(R.id.storage_left);
         timeTV = root.findViewById(R.id.time);
 
-        dotsHolder = root.findViewById(R.id.dots_holder);
-
         // chart
         weekBarChart = root.findViewById(R.id.week_barchart);
         realtimeLineChart = root.findViewById(R.id.realtime_linechart);
 
         realtimeSwitch = root.findViewById(R.id.switch_realtime);
-        noRealTimeView = root.findViewById(R.id.no_realtime);
 
         // set up realtime line chart with closing the switch button
         realtimeSwitch.setChecked(false);
         realtimeSwitch.setEnabled(false);
-        noRealTimeView.setVisibility(View.VISIBLE);
-        realtimeLineChart.setVisibility(View.GONE);
-        dotsHolder.setVisibility(View.GONE);
 
         root.findViewById(R.id.see_all_statistic).setOnClickListener(this);
         realtimeSwitch.setOnClickListener(this);
@@ -238,6 +252,7 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
             @Override
             public void onRefresh() {
                 mPresenter.checkBluetoothSupport(getContext());
+                mPresenter.requestBaseInfo();
             }
         });
 
@@ -248,16 +263,28 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
         // if every below is ok, then open bluetooth
         mPresenter.checkBluetoothSupport(getActivity());
 
-        Intent gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);
-        getContext().bindService(gattServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
-        getContext().registerReceiver(mGattUpdateReceiver, BaseActivity.gattUpdateIntentFilter());
-        if (mBluetoothLeService != null) {
-            final boolean result = mBluetoothLeService.connect(mChosenBTAddress);
-            if (D) Log.d(TAG, "Connect request result=" + result);
-        }
+        setupRealtimeLineChart();
+
+        setupBaseInfo();
 
         setHasOptionsMenu(true);
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mPresenter.start();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mServiceConnection != null && mBluetoothLeService != null) {
+            getActivity().unbindService(mServiceConnection);
+            mBluetoothLeService.disconnect();
+            getActivity().unregisterReceiver(mGattUpdateReceiver);
+        }
     }
 
     @Override
@@ -448,23 +475,6 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
     }
 
     @Override
-    public void displayRealtimeLinearChart(boolean active) {
-        realtimeSwitch.setChecked(active);
-        if (active) {
-            if (realtimeLineChart.getData() == null)
-                setupRealtimeLineChart();
-
-            noRealTimeView.setVisibility(View.GONE);
-            realtimeLineChart.setVisibility(View.VISIBLE);
-            dotsHolder.setVisibility(View.VISIBLE);
-        } else {
-            noRealTimeView.setVisibility(View.VISIBLE);
-            realtimeLineChart.setVisibility(View.GONE);
-            dotsHolder.setVisibility(View.GONE);
-        }
-    }
-
-    @Override
     public void requestRealtime(boolean active) {
         if (mConnected == BluetoothLeService.STATE_CONNECTED) {
             if (active)
@@ -500,7 +510,7 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
         }
 
         int lightIndex = Integer.valueOf(status);
-        if (lightIndex >= 0 && lightIndex <= 4) {
+        if (lightIndex >= 0 && lightIndex < 4) {
             dots.get(index).setImageDrawable(comfortableDrawables.get(lightIndex));
         }
     }
@@ -511,14 +521,14 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
 
         realtimeLineChart.setDoubleTapToZoomEnabled(false);
 
-        int whiteColor = ActivityCompat.getColor(getContext(), R.color.textOrIcons);
-        realtimeLineChart.getXAxis().setTextColor(whiteColor);
-        realtimeLineChart.getAxisLeft().setTextColor(whiteColor);
-        realtimeLineChart.getAxisRight().setTextColor(whiteColor);
+        int blackColor = ActivityCompat.getColor(getContext(), R.color.primaryText);
+        realtimeLineChart.getXAxis().setTextColor(blackColor);
+        realtimeLineChart.getAxisLeft().setTextColor(blackColor);
+        realtimeLineChart.getAxisRight().setTextColor(blackColor);
 
         Legend l = realtimeLineChart.getLegend();
         l.setForm(Legend.LegendForm.LINE);
-        l.setTextColor(whiteColor);
+        l.setTextColor(blackColor);
 
         // add an empty data object
         realtimeLineChart.setData(new LineData());
@@ -540,6 +550,12 @@ public class HomeUserFragment extends Fragment implements UserContract.View, Vie
                 realtimeLineChart.invalidate();
             }
         }
+    }
+
+    private void setupBaseInfo() {
+        batteryLeftTV.setText(String.format("%s%%", sharedPref.getString(MainActivity.DEVICE_POWER, "")));
+        storageLeftTV.setText(String.format("%sMB", sharedPref.getString(MainActivity.DEVICE_STORAGE, "")));
+        timeTV.setText(sharedPref.getString(MainActivity.DEVICE_TIME, ""));
     }
 
     private void showMessage(String msg) {

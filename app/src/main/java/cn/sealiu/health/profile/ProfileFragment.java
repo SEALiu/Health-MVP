@@ -19,8 +19,10 @@ import android.widget.TextView;
 
 import cn.sealiu.health.R;
 import cn.sealiu.health.data.bean.User;
+import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.main.ScrollChildSwipeRefreshLayout;
 
+import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ProfileFragment extends Fragment implements ProfileContract.View, View.OnClickListener {
@@ -135,9 +137,10 @@ public class ProfileFragment extends Fragment implements ProfileContract.View, V
                     genderTV.setText(R.string.male);
                 }
 
-                ageTV.setText(user.getAge() == null ? getString(R.string.undefine) : user.getAge() + "");
+                ageTV.setText(user.getAge() == null ? getString(R.string.undefine) : user.getAge());
                 phoneTV.setText(user.getPhone() == null ? getString(R.string.undefine) : user.getPhone());
                 emailTV.setText(user.getEmail() == null ? getString(R.string.undefine) : user.getEmail());
+                midTV.setText(sharedPref.getString(MainActivity.DEVICE_MID, ""));
                 midTV.setText(user.getMid());
             }
         });

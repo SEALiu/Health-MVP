@@ -3,7 +3,6 @@ package cn.sealiu.health.setting;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.NavUtils;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -15,8 +14,6 @@ import cn.sealiu.health.R;
 import cn.sealiu.health.forum.ForumActivity;
 import cn.sealiu.health.message.MessageActivity;
 import cn.sealiu.health.profile.ProfileActivity;
-import cn.sealiu.health.profile.ProfileFragment;
-import cn.sealiu.health.profile.ProfilePresenter;
 import cn.sealiu.health.util.ActivityUtils;
 
 public class SettingActivity extends BaseActivity {
@@ -80,7 +77,8 @@ public class SettingActivity extends BaseActivity {
                     public boolean onNavigationItemSelected(MenuItem menuItem) {
                         switch (menuItem.getItemId()) {
                             case R.id.home_menu_item:
-                                NavUtils.navigateUpFromSameTask(SettingActivity.this);
+                                //NavUtils.navigateUpFromSameTask(SettingActivity.this);
+                                onBackPressed();
                                 break;
                             case R.id.forum_menu_item:
                                 Intent forumIntent =
@@ -112,5 +110,10 @@ public class SettingActivity extends BaseActivity {
                         return true;
                     }
                 });
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 }

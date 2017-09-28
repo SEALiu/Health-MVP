@@ -168,6 +168,17 @@ public class BluetoothLeService extends Service {
         return super.onUnbind(intent);
     }
 
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public boolean stopService(Intent name) {
+        return super.stopService(name);
+    }
+
     /**
      * Initializes a reference to the local Bluetooth adapter.
      *
@@ -212,11 +223,7 @@ public class BluetoothLeService extends Service {
         if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null) {
             Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
-            if (mBluetoothGatt.connect()) {
-                return true;
-            } else {
-                return false;
-            }
+            return mBluetoothGatt.connect();
         }
 
         if (!BluetoothAdapter.checkBluetoothAddress(address))
@@ -259,6 +266,8 @@ public class BluetoothLeService extends Service {
         }
         mBluetoothGatt.close();
         mBluetoothGatt = null;
+
+        if (D) Log.d(TAG, "bluetooth le service closed");
     }
 
     /**

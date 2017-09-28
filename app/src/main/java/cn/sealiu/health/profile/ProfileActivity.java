@@ -3,7 +3,6 @@ package cn.sealiu.health.profile;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.NavUtils;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -59,7 +58,7 @@ public class ProfileActivity extends BaseActivity {
             String type = sharedPref.getString(MainActivity.USER_TYPE, "-1");
             String username = sharedPref.getString(PROFILE_USERNAME, "");
             int gender = sharedPref.getInt(PROFILE_GENDER, -1);
-            int age = sharedPref.getInt(PROFILE_AGE, -1);
+            String age = sharedPref.getString(PROFILE_AGE, "0");
             String phone = sharedPref.getString(PROFILE_PHONE, "");
             String email = sharedPref.getString(PROFILE_EMAIL, "");
             String mid = sharedPref.getString(PROFILE_MID, "");
@@ -102,7 +101,8 @@ public class ProfileActivity extends BaseActivity {
                     public boolean onNavigationItemSelected(MenuItem menuItem) {
                         switch (menuItem.getItemId()) {
                             case R.id.home_menu_item:
-                                NavUtils.navigateUpFromSameTask(ProfileActivity.this);
+                                //NavUtils.navigateUpFromSameTask(ProfileActivity.this);
+                                onBackPressed();
                                 break;
                             case R.id.forum_menu_item:
                                 Intent forumIntent =
@@ -134,5 +134,10 @@ public class ProfileActivity extends BaseActivity {
                         return true;
                     }
                 });
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 }

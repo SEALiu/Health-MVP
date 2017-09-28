@@ -9,7 +9,7 @@ import android.support.annotation.Nullable;
 public class ProtocolMsg {
     // 响应数据类型
     // TODO: 2017/7/21 由于蓝牙模块的硬件的程序写错了，实时数据的类型写成了 "01" ，实际应该为："21"，以后需要改过来
-    public static final String RS_DATA = "21";
+    public static final String RS_DATA = "01";
     public static final String RS_STATUS_OR_PARAM = "22";
     public static final String RS_EXECUTE_STATUS = "23";
     public static final String RS_ACK = "24";
