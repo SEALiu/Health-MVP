@@ -111,15 +111,25 @@ public class HomeDoctorFragment extends Fragment implements DoctorContract.View 
     }
 
     @Override
-    public void showUsers(List<User> users) {
-        mUserAdapter.replaceData(users);
+    public void showUsers(final List<User> users) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mUserAdapter.replaceData(users);
 
-        mNoUsersView.setVisibility(View.GONE);
+                mNoUsersView.setVisibility(View.GONE);
+            }
+        });
     }
 
     @Override
     public void showNoUsers() {
-        mNoUsersView.setVisibility(View.VISIBLE);
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mNoUsersView.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     @Override

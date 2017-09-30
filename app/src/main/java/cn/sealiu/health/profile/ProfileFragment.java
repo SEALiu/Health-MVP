@@ -22,6 +22,7 @@ import cn.sealiu.health.data.bean.User;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.main.ScrollChildSwipeRefreshLayout;
 
+import static cn.sealiu.health.BaseActivity.IDENTITY_DOCTOR;
 import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -30,6 +31,7 @@ public class ProfileFragment extends Fragment implements ProfileContract.View, V
     private static final String ARGUMENT_USER = "USER";
     private ProfileContract.Presenter mPresenter;
     private User user;
+    private String userType;
 
     private TextView usernameTV, genderTV, ageTV, phoneTV, emailTV, midTV;
 
@@ -52,6 +54,7 @@ public class ProfileFragment extends Fragment implements ProfileContract.View, V
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        userType = sharedPref.getString(MainActivity.USER_TYPE, "-1");
     }
 
     @Override
@@ -72,13 +75,16 @@ public class ProfileFragment extends Fragment implements ProfileContract.View, V
         emailTV = root.findViewById(R.id.email);
         midTV = root.findViewById(R.id.machine_id);
 
+        if (userType.equals(IDENTITY_DOCTOR)) {
+            root.findViewById(R.id.machine_id_holder).setVisibility(View.GONE);
+        }
+
         ScrollChildSwipeRefreshLayout swipeRefreshLayout = root.findViewById(R.id.refresh_layout);
         swipeRefreshLayout.setColorSchemeColors(
                 ContextCompat.getColor(getActivity(), R.color.colorPrimary),
                 ContextCompat.getColor(getActivity(), R.color.colorAccent),
                 ContextCompat.getColor(getActivity(), R.color.colorPrimaryDark)
         );
-
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override

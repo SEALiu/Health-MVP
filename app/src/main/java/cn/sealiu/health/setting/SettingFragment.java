@@ -21,6 +21,7 @@ import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
 
 import static cn.sealiu.health.BaseActivity.D;
+import static cn.sealiu.health.BaseActivity.IDENTITY_DOCTOR;
 import static cn.sealiu.health.BaseActivity.sharedPref;
 import static cn.sealiu.health.main.MainActivity.USER_LOGIN;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -36,6 +37,7 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
     private static final int REQUEST_FIX = 1;
     private SettingContract.Presenter mPresenter;
     private TextView showChannelNumTV;
+    private String userType;
 
     public SettingFragment() {
     }
@@ -47,6 +49,7 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        userType = sharedPref.getString(MainActivity.USER_TYPE, "-1");
     }
 
     @Override
@@ -63,11 +66,24 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
         showChannelNumTV = root.findViewById(R.id.show_channel_num);
         updateChannelNum();
 
-        root.findViewById(R.id.fix_criterion).setOnClickListener(this);
-        root.findViewById(R.id.set_show_channel).setOnClickListener(this);
         root.findViewById(R.id.logout).setOnClickListener(this);
-        root.findViewById(R.id.set_channel_name).setOnClickListener(this);
-        root.findViewById(R.id.set_network).setOnClickListener(this);
+
+        View showChannel = root.findViewById(R.id.set_show_channel);
+        View fixCriterion = root.findViewById(R.id.fix_criterion);
+        View setChannelName = root.findViewById(R.id.set_channel_name);
+        View setNetwork = root.findViewById(R.id.set_network);
+
+        setChannelName.setOnClickListener(this);
+        setNetwork.setOnClickListener(this);
+        fixCriterion.setOnClickListener(this);
+        showChannel.setOnClickListener(this);
+
+        if (userType.equals(IDENTITY_DOCTOR)) {
+            showChannel.setVisibility(View.GONE);
+            fixCriterion.setVisibility(View.GONE);
+            setChannelName.setVisibility(View.GONE);
+            setNetwork.setVisibility(View.GONE);
+        }
 
         return root;
     }

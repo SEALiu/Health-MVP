@@ -88,6 +88,8 @@ public class DoctorPresenter implements DoctorContract.Presenter {
                 mDoctorView.showUsers(users);
             }
         });
+
+        mDoctorView.setLoadingIndicator(false);
     }
 
     @Override

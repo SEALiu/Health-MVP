@@ -91,10 +91,6 @@ public class MainActivity extends BaseActivity {
             if (D) Log.e(TAG, "user not logged in");
             startActivity(new Intent(this, LoginActivity.class));
             finish();
-        } else if (sharedPref.getString(DEVICE_MID, "").equals("") ||
-                sharedPref.getString(DEVICE_ADDRESS, "").equals("")) {
-            startActivity(new Intent(this, FindBluetoothActivity.class));
-            finish();
         }
 //        else if (!(sharedPref.getBoolean(MainActivity.FIX_CRITERION_BLANK, false) ||
 //                sharedPref.getBoolean(MainActivity.FIX_CRITERION_LOOSE, false) ||
@@ -122,6 +118,13 @@ public class MainActivity extends BaseActivity {
                 new DoctorPresenter(doctorFragment);
                 break;
             case IDENTITY_USER:
+
+                if (sharedPref.getString(DEVICE_MID, "").equals("") ||
+                        sharedPref.getString(DEVICE_ADDRESS, "").equals("")) {
+                    startActivity(new Intent(this, FindBluetoothActivity.class));
+                    finish();
+                }
+
                 HomeUserFragment userFragment =
                         (HomeUserFragment) getSupportFragmentManager().findFragmentById(R.id.contentFrame);
                 if (userFragment == null) {
