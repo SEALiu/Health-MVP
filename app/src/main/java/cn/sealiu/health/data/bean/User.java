@@ -11,6 +11,8 @@ import java.io.Serializable;
  */
 
 public class User implements Serializable {
+    private String id;
+
     @Nullable
     private final String userUid;
 
@@ -59,6 +61,14 @@ public class User implements Serializable {
         this.email = email;
         this.pwd = pwd;
         this.mid = mid;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     @Nullable

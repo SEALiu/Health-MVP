@@ -137,4 +137,8 @@
     <string name="network_setting">网络设置</string>
     <string name="channel_name_unchanged">通道未命名</string>
     <string name="channel_name_toolong">通道命名最多两个字符</string>
+    <string name="patient_detail">患者详情</string>
+    <string name="base_info">%1$s | %2$s | %3$s岁</string>
+    <string name="send_msg">发送消息</string>
+    <string name="message_empty">信息为空，未发送</string>
 </resources>

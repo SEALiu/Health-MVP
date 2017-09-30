@@ -12,6 +12,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -39,23 +40,23 @@
                 android:id="@+id/base_info"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp" />
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp" />
 
             <TextView
                 android:id="@+id/phone_number"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp" />
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp" />
 
             <TextView
                 android:id="@+id/email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp" />
+                android:layout_margin="16dp" />
         </LinearLayout>
 
     </android.support.v7.widget.CardView>
@@ -95,8 +96,8 @@
 
     </LinearLayout>
 
-    <com.db.chart.view.BarChartView
-        android:id="@+id/statistic"
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/statistic_chart"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_marginTop="0dp"

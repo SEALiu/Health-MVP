@@ -42,7 +42,10 @@
         <activity android:name=".BaseActivity" />
         <activity android:name=".login.LoginActivity" />
         <activity android:name=".bluetooth.FindBluetoothActivity" />
-        <activity android:name=".userdetail.UserDetailActivity" />
+
+        <activity
+            android:name=".userdetail.UserDetailActivity"
+            android:parentActivityName=".main.MainActivity" />
 
         <activity
             android:name=".register.RegisterActivity"

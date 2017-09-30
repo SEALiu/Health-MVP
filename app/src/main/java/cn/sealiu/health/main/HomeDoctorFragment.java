@@ -37,7 +37,7 @@ public class HomeDoctorFragment extends Fragment implements DoctorContract.View 
         @Override
         public void onUserClick(User user) {
             Intent intent = new Intent(getContext(), UserDetailActivity.class);
-            intent.putExtra(UserDetailActivity.EXTRA_USER_ID, user.getUserId());
+            intent.putExtra(UserDetailActivity.EXTRA_USER_ID, user.getId());
 
             startActivity(intent);
         }
