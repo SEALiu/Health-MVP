@@ -5,7 +5,6 @@ import java.util.List;
 import cn.sealiu.health.BasePresenter;
 import cn.sealiu.health.BaseView;
 import cn.sealiu.health.data.bean.Message;
-import cn.sealiu.health.data.bean.Post;
 
 /**
  * Created by liuyang
@@ -22,10 +21,11 @@ public interface MessageContract {
 
         void showMessages(List<Message> messages);
 
-        void showInterfaceError();
+        void showInfo(String msg);
 
-        void showError(String error);
+        void showInfo(int strId);
 
+        void gotoLogin();
     }
 
     interface Presenter extends BasePresenter {

@@ -105,6 +105,9 @@ public class MainActivity extends BaseActivity {
         // check logged user's identity and
         // create the presenter
         String identity = sharedPref.getString(USER_TYPE, "-1");
+
+        if (D) Log.d(TAG, identity);
+
         switch (identity) {
             case IDENTITY_DOCTOR:
                 HomeDoctorFragment doctorFragment =

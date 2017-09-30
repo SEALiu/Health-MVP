@@ -470,8 +470,14 @@ public class HomeUserFragment extends Fragment implements
 
     @Override
     public void requestDeviceStatus() {
-        mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
-                BoxRequestProtocol.boxRequestStatus());
+        if (mConnected == BluetoothLeService.STATE_CONNECTED &&
+                mWantedCharacteristic != null &&
+                mBluetoothLeService != null) {
+            mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                    BoxRequestProtocol.boxRequestStatus());
+        } else {
+            showInfo("设备未连接");
+        }
     }
 
     @Override
