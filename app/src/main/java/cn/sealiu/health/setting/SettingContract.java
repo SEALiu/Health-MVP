@@ -23,6 +23,8 @@ public interface SettingContract {
         void showInfo(String msg);
 
         void showInfo(int strId);
+
+        void updateChannelNum();
     }
 
     interface Presenter extends BasePresenter {

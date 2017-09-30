@@ -133,4 +133,8 @@
     <string name="comment_content_empty">评论内容不能为空</string>
     <string name="channel_number_unchanged">显示通道数量未改变</string>
     <string name="channel_number_error">设置通道数量最小为1，最大为4</string>
+    <string name="set_channel_name">通道命名</string>
+    <string name="network_setting">网络设置</string>
+    <string name="channel_name_unchanged">通道未命名</string>
+    <string name="channel_name_toolong">通道命名最多两个字符</string>
 </resources>

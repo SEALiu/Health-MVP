@@ -64,6 +64,64 @@
         android:background="@color/colorDivider" />
 
     <LinearLayout
+        android:id="@+id/set_channel_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/textOrIcons"
+        android:orientation="horizontal"
+        android:padding="@dimen/activity_vertical_margin">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/set_channel_name" />
+
+        <TextView
+            android:id="@+id/set_channel_name_BB"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableEnd="@drawable/ic_chevron_right_black_24dp"
+            android:gravity="center_vertical" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@color/colorDivider" />
+
+    <LinearLayout
+        android:id="@+id/set_network"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/textOrIcons"
+        android:orientation="horizontal"
+        android:padding="@dimen/activity_vertical_margin">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/network_setting" />
+
+        <TextView
+            android:id="@+id/show_network"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableEnd="@drawable/ic_chevron_right_black_24dp"
+            android:gravity="center_vertical" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@color/colorDivider" />
+
+    <LinearLayout
         android:id="@+id/about"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

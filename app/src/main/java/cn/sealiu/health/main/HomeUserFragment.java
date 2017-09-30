@@ -503,7 +503,7 @@ public class HomeUserFragment extends Fragment implements
             // let the chart know it's data has changed
             realtimeLineChart.notifyDataSetChanged();
 
-            realtimeLineChart.setVisibleXRangeMaximum(10);
+            realtimeLineChart.setVisibleXRangeMaximum(15);
 
             // this automatically refreshes the chart (calls invalidate())
             realtimeLineChart.moveViewTo(data.getEntryCount() - 7, 50f, YAxis.AxisDependency.LEFT);

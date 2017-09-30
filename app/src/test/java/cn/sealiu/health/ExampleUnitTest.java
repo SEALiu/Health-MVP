@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.util.regex.Pattern;
 
+import cn.sealiu.health.setting.SettingFragment;
 import cn.sealiu.health.util.Fun;
 
 import static org.junit.Assert.assertEquals;
@@ -49,5 +50,10 @@ public class ExampleUnitTest {
                 System.out.println(data.substring(34, 68));
             }
         }
+    }
+
+    @Test
+    public void testChineseLen() {
+        System.out.print(SettingFragment.length("左肩") / 2);
     }
 }
