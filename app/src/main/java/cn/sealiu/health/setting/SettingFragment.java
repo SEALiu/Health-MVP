@@ -78,6 +78,8 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
         fixCriterion.setOnClickListener(this);
         showChannel.setOnClickListener(this);
 
+        root.findViewById(R.id.about).setOnClickListener(this);
+
         if (userType.equals(IDENTITY_DOCTOR)) {
             showChannel.setVisibility(View.GONE);
             fixCriterion.setVisibility(View.GONE);
@@ -123,6 +125,17 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.about:
+                new AlertDialog.Builder(getActivity())
+                        .setTitle(R.string.about)
+                        .setMessage(R.string.about_content)
+                        .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        }).show();
+                break;
             case R.id.logout:
                 new AlertDialog.Builder(getActivity())
                         .setTitle(R.string.logout)

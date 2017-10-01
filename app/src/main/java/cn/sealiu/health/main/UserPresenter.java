@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
+import cn.sealiu.health.data.local.HealthDbHelper;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.ProtocolMsg;
 import cn.sealiu.health.util.SampleGattAttributes;
@@ -408,7 +409,6 @@ public class UserPresenter implements UserContract.Presenter {
         Pattern p14 = Pattern.compile("[\\dA-F]{22}FF0D0A$");
         //Pattern p17 = Pattern.compile("^FF[\\dA-F]{26}FF0D0A$");
 
-
         if (p20.matcher(data.toUpperCase()).find()) {
             dataCache = data;
             return;
@@ -443,6 +443,12 @@ public class UserPresenter implements UserContract.Presenter {
                     break;
             }
         }
+    }
+
+    @Override
+    public void updateDatastatusTb(HealthDbHelper dbHelper) {
+        //从本地取设备启用日期
+
     }
 
     /**
@@ -523,8 +529,15 @@ public class UserPresenter implements UserContract.Presenter {
             // 请求设备设置参数的响应
             switch (unboxResponseProtocol.getParamType()) {
                 case ProtocolMsg.DEVICE_PARAM_ENABLE_DATE:
+                    // TODO: 2017/10/1 error data: 0108E1070000000500
                     //FF220200010108E1070000000500FF0D0A
-                    sharedPref.edit().putString(MainActivity.DEVICE_ENABLE_DATE, "").apply();
+                    if (D) Log.e(TAG, "DEVICE_PARAM_ENABLE_DATE: " + data);
+                    //sharedPref.edit().putString(MainActivity.DEVICE_ENABLE_DATE, "").apply();
+                    if (sharedPref.getString(MainActivity.DEVICE_START_USING_DATE, "").equals("")) {
+                        mUserView.gotoFixCriterion();
+                    } else {
+                        mUserView.updateDataStatus();
+                    }
                     break;
                 case ProtocolMsg.DEVICE_PARAM_CHANNEL_NUM:
                     int channelNum = Integer.valueOf(data.substring(0, 2), 16);

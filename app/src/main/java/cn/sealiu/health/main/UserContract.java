@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import cn.sealiu.health.BasePresenter;
 import cn.sealiu.health.BaseView;
 import cn.sealiu.health.BluetoothLeService;
+import cn.sealiu.health.data.local.HealthDbHelper;
 
 /**
  * Created by liuyang
@@ -22,6 +23,8 @@ public interface UserContract {
         void showInfo(int strId);
 
         void gotoLogin();
+
+        void gotoFixCriterion();
 
         void setLoadingIndicator(boolean active);
 
@@ -50,6 +53,8 @@ public interface UserContract {
         void requestRealtime(boolean active);
 
         void updateLineChartRT(float value, String comfort, int sequence);
+
+        void updateDataStatus();
     }
 
     interface Presenter extends BasePresenter {
@@ -95,5 +100,7 @@ public interface UserContract {
         BluetoothGattCharacteristic discoverCharacteristic(BluetoothLeService service);
 
         void analyzeData(String data);
+
+        void updateDatastatusTb(HealthDbHelper dbHelper);
     }
 }

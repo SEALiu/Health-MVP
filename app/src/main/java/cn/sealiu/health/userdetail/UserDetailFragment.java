@@ -37,7 +37,7 @@ public class UserDetailFragment extends Fragment implements UserDetailContract.V
 
     private static final String ARGUMENT_USER_ID = "USER_ID";
     private UserDetailContract.Presenter mPresenter;
-    private String userId;
+    private String userId, userName;
 
     private TextView baseInfoTV, phoneTV, emailTV;
     private AppCompatButton chooseStatisticBtn;
@@ -102,7 +102,11 @@ public class UserDetailFragment extends Fragment implements UserDetailContract.V
             case R.id.send_msg:
                 LayoutInflater inflater = getActivity().getLayoutInflater();
                 View dialogView = inflater.inflate(R.layout.send_msg_dia, null);
+                TextView receiversTV = dialogView.findViewById(R.id.receivers);
                 final EditText content = dialogView.findViewById(R.id.content);
+
+                userName = userName == null ? "未命名" : userName;
+                receiversTV.setText(String.format("收件人: %s", userName));
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
@@ -140,6 +144,8 @@ public class UserDetailFragment extends Fragment implements UserDetailContract.V
 
     @Override
     public void showUserDetail(final User user) {
+        userName = user.getUsername();
+
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

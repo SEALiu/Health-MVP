@@ -6,6 +6,16 @@
     android:orientation="vertical"
     android:padding="@dimen/activity_vertical_margin">
 
+    <TextView
+        android:id="@+id/receivers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:paddingBottom="8dp"
+        android:paddingTop="8dp"
+        android:textColor="@color/primaryText"
+        android:textSize="16sp" />
+
     <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -16,9 +26,9 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
+            android:hint="@string/write_something"
             android:minLines="5"
             android:textSize="14sp"
-            android:hint="@string/write_something"
             app:backgroundTint="@color/colorAccent"
             tools:ignore="LabelFor" />
     </android.support.design.widget.TextInputLayout>

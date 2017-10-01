@@ -126,11 +126,16 @@ public class LoginPresenter implements LoginContract.Presenter {
                     mLoginView.showLoginSuccess();
 
                     if (result.getTypeId().equals(IDENTITY_USER)) {
+                        if (D) Log.d(TAG, sharedPref.getString(MainActivity.DEVICE_ADDRESS, ""));
+                        if (D) Log.d(TAG, sharedPref.getString(MainActivity.DEVICE_MID, ""));
+
                         if (sharedPref.getString(MainActivity.DEVICE_ADDRESS, "").equals("") ||
                                 sharedPref.getString(MainActivity.DEVICE_MID, "").equals("")) {
                             // there is no bluetooth mac address or
                             // device machine id in shardPref
                             mLoginView.gotoFindBluetooth();
+                        } else {
+                            mLoginView.gotoHome();
                         }
 
                     } else if (result.getTypeId().equals(IDENTITY_DOCTOR)) {

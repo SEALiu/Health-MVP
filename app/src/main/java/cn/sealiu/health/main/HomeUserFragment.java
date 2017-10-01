@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -51,12 +52,13 @@ import java.util.TimerTask;
 
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
+import cn.sealiu.health.data.local.HealthDbHelper;
+import cn.sealiu.health.fixcriterion.FixCriterionActivity;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.statistic.StatisticActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
 
 import static android.app.Activity.RESULT_OK;
-import static android.content.ContentValues.TAG;
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -64,6 +66,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class HomeUserFragment extends Fragment implements
         UserContract.View,
         View.OnClickListener {
+
+    private static final String TAG = "HomeUserFragment";
+    private static final int REQUEST_FIX_CRITERION = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     public static final String BIND_SUCCESS = "00000000";
 
@@ -73,6 +78,9 @@ public class HomeUserFragment extends Fragment implements
     private LineChart realtimeLineChart;
     private SwitchCompat realtimeSwitch;
     Menu menu;
+
+    private HealthDbHelper dbHelper;
+    private SQLiteDatabase db;
 
     private List<ImageView> dots = new ArrayList<>();
     private List<String> labels = new ArrayList<>();
@@ -272,6 +280,21 @@ public class HomeUserFragment extends Fragment implements
     }
 
     @Override
+    public void updateDataStatus() {
+        if (dbHelper == null) dbHelper = new HealthDbHelper(getActivity());
+        db = dbHelper.getWritableDatabase();
+        String startUseDate = sharedPref.getString(MainActivity.DEVICE_START_USING_DATE, "");
+
+        if (startUseDate.equals("")) {
+            Log.d(TAG, "start use date is empty");
+            mPresenter.requestDeviceEnableDate();
+        } else {
+            Log.d(TAG, "start use date is not empty, " + startUseDate);
+            // TODO: 2017/10/1 init datastatus.tb or update
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         mPresenter.start();
@@ -297,6 +320,10 @@ public class HomeUserFragment extends Fragment implements
                 } else {
                     manualConnect();
                 }
+                break;
+            case REQUEST_FIX_CRITERION:
+                // TODO: 2017/10/1 检查定标结果
+                if (D) Log.d(TAG, "fix criterion result: " + resultCode);
                 break;
         }
     }
@@ -331,6 +358,7 @@ public class HomeUserFragment extends Fragment implements
                 }
                 break;
             case R.id.sync:
+                // TODO: 2017/10/1 检查本地数据表，更新，找到为上传的数据，检查网络，然后上传
                 mPresenter.syncLocalData();
                 break;
         }
@@ -373,6 +401,12 @@ public class HomeUserFragment extends Fragment implements
     public void gotoLogin() {
         getActivity().startActivity(new Intent(getActivity(), LoginActivity.class));
         getActivity().finish();
+    }
+
+    @Override
+    public void gotoFixCriterion() {
+        getActivity().startActivityForResult(new Intent(getActivity(), FixCriterionActivity.class),
+                REQUEST_FIX_CRITERION);
     }
 
     @Override
@@ -458,14 +492,22 @@ public class HomeUserFragment extends Fragment implements
 
     @Override
     public void requestDeviceParam(String paramName) {
-        mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
-                BoxRequestProtocol.boxRequestDeviceParam(paramName, null));
+        if (mConnected == BluetoothLeService.STATE_CONNECTED &&
+                mWantedCharacteristic != null &&
+                mBluetoothLeService != null) {
+            mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                    BoxRequestProtocol.boxRequestDeviceParam(paramName, null));
+        }
     }
 
     @Override
     public void setDeviceParam(String paramName, String value) {
-        mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
-                BoxRequestProtocol.boxRequestDeviceParam(paramName, value));
+        if (mConnected == BluetoothLeService.STATE_CONNECTED &&
+                mWantedCharacteristic != null &&
+                mBluetoothLeService != null) {
+            mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                    BoxRequestProtocol.boxRequestDeviceParam(paramName, value));
+        }
     }
 
     @Override

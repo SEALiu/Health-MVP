@@ -64,6 +64,14 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         noMsgView = root.findViewById(R.id.no_message);
         listView.setAdapter(mMsgAdapter);
 
+        getActivity().findViewById(R.id.fab_add_message)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        // TODO: 2017/10/1 群／单发消息
+                    }
+                });
+
         ScrollChildSwipeRefreshLayout swipeRefreshLayout = root.findViewById(R.id.refresh_layout);
         swipeRefreshLayout.setColorSchemeColors(
                 ContextCompat.getColor(getActivity(), R.color.colorPrimary),
