@@ -37,18 +37,16 @@ import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.components.YAxis.YAxisLabelPosition;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.IAxisValueFormatter;
-import com.github.mikephil.charting.formatter.LargeValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
@@ -75,10 +73,13 @@ import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.statistic.StatisticActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.Fun;
+import cn.sealiu.health.util.MyAxisValueFormatter;
+import cn.sealiu.health.util.WeekDayAxisValueFormatter;
 
 import static android.app.Activity.RESULT_OK;
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
+import static com.github.mikephil.charting.components.XAxis.XAxisPosition;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class HomeUserFragment extends Fragment implements
@@ -95,6 +96,7 @@ public class HomeUserFragment extends Fragment implements
     private TextView batteryLeftTV, storageLeftTV, timeTV;
     private BarChart weekBarChart;
     private LineChart realtimeLineChart;
+    private View noWeekData;
     private SwitchCompat realtimeSwitch;
     Menu menu;
 
@@ -257,6 +259,7 @@ public class HomeUserFragment extends Fragment implements
         // chart
         weekBarChart = root.findViewById(R.id.week_barchart);
         realtimeLineChart = root.findViewById(R.id.realtime_linechart);
+        noWeekData = root.findViewById(R.id.no_week_data);
 
         realtimeSwitch = root.findViewById(R.id.switch_realtime);
 
@@ -280,6 +283,9 @@ public class HomeUserFragment extends Fragment implements
             public void onRefresh() {
                 mPresenter.checkBluetoothSupport(getContext());
                 mPresenter.requestBaseInfo();
+
+                if (dbHelper == null) dbHelper = new HealthDbHelper(getActivity());
+                mPresenter.loadWeekBarChartData(dbHelper);
             }
         });
 
@@ -675,7 +681,14 @@ public class HomeUserFragment extends Fragment implements
     }
 
     @Override
-    public void updateWeekBarChart(ArrayList<BarEntry> yVals) {
+    public void updateWeekBarChart(ArrayList<BarEntry> yVals, boolean visible) {
+        if (!visible) {
+            noWeekData.setVisibility(View.VISIBLE);
+            return;
+        } else {
+            noWeekData.setVisibility(View.GONE);
+        }
+
         BarDataSet set1;
         if (weekBarChart.getData() != null && weekBarChart.getData().getDataSetCount() > 0) {
             set1 = (BarDataSet) weekBarChart.getData().getDataSetByIndex(0);
@@ -685,7 +698,7 @@ public class HomeUserFragment extends Fragment implements
         } else {
             set1 = new BarDataSet(yVals, "佩戴时间");
             set1.setDrawValues(false);
-            set1.setColor(ActivityCompat.getColor(getActivity(), R.color.blueSky));
+            set1.setColor(ActivityCompat.getColor(getActivity(), R.color.banana));
             set1.setValueTextColor(ActivityCompat.getColor(getActivity(), R.color.textOrIcons));
 
             ArrayList<IBarDataSet> dataSets = new ArrayList<>();
@@ -693,20 +706,21 @@ public class HomeUserFragment extends Fragment implements
 
             BarData data = new BarData(dataSets);
             data.setValueTextSize(10f);
-            data.setValueFormatter(new LargeValueFormatter());
             weekBarChart.setData(data);
         }
 
         // restrict the x-axis range
-        weekBarChart.getXAxis().setAxisMinimum(0);
+        //weekBarChart.getXAxis().setAxisMinimum(0);
 
         // barData.getGroupWith(...) is a helper that calculates the width each group needs based on the provided parameters
-        weekBarChart.getXAxis().setAxisMaximum(30);
+        weekBarChart.getXAxis().setAxisMaximum(7);
         weekBarChart.invalidate();
-        weekBarChart.animateXY(3000, 2000);
+        weekBarChart.animateXY(1000, 1500);
     }
 
     private void setupWeekBarChart() {
+        int white = ActivityCompat.getColor(getActivity(), R.color.textOrIcons);
+
         weekBarChart.setDrawGridBackground(false);
         weekBarChart.getDescription().setEnabled(false);
 
@@ -724,30 +738,26 @@ public class HomeUserFragment extends Fragment implements
 
         weekBarChart.setDoubleTapToZoomEnabled(false);
 
-        int white = ActivityCompat.getColor(getActivity(), R.color.textOrIcons);
         XAxis xAxis = weekBarChart.getXAxis();
         xAxis.setGranularity(1f);
+        xAxis.setPosition(XAxisPosition.BOTTOM);
         xAxis.setTextColor(white);
+        xAxis.setDrawGridLines(false);
         xAxis.setCenterAxisLabels(false);
-
-        xAxis.setValueFormatter(new IAxisValueFormatter() {
-            @Override
-            public String getFormattedValue(float value, AxisBase axis) {
-                return String.valueOf((int) value);
-            }
-        });
+        xAxis.setValueFormatter(new WeekDayAxisValueFormatter());
 
         YAxis leftAxis = weekBarChart.getAxisLeft();
-        leftAxis.setValueFormatter(new LargeValueFormatter());
         leftAxis.setDrawGridLines(false);
-        leftAxis.setSpaceTop(35f);
-        leftAxis.setAxisMinimum(0f);
+        leftAxis.setSpaceTop(15f);
+        leftAxis.setAxisMinimum(1f);
         leftAxis.setTextColor(white);
+        leftAxis.setPosition(YAxisLabelPosition.OUTSIDE_CHART);
+        leftAxis.setValueFormatter(new MyAxisValueFormatter());
 
         weekBarChart.getAxisRight().setEnabled(false);
 
         Legend l = weekBarChart.getLegend();
-        l.setForm(Legend.LegendForm.LINE);
+        l.setForm(Legend.LegendForm.SQUARE);
         l.setTextColor(Color.WHITE);
 
         MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view);

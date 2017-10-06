@@ -7,13 +7,17 @@ import android.bluetooth.BluetoothManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.util.Log;
 
+import com.github.mikephil.charting.data.BarEntry;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -569,10 +573,37 @@ public class UserPresenter implements UserContract.Presenter {
 
     @Override
     public void loadWeekBarChartData(HealthDbHelper dbHelper) {
+        boolean visible = false;
+        String mid = sharedPref.getString(MainActivity.DEVICE_MID, "");
+        // 采集率为每30秒一次，故一天的数据总量为：24 * 60 * 2 = 2880
+        Float dataNumOneDay = 24 * 60 * 2f;
+
+        ArrayList<BarEntry> yVals = new ArrayList<>();
+
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        // 获取近7天的数据(不包括今天)
+        DateFormat yMd = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
+        Calendar day = Calendar.getInstance();
+        for (int i = 0; i < 7; i++) {
+            day.add(Calendar.DATE, -1);
+            String dayStr = yMd.format(day.getTime());
+
+            String sql = "SELECT * FROM " + DataEntry.TABLE_NAME +
+                    " WHERE " + DataEntry.COLUMN_NAME_MID + " = '" + mid +
+                    "' AND " + DataEntry.COLUMN_NAME_TIME + " LIKE '" + dayStr + "%'";
+            Cursor c = db.rawQuery(sql, null);
+            if (D) Log.d(TAG, dayStr + " data count: " + c.getCount());
+
+            // 近7天，最少有一天有数据
+            if (c.getCount() != 0 && !visible) visible = true;
+            // y轴单位：小时(h)
+            yVals.add(new BarEntry(i, (c.getCount() / dataNumOneDay) * 24));
+            c.close();
+        }
+
+        mUserView.updateWeekBarChart(yVals, visible);
     }
 
     /**

@@ -56,7 +56,7 @@ public interface UserContract {
 
         void requestRealtime(boolean active);
 
-        void updateWeekBarChart(ArrayList<BarEntry> yVals);
+        void updateWeekBarChart(ArrayList<BarEntry> yVals, boolean visible);
 
         void updateLineChartRT(float value, String comfort, int sequence);
 
