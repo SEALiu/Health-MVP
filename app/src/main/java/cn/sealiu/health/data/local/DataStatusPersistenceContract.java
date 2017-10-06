@@ -16,6 +16,10 @@ public final class DataStatusPersistenceContract {
         public static final String TABLE_NAME = "datastatus";
         public static final String COLUMN_NAME_ID = "id";
         public static final String COLUMN_NAME_TIME = "time";
+        //status = 1: 已请求，本地保存
+        //status = 2: 已请求，设备无数据
+        //status = 3: 未请求
         public static final String COLUMN_NAME_STATUS = "status";
+        public static final String COLUMN_NAME_SYNC = "sync";
     }
 }

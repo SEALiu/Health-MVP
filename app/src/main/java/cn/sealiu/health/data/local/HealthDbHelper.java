@@ -40,9 +40,9 @@ public class HealthDbHelper extends SQLiteOpenHelper {
             "CREATE TABLE " + DataStatusPersistenceContract.DataStatusEntry.TABLE_NAME + " (" +
                     DataStatusEntry.COLUMN_NAME_ID + TEXT_TYPE + " PRIMARY KEY," +
                     DataStatusEntry.COLUMN_NAME_TIME + TEXT_TYPE + COMMA_SEP +
-                    DataStatusEntry.COLUMN_NAME_STATUS + INTEGER_TYPE +
+                    DataStatusEntry.COLUMN_NAME_STATUS + INTEGER_TYPE + COMMA_SEP +
+                    DataStatusEntry.COLUMN_NAME_SYNC + INTEGER_TYPE +
                     " )";
-
 
     public HealthDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

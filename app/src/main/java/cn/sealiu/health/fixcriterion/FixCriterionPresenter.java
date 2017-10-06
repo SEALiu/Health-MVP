@@ -61,6 +61,8 @@ public class FixCriterionPresenter implements FixCriterionContract.Presenter {
 
         if (d.length() > 0) {
             String protocol = BoxRequestProtocol.boxProtocol(d, uid);
+            if (D) Log.e(TAG, "fix criterion protocol: " + protocol);
+
             byte[] buff = BoxRequestProtocol.convertHex2Bytes(protocol);
             c.setValue(buff);
             s.writeCharacteristic(c);

@@ -2,6 +2,12 @@ package cn.sealiu.health;
 
 import org.junit.Test;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import cn.sealiu.health.setting.SettingFragment;
@@ -55,5 +61,42 @@ public class ExampleUnitTest {
     @Test
     public void testChineseLen() {
         System.out.print(SettingFragment.length("左肩") / 2);
+    }
+
+    @Test
+    public void testDateBetween() {
+        Date start = null;
+        Date end = null;
+
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        try {
+            start = df.parse("2017-8-1");
+            end = df.parse("2017-10-1");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        if (start != null && end != null) {
+            for (String str : Fun.getDatesBetweenTwoDate(start, end)) {
+                System.out.println(str);
+            }
+        }
+    }
+
+    @Test
+    public void testGetWeekDate() {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String[] leastWeek = new String[7];
+
+        Calendar today = Calendar.getInstance();
+
+        for (int i = 0; i < 7; i++) {
+            leastWeek[i] = df.format(today.getTime());
+            today.add(Calendar.DATE, -1);
+        }
+
+        for (String str : leastWeek) {
+            System.out.println(str);
+        }
     }
 }

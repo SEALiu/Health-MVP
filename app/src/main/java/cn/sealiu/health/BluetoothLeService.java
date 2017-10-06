@@ -168,12 +168,6 @@ public class BluetoothLeService extends Service {
         return super.onUnbind(intent);
     }
 
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand(intent, flags, startId);
-    }
-
     @Override
     public boolean stopService(Intent name) {
         return super.stopService(name);

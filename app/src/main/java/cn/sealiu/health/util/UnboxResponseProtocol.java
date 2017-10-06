@@ -129,9 +129,9 @@ public class UnboxResponseProtocol extends ProtocolMsg {
         int minute = Integer.parseInt(msg.substring(offset + 2, offset + 4), 16);
         int second = Integer.parseInt(msg.substring(offset + 4, offset + 6), 16);
 
-        return leftPad(hour + "", 2) + ":" +
-                leftPad(minute + "", 2) + ":" +
-                leftPad(second + "", 2);
+        return Fun.leftPad(hour + "", 2) + ":" +
+                Fun.leftPad(minute + "", 2) + ":" +
+                Fun.leftPad(second + "", 2);
     }
 
     /**

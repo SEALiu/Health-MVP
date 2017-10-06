@@ -16,13 +16,18 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
+import cn.sealiu.health.fixcriterion.FixCriterionActivity;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.IDENTITY_DOCTOR;
 import static cn.sealiu.health.BaseActivity.sharedPref;
+import static cn.sealiu.health.main.HomeUserFragment.mBluetoothLeService;
+import static cn.sealiu.health.main.HomeUserFragment.mConnected;
+import static cn.sealiu.health.main.HomeUserFragment.mWantedCharacteristic;
 import static cn.sealiu.health.main.MainActivity.USER_LOGIN;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -157,8 +162,14 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
                         }).show();
                 break;
             case R.id.fix_criterion:
-//                Intent intent = new Intent(getActivity(), FixCriterionActivity.class);
-//                startActivityForResult(intent, REQUEST_FIX);
+                if (mConnected == BluetoothLeService.STATE_CONNECTED &&
+                        mWantedCharacteristic != null &&
+                        mBluetoothLeService != null) {
+                    Intent intent = new Intent(getActivity(), FixCriterionActivity.class);
+                    startActivityForResult(intent, REQUEST_FIX);
+                } else {
+                    showInfo("设备未连接");
+                }
                 break;
             case R.id.set_show_channel:
                 LayoutInflater inflater = getActivity().getLayoutInflater();

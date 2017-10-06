@@ -27,7 +27,7 @@ public class BaseActivity extends AppCompatActivity {
     // 模拟器调试地址
     //public static final String REMOTE_URL = "http://10.0.2.2:8080";
     // 真机调试地址
-    public static final String REMOTE_URL = "http://192.168.1.100:8080";
+    public static final String REMOTE_URL = "http://192.168.1.101:8080";
 
     public static SharedPreferences sharedPref, settingPref;
     public static ProgressDialog mProgressDialog;

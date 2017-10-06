@@ -1,7 +1,5 @@
 package cn.sealiu.health.util;
 
-import android.support.annotation.Nullable;
-
 /**
  * Created by liuyang
  * on 2017/6/23.
@@ -57,26 +55,4 @@ public class ProtocolMsg {
     // 状态类型
     public static final String RS_STATUS = "01";
     public static final String RS_PARAM = "02";
-
-    static String rightPad(String originalString, int length) {
-
-        StringBuilder originalStringBuilder = new StringBuilder(originalString);
-        while (originalStringBuilder.length() < length) {
-            originalStringBuilder.append('0');
-        }
-        originalString = originalStringBuilder.toString();
-        return originalString;
-    }
-
-    static String leftPad(@Nullable String originalString, int length) {
-        if (originalString == null) originalString = "";
-        int strSize = originalString.length();
-        int padLen = length - strSize;
-        StringBuilder tempStr = new StringBuilder();
-        for (int i = 0; i < padLen; i++) {
-            tempStr.append('0');
-        }
-
-        return tempStr.append(originalString).toString();
-    }
 }

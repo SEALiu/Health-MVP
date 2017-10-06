@@ -5,11 +5,14 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -34,29 +37,44 @@ import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.formatter.LargeValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
+import cn.sealiu.health.data.local.DataStatusPersistenceContract.DataStatusEntry;
 import cn.sealiu.health.data.local.HealthDbHelper;
 import cn.sealiu.health.fixcriterion.FixCriterionActivity;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.statistic.StatisticActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
+import cn.sealiu.health.util.Fun;
 
 import static android.app.Activity.RESULT_OK;
 import static cn.sealiu.health.BaseActivity.D;
@@ -71,6 +89,7 @@ public class HomeUserFragment extends Fragment implements
     private static final int REQUEST_FIX_CRITERION = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     public static final String BIND_SUCCESS = "00000000";
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     private UserContract.Presenter mPresenter;
     private TextView batteryLeftTV, storageLeftTV, timeTV;
@@ -87,32 +106,32 @@ public class HomeUserFragment extends Fragment implements
     private List<Integer> colors = new ArrayList<>();
     List<Drawable> comfortableDrawables = new ArrayList<>();
 
+    private String historyDate = "";
     /**
      * -1: bluetooth isn't open
      * 0: disconnected
      * 1: searching
      * 2: connected
      */
-    public int mConnected = BluetoothLeService.STATE_DISCONNECTED;
-    public BluetoothLeService mBluetoothLeService;
-    public BluetoothGattCharacteristic mWantedCharacteristic;
-    public String mChosenBTName, mChosenBTAddress;
-    public ServiceConnection mServiceConnection = new ServiceConnection() {
+    public static int mConnected = BluetoothLeService.STATE_DISCONNECTED;
+    public static BluetoothLeService mBluetoothLeService;
+    public static BluetoothGattCharacteristic mWantedCharacteristic;
+    public static String mChosenBTName, mChosenBTAddress;
+    public static ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) iBinder).getService();
             if (!mBluetoothLeService.initialize()) {
                 if (D) Log.e(TAG, "Unable to initialize Bluetooth");
-                getActivity().finish();
-            }
+            } else {
+                if (mChosenBTAddress == null) {
+                    mChosenBTName = sharedPref.getString(MainActivity.DEVICE_NAME, "未知设备");
+                    mChosenBTAddress = sharedPref.getString(MainActivity.DEVICE_ADDRESS, "");
+                }
 
-            if (mChosenBTAddress == null) {
-                mChosenBTName = sharedPref.getString(MainActivity.DEVICE_NAME, "未知设备");
-                mChosenBTAddress = sharedPref.getString(MainActivity.DEVICE_ADDRESS, "");
+                // Automatically connects to the device upon successful start-up initialization.
+                mBluetoothLeService.connect(mChosenBTAddress);
             }
-
-            // Automatically connects to the device upon successful start-up initialization.
-            mBluetoothLeService.connect(mChosenBTAddress);
         }
 
         @Override
@@ -196,7 +215,6 @@ public class HomeUserFragment extends Fragment implements
         super.onCreate(savedInstanceState);
         Intent gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);
         getContext().bindService(gattServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
-//        getActivity().startService(gattServiceIntent);
 
         getContext().registerReceiver(mGattUpdateReceiver, gattUpdateIntentFilter());
         if (mBluetoothLeService != null) {
@@ -207,7 +225,8 @@ public class HomeUserFragment extends Fragment implements
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.home_user_frag, container, false);
 
         dots.add((ImageView) root.findViewById(R.id.dot_1));
@@ -271,7 +290,12 @@ public class HomeUserFragment extends Fragment implements
         // if every below is ok, then open bluetooth
         mPresenter.checkBluetoothSupport(getActivity());
 
+        setupWeekBarChart();
+
         setupRealtimeLineChart();
+
+        if (dbHelper == null) dbHelper = new HealthDbHelper(getActivity());
+        mPresenter.loadWeekBarChartData(dbHelper);
 
         setupBaseInfo();
 
@@ -279,19 +303,106 @@ public class HomeUserFragment extends Fragment implements
         return root;
     }
 
+    /**
+     * 维护本地数据状态表 datastatus.tb
+     * 该表保存了设备启用日期到当前日期的历史数据的请求情况(已请求本地缓存有数据，已请求但设备无数据，未请求)
+     */
     @Override
     public void updateDataStatus() {
         if (dbHelper == null) dbHelper = new HealthDbHelper(getActivity());
         db = dbHelper.getWritableDatabase();
-        String startUseDate = sharedPref.getString(MainActivity.DEVICE_START_USING_DATE, "");
+        String startUseStr = sharedPref.getString(MainActivity.DEVICE_START_USING_DATE, "");
 
-        if (startUseDate.equals("")) {
-            Log.d(TAG, "start use date is empty");
+        if (startUseStr.equals("")) {
+            if (D) Log.d(TAG, "start use date is empty");
             mPresenter.requestDeviceEnableDate();
         } else {
-            Log.d(TAG, "start use date is not empty, " + startUseDate);
-            // TODO: 2017/10/1 init datastatus.tb or update
+            if (D) Log.d(TAG, "start use date is not empty, " + startUseStr);
+
+            Date startUseDate = null;
+            Date now = null;
+            try {
+                startUseDate = df.parse(startUseStr);
+                now = df.parse(df.format(new Date()));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            if (startUseDate == null || now == null) return;
+
+            // 启用日期 到 当前日期 之间的 日期List
+            List<String> betweenDays = Fun.getDatesBetweenTwoDate(startUseDate, now);
+
+            for (String dateStr : betweenDays) {
+                String sql = "SELECT * FROM " + DataStatusEntry.TABLE_NAME +
+                        " WHERE " + DataStatusEntry.COLUMN_NAME_TIME + " = '" + dateStr + "'";
+                Cursor c = db.rawQuery(sql, null);
+
+                // 如果该日期 datastatus.tb 中没有，则插入该条数据，status 默认为3，表示："未请求"
+                if (!c.moveToFirst()) {
+                    ContentValues values = new ContentValues();
+                    values.put(DataStatusEntry.COLUMN_NAME_ID, UUID.randomUUID().toString());
+                    values.put(DataStatusEntry.COLUMN_NAME_TIME, dateStr);
+                    values.put(DataStatusEntry.COLUMN_NAME_STATUS, 3); //未请求
+
+                    db.insert(DataStatusEntry.TABLE_NAME, null, values);
+                }
+                c.close();
+            }
+            if (mConnected == BluetoothLeService.STATE_CONNECTED
+                    && mWantedCharacteristic != null
+                    && mBluetoothLeService != null) {
+                mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                        BoxRequestProtocol.boxStopUpload());
+                //向设备请求历史数据
+                updateHistoryData();
+            }
         }
+    }
+
+    /**
+     * 向设备请求设备历史数据
+     */
+    @Override
+    public void updateHistoryData() {
+
+        // 按照本地数据库 datastatus.tb 请求历史数据
+        String sql = "SELECT * FROM " + DataStatusEntry.TABLE_NAME +
+                " WHERE " + DataStatusEntry.COLUMN_NAME_STATUS + " = 3";
+        Cursor c = db.rawQuery(sql, null);
+
+        if (c.moveToFirst()) {
+            historyDate = c.getString(c.getColumnIndex(DataStatusEntry.COLUMN_NAME_TIME));
+            if (D) Log.e(TAG, "request history: Date is " + historyDate);
+
+            if (mConnected == BluetoothLeService.STATE_CONNECTED
+                    && mWantedCharacteristic != null
+                    && mBluetoothLeService != null) {
+                mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                        BoxRequestProtocol.boxRequestHistoryData(historyDate));
+            } else {
+                if (D) Log.e(TAG, "device disconnected");
+                showInfo("设备未连接");
+            }
+        } else {
+            if (D) Log.e(TAG, "history data request over");
+            showInfo("设备数据请求完毕");
+
+            // 继续接收实时数据
+            if (mConnected == BluetoothLeService.STATE_CONNECTED
+                    && mWantedCharacteristic != null
+                    && mBluetoothLeService != null) {
+                mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                        BoxRequestProtocol.boxStartUpload());
+            }
+        }
+        c.close();
+    }
+
+    @Override
+    public void saveHistoryData() {
+        if (dbHelper == null) dbHelper = new HealthDbHelper(getActivity());
+        mPresenter.doSaveHistoryData(dbHelper, historyDate);
     }
 
     @Override
@@ -561,6 +672,87 @@ public class HomeUserFragment extends Fragment implements
         if (lightIndex >= 0 && lightIndex < 4) {
             dots.get(index).setImageDrawable(comfortableDrawables.get(lightIndex));
         }
+    }
+
+    @Override
+    public void updateWeekBarChart(ArrayList<BarEntry> yVals) {
+        BarDataSet set1;
+        if (weekBarChart.getData() != null && weekBarChart.getData().getDataSetCount() > 0) {
+            set1 = (BarDataSet) weekBarChart.getData().getDataSetByIndex(0);
+            set1.setValues(yVals);
+            weekBarChart.getData().notifyDataChanged();
+            weekBarChart.notifyDataSetChanged();
+        } else {
+            set1 = new BarDataSet(yVals, "佩戴时间");
+            set1.setDrawValues(false);
+            set1.setColor(ActivityCompat.getColor(getActivity(), R.color.blueSky));
+            set1.setValueTextColor(ActivityCompat.getColor(getActivity(), R.color.textOrIcons));
+
+            ArrayList<IBarDataSet> dataSets = new ArrayList<>();
+            dataSets.add(set1);
+
+            BarData data = new BarData(dataSets);
+            data.setValueTextSize(10f);
+            data.setValueFormatter(new LargeValueFormatter());
+            weekBarChart.setData(data);
+        }
+
+        // restrict the x-axis range
+        weekBarChart.getXAxis().setAxisMinimum(0);
+
+        // barData.getGroupWith(...) is a helper that calculates the width each group needs based on the provided parameters
+        weekBarChart.getXAxis().setAxisMaximum(30);
+        weekBarChart.invalidate();
+        weekBarChart.animateXY(3000, 2000);
+    }
+
+    private void setupWeekBarChart() {
+        weekBarChart.setDrawGridBackground(false);
+        weekBarChart.getDescription().setEnabled(false);
+
+        weekBarChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(Entry e, Highlight h) {
+                Log.d(TAG, "entry: X = " + e.getX() + "// Y = " + e.getY());
+            }
+
+            @Override
+            public void onNothingSelected() {
+
+            }
+        });
+
+        weekBarChart.setDoubleTapToZoomEnabled(false);
+
+        int white = ActivityCompat.getColor(getActivity(), R.color.textOrIcons);
+        XAxis xAxis = weekBarChart.getXAxis();
+        xAxis.setGranularity(1f);
+        xAxis.setTextColor(white);
+        xAxis.setCenterAxisLabels(false);
+
+        xAxis.setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                return String.valueOf((int) value);
+            }
+        });
+
+        YAxis leftAxis = weekBarChart.getAxisLeft();
+        leftAxis.setValueFormatter(new LargeValueFormatter());
+        leftAxis.setDrawGridLines(false);
+        leftAxis.setSpaceTop(35f);
+        leftAxis.setAxisMinimum(0f);
+        leftAxis.setTextColor(white);
+
+        weekBarChart.getAxisRight().setEnabled(false);
+
+        Legend l = weekBarChart.getLegend();
+        l.setForm(Legend.LegendForm.LINE);
+        l.setTextColor(Color.WHITE);
+
+        MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view);
+        mv.setChartView(weekBarChart);
+        weekBarChart.setMarker(mv);
     }
 
     private void setupRealtimeLineChart() {

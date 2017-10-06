@@ -4,18 +4,26 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.util.Log;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
+import cn.sealiu.health.data.bean.DataBean;
 import cn.sealiu.health.data.local.HealthDbHelper;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.ProtocolMsg;
@@ -24,6 +32,8 @@ import cn.sealiu.health.util.UnboxResponseProtocol;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
+import static cn.sealiu.health.data.local.DataPersistenceContract.DataEntry;
+import static cn.sealiu.health.data.local.DataStatusPersistenceContract.DataStatusEntry;
 import static cn.sealiu.health.util.ProtocolMsg.RS_ACK;
 import static cn.sealiu.health.util.ProtocolMsg.RS_EXECUTE_STATUS;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -37,6 +47,11 @@ public class UserPresenter implements UserContract.Presenter {
     private static final String TAG = "UserPresenter";
     private String dataCache = "";
     private String highMid = "", lowMid = "";
+
+    // 1: realtime data;
+    // 2: history data;
+    private int realtimeOrHistoryDataFlag = 1;
+    public StringBuilder historyStringBuilder;
 
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -318,7 +333,15 @@ public class UserPresenter implements UserContract.Presenter {
                     requestSamplingFrequency();
                 }
             }, delay);
+            delay += period;
         }
+
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                startRealtime();
+            }
+        }, delay);
     }
 
     @Override
@@ -409,6 +432,30 @@ public class UserPresenter implements UserContract.Presenter {
         Pattern p14 = Pattern.compile("[\\dA-F]{22}FF0D0A$");
         //Pattern p17 = Pattern.compile("^FF[\\dA-F]{26}FF0D0A$");
 
+        // 请求历史数据的确认报文
+        Pattern pHistoryBegin = Pattern.compile("FF2403");
+
+        // 历史数据传输完成的确认报文
+        Pattern pHistoryEnd = Pattern.compile("2303");
+
+        if (pHistoryBegin.matcher(data.toUpperCase()).find()) {
+            realtimeOrHistoryDataFlag = 2;
+            historyStringBuilder = new StringBuilder();
+        }
+
+        if (pHistoryEnd.matcher(data.toUpperCase()).find()) {
+            realtimeOrHistoryDataFlag = 1;
+            // 该天的历史数据传输完成，下一步：
+            // 保存到本地数据库 data.tb
+            // 并更新 datastatus.tb
+            mUserView.saveHistoryData();
+        }
+
+        if (realtimeOrHistoryDataFlag == 2) {
+            historyStringBuilder.append(data);
+            return;
+        }
+
         if (p20.matcher(data.toUpperCase()).find()) {
             dataCache = data;
             return;
@@ -446,8 +493,85 @@ public class UserPresenter implements UserContract.Presenter {
     }
 
     @Override
-    public void updateDatastatusTb(HealthDbHelper dbHelper) {
-        //从本地取设备启用日期
+    public void doSaveHistoryData(HealthDbHelper dbHelper, String historyDate) {
+        List<DataBean> dataBeans = new ArrayList<>();
+        String mid = sharedPref.getString(MainActivity.DEVICE_MID, "");
+
+        Pattern pHistory = Pattern.compile("FF01[\\dA-F]{24}FF0D0A");
+        Matcher matcher = pHistory.matcher(historyStringBuilder.toString());
+
+        while (matcher.find()) {
+            String item = historyStringBuilder.toString().substring(
+                    matcher.start(),
+                    matcher.end()
+            );
+
+            if (D) Log.d(TAG, "history data: " + item);
+
+            UnboxResponseProtocol unboxResponseProtocol = new UnboxResponseProtocol(item);
+            if (unboxResponseProtocol.getIsValidate() && !historyDate.equals("")
+                    && !unboxResponseProtocol.getType().equals(RS_EXECUTE_STATUS)) {
+                String time = unboxResponseProtocol.getDataTime();
+
+                String sequenceNum = unboxResponseProtocol.getSequenceNum();
+                String[] data = unboxResponseProtocol.getData();
+
+                DataBean bean = new DataBean(mid,
+                        Integer.valueOf(sequenceNum),
+                        data[0],
+                        data[1],
+                        data[2],
+                        data[3],
+                        historyDate + " " + time
+                );
+                bean.setId(UUID.randomUUID().toString());
+                dataBeans.add(bean);
+            }
+        }
+
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        for (DataBean bean : dataBeans) {
+            ContentValues values = new ContentValues();
+
+            values.put(DataEntry.COLUMN_NAME_ID, bean.getId());
+            values.put(DataEntry.COLUMN_NAME_MID, bean.getMid());
+            values.put(DataEntry.COLUMN_NAME_SEQUENCE, bean.getSequence());
+            values.put(DataEntry.COLUMN_NAME_AA, bean.getAa());
+            values.put(DataEntry.COLUMN_NAME_BB, bean.getBb());
+            values.put(DataEntry.COLUMN_NAME_CC, bean.getCc());
+            values.put(DataEntry.COLUMN_NAME_DD, bean.getDd());
+            values.put(DataEntry.COLUMN_NAME_TIME, bean.getTime());
+
+            db.insert(DataEntry.TABLE_NAME, null, values);
+        }
+
+        String sql;
+        if (historyStringBuilder.length() == 0) {
+            // 已请求，设备无数据
+            sql = "UPDATE " + DataStatusEntry.TABLE_NAME + " SET " +
+                    DataStatusEntry.COLUMN_NAME_STATUS + " = 2 WHERE " +
+                    DataStatusEntry.COLUMN_NAME_TIME + " = '" + historyDate + "'";
+        } else {
+            // 已请求，本地保存
+            sql = "UPDATE " + DataStatusEntry.TABLE_NAME + " SET " +
+                    DataStatusEntry.COLUMN_NAME_STATUS + " = 1 WHERE " +
+                    DataStatusEntry.COLUMN_NAME_TIME + " = '" + historyDate + "'";
+        }
+
+        if (D) Log.e(TAG, "update datastatus sql is " + sql);
+
+        db.execSQL(sql);
+
+        //继续请求历史数据
+        mUserView.updateHistoryData();
+    }
+
+    @Override
+    public void loadWeekBarChartData(HealthDbHelper dbHelper) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     }
 
@@ -528,6 +652,8 @@ public class UserPresenter implements UserContract.Presenter {
 
             // 请求设备设置参数的响应
             switch (unboxResponseProtocol.getParamType()) {
+                // 获取向设备请求启用参数，如果存在则保存至本地 shared preference
+                // 如果没有则需要进行定标操作
                 case ProtocolMsg.DEVICE_PARAM_ENABLE_DATE:
                     // TODO: 2017/10/1 error data: 0108E1070000000500
                     //FF220200010108E1070000000500FF0D0A

@@ -4,6 +4,10 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import com.github.mikephil.charting.data.BarEntry;
+
+import java.util.ArrayList;
+
 import cn.sealiu.health.BasePresenter;
 import cn.sealiu.health.BaseView;
 import cn.sealiu.health.BluetoothLeService;
@@ -52,9 +56,15 @@ public interface UserContract {
 
         void requestRealtime(boolean active);
 
+        void updateWeekBarChart(ArrayList<BarEntry> yVals);
+
         void updateLineChartRT(float value, String comfort, int sequence);
 
         void updateDataStatus();
+
+        void updateHistoryData();
+
+        void saveHistoryData();
     }
 
     interface Presenter extends BasePresenter {
@@ -101,6 +111,8 @@ public interface UserContract {
 
         void analyzeData(String data);
 
-        void updateDatastatusTb(HealthDbHelper dbHelper);
+        void doSaveHistoryData(HealthDbHelper dbHelper, String historyDate);
+
+        void loadWeekBarChartData(HealthDbHelper dbHelper);
     }
 }

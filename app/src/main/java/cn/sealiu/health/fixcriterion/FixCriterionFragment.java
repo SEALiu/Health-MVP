@@ -1,14 +1,12 @@
 package cn.sealiu.health.fixcriterion;
 
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -32,6 +30,12 @@ import cn.sealiu.health.util.BoxRequestProtocol;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
+import static cn.sealiu.health.main.HomeUserFragment.gattUpdateIntentFilter;
+import static cn.sealiu.health.main.HomeUserFragment.mBluetoothLeService;
+import static cn.sealiu.health.main.HomeUserFragment.mChosenBTAddress;
+import static cn.sealiu.health.main.HomeUserFragment.mConnected;
+import static cn.sealiu.health.main.HomeUserFragment.mServiceConnection;
+import static cn.sealiu.health.main.HomeUserFragment.mWantedCharacteristic;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -52,50 +56,6 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
     private int currentFix = 0;
     private boolean[] flags = {false, false, false, false};
 
-    /**
-     * -1: bluetooth isn't open
-     * 0: disconnected
-     * 1: searching
-     * 2: connected
-     */
-    public int mConnected = BluetoothLeService.STATE_DISCONNECTED;
-    public BluetoothLeService mBluetoothLeService;
-    public BluetoothGattCharacteristic mWantedCharacteristic;
-    public String mChosenBTName, mChosenBTAddress;
-
-    public ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            mBluetoothLeService = ((BluetoothLeService.LocalBinder) iBinder).getService();
-            if (!mBluetoothLeService.initialize()) {
-                if (D) Log.e(TAG, "Unable to initialize Bluetooth");
-                getActivity().finish();
-            }
-
-            if (mChosenBTAddress == null) {
-                mChosenBTName = sharedPref.getString(MainActivity.DEVICE_NAME, "未知设备");
-                mChosenBTAddress = sharedPref.getString(MainActivity.DEVICE_ADDRESS, "");
-            }
-
-            // Automatically connects to the device upon successful start-up initialization.
-            mBluetoothLeService.connect(mChosenBTAddress);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            mBluetoothLeService = null;
-        }
-    };
-
-    public static IntentFilter gattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        return intentFilter;
-    }
-
     public final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -105,13 +65,23 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
                 showMessage(getString(R.string.device_connected));
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = BluetoothLeService.STATE_DISCONNECTED;
-                showMessage(getString(R.string.device_disconnected), R.string.reconnect,
-                        new View.OnClickListener() {
+
+                new AlertDialog.Builder(getActivity())
+                        .setCancelable(false)
+                        .setTitle(R.string.device_disconnected)
+                        .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(View view) {
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                getActivity().finish();
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .setPositiveButton(R.string.reconnect, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
                                 manualConnect();
                             }
-                        });
+                        }).show();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // Show all the supported services and characteristics on the user interface.
                 // You can get List<BluetoothGattService>
