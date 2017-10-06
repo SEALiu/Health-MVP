@@ -11,6 +11,7 @@ import com.github.mikephil.charting.utils.MPPointF;
 import com.github.mikephil.charting.utils.Utils;
 
 import cn.sealiu.health.R;
+import cn.sealiu.health.statistic.StatisticFragment;
 
 
 /**
@@ -21,11 +22,12 @@ import cn.sealiu.health.R;
 public class MyMarkerView extends MarkerView {
 
     private TextView tvContent;
+    private int type;
 
-    public MyMarkerView(Context context, int layoutResource) {
+    public MyMarkerView(Context context, int layoutResource, int type) {
         super(context, layoutResource);
-
-        tvContent = (TextView) findViewById(R.id.tvContent);
+        this.type = type;
+        tvContent = findViewById(R.id.tvContent);
     }
 
     // callbacks everytime the MarkerView is redrawn, can be used to update the
@@ -33,15 +35,33 @@ public class MyMarkerView extends MarkerView {
     @Override
     public void refreshContent(Entry e, Highlight highlight) {
 
+        float y = 0f;
+
         if (e instanceof CandleEntry) {
-
             CandleEntry ce = (CandleEntry) e;
-
-            tvContent.setText(String.format("%s小时", Utils.formatNumber(ce.getHigh(), 2, true)));
+            y = ce.getHigh();
         } else {
-
-            tvContent.setText(String.format("%s小时", Utils.formatNumber(e.getY(), 2, true)));
+            y = e.getY();
+            if (type == StatisticFragment.TYPE_DAY)
+                tvContent.setText(String.format("%s分钟", Utils.formatNumber(e.getY(), 0, true)));
         }
+
+        switch (type) {
+            case StatisticFragment.TYPE_DAY:
+                tvContent.setText(String.format("%s分钟",
+                        Utils.formatNumber(y, 0, true)));
+                break;
+            case StatisticFragment.TYPE_WEEK:
+            case StatisticFragment.TYPE_MONTH:
+                tvContent.setText(String.format("%s小时",
+                        Utils.formatNumber(y, 2, true)));
+                break;
+            case StatisticFragment.TYPE_YEAR:
+                tvContent.setText(String.format("%s天",
+                        Utils.formatNumber(y, 2, true)));
+                break;
+        }
+
 
         super.refreshContent(e, highlight);
     }

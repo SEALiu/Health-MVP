@@ -144,4 +144,6 @@
     <string name="close">关闭</string>
     <string name="about_content">Health-Version1.0</string>
     <string name="no_data">暂无数据</string>
+    <string name="choose_date">选择日期</string>
+    <string name="comfort_statistic">舒适度统计</string>
 </resources>

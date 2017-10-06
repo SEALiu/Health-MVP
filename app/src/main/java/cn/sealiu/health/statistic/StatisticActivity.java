@@ -6,6 +6,7 @@ import android.support.v7.widget.Toolbar;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.R;
+import cn.sealiu.health.data.local.HealthDbHelper;
 import cn.sealiu.health.util.ActivityUtils;
 
 public class StatisticActivity extends BaseActivity {
@@ -34,7 +35,7 @@ public class StatisticActivity extends BaseActivity {
                     getSupportFragmentManager(), statisticFragment, R.id.contentFrame);
         }
 
-        new StatisticPresenter(statisticFragment);
+        new StatisticPresenter(statisticFragment, new HealthDbHelper(this));
     }
 
     @Override

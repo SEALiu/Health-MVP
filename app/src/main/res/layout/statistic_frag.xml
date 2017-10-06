@@ -1,19 +1,252 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<cn.sealiu.health.main.ScrollChildSwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/refresh_layout"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/textOrIcons">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <LinearLayout
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:background="@color/lightBg">
+
+        <LinearLayout
+            android:id="@+id/statistic_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="0dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="16dp"
+            android:background="@color/colorPrimary"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:id="@+id/statistic_title_main"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:text="@string/statistic_title"
+                android:textColor="@color/textOrIcons"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/choose_statistic"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/ic_chevron_right_light_24dp"
+                android:text="@string/by_day"
+                android:textColor="@color/textOrIcons" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/choose_date"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="@string/choose_date"
+                android:textColor="@color/textOrIcons" />
+        </LinearLayout>
 
         <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/statistic_barchart"
+            android:id="@+id/statistic_chart"
             android:layout_width="match_parent"
-            android:layout_height="200dp" />
-    </LinearLayout>
-</cn.sealiu.health.main.ScrollChildSwipeRefreshLayout>
+            android:layout_height="200dp"
+            android:layout_marginTop="0dp"
+            android:background="@color/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/statistic_title" />
+
+        <LinearLayout
+            android:id="@+id/no_data"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@color/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/statistic_title">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_insert_chart_24dp"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/textOrIcons"
+                android:layout_marginTop="8dp"
+                android:text="@string/no_data" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/comfort_statistic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/comfort_statistic"
+            android:textColor="@color/primaryText"
+            android:textSize="16sp"
+            android:padding="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/statistic_chart" />
+
+        <TextView
+            android:id="@+id/comfort_statistic_range"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:text="时间范围"
+            app:layout_constraintBottom_toBottomOf="@+id/comfort_statistic"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/comfort_statistic"
+            app:layout_constraintTop_toTopOf="@+id/comfort_statistic" />
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/channel_A_holder"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="0dp"
+            app:layout_constraintEnd_toStartOf="@+id/channel_B_holder"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/comfort_statistic">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/channel_A"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+                <TextView
+                    android:id="@+id/no_data_A"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:background="@color/textOrIcons"
+                    android:drawableTop="@drawable/ic_pie_chart_black_24dp"
+                    android:gravity="center_horizontal"
+                    android:text="@string/no_data" />
+            </RelativeLayout>
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/channel_B_holder"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/channel_A_holder"
+            app:layout_constraintTop_toBottomOf="@+id/comfort_statistic">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/channel_B"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+                <TextView
+                    android:id="@+id/no_data_B"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:background="@color/textOrIcons"
+                    android:drawableTop="@drawable/ic_pie_chart_black_24dp"
+                    android:gravity="center_horizontal"
+                    android:text="@string/no_data" />
+            </RelativeLayout>
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/channel_C_holder"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/channel_D_holder"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/channel_A_holder">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/channel_C"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+                <TextView
+                    android:id="@+id/no_data_C"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:background="@color/textOrIcons"
+                    android:drawableTop="@drawable/ic_pie_chart_black_24dp"
+                    android:text="@string/no_data"
+                    android:layout_centerInParent="true" />
+            </RelativeLayout>
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/channel_D_holder"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/channel_C_holder"
+            app:layout_constraintTop_toBottomOf="@+id/channel_B_holder">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/channel_D"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+                <TextView
+                    android:id="@+id/no_data_D"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:background="@color/textOrIcons"
+                    android:drawableTop="@drawable/ic_pie_chart_black_24dp"
+                    android:text="@string/no_data"
+                    android:layout_centerInParent="true" />
+            </RelativeLayout>
+        </android.support.v7.widget.CardView>
+
+    </android.support.constraint.ConstraintLayout>
+</ScrollView>

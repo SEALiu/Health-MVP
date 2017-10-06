@@ -79,6 +79,7 @@ import cn.sealiu.health.util.WeekDayAxisValueFormatter;
 import static android.app.Activity.RESULT_OK;
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
+import static cn.sealiu.health.statistic.StatisticFragment.TYPE_WEEK;
 import static com.github.mikephil.charting.components.XAxis.XAxisPosition;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -752,7 +753,7 @@ public class HomeUserFragment extends Fragment implements
         leftAxis.setAxisMinimum(1f);
         leftAxis.setTextColor(white);
         leftAxis.setPosition(YAxisLabelPosition.OUTSIDE_CHART);
-        leftAxis.setValueFormatter(new MyAxisValueFormatter());
+        leftAxis.setValueFormatter(new MyAxisValueFormatter(TYPE_WEEK));
 
         weekBarChart.getAxisRight().setEnabled(false);
 
@@ -760,7 +761,7 @@ public class HomeUserFragment extends Fragment implements
         l.setForm(Legend.LegendForm.SQUARE);
         l.setTextColor(Color.WHITE);
 
-        MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view);
+        MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view, TYPE_WEEK);
         mv.setChartView(weekBarChart);
         weekBarChart.setMarker(mv);
     }

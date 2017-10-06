@@ -79,7 +79,7 @@ public class UserDetailFragment extends Fragment implements UserDetailContract.V
         phoneTV = root.findViewById(R.id.phone_number);
         emailTV = root.findViewById(R.id.email);
         chooseStatisticBtn = root.findViewById(R.id.choose_statistic);
-        statisticBarChart = root.findViewById(R.id.statistic_barchart);
+        statisticBarChart = root.findViewById(R.id.statistic_chart);
 
         chooseStatisticBtn.setOnClickListener(this);
 
