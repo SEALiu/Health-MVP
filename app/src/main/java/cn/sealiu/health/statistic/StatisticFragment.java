@@ -29,10 +29,10 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import cn.sealiu.health.R;
 import cn.sealiu.health.main.MyMarkerView;
-import cn.sealiu.health.util.DayAxisValueFormatter;
 import cn.sealiu.health.util.MyAxisValueFormatter;
 import cn.sealiu.health.util.WeekDayAxisValueFormatter;
 
@@ -52,10 +52,18 @@ public class StatisticFragment extends Fragment implements
     public final static int TYPE_WEEK = 2;
     public final static int TYPE_MONTH = 3;
     public final static int TYPE_YEAR = 4;
+
     private StatisticContract.Presenter mPresenter;
     private AppCompatButton chooseStatisticBtn, chooseDateBtn;
     private BarChart mBarChart;
-    private View noData;
+    private BarChart mBarChartA, mBarChartB, mBarChartC, mBarChartD;
+    private View noData, noDataA, noDataB, noDataC, noDataD;
+    private List<BarChart> mBarCharts = new ArrayList<>();
+    private List<View> noDataChannels = new ArrayList<>();
+    private String[] mxAxis = new String[]{"空载", "松", "合适", "紧"};
+    private String[] mMonths = new String[]{
+            "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"
+    };
 
     public StatisticFragment() {
     }
@@ -78,11 +86,34 @@ public class StatisticFragment extends Fragment implements
         chooseStatisticBtn = root.findViewById(R.id.choose_statistic);
         mBarChart = root.findViewById(R.id.statistic_chart);
         noData = root.findViewById(R.id.no_data);
+        noDataA = root.findViewById(R.id.no_data_A);
+        noDataB = root.findViewById(R.id.no_data_B);
+        noDataC = root.findViewById(R.id.no_data_C);
+        noDataD = root.findViewById(R.id.no_data_D);
+
+        mBarChartA = root.findViewById(R.id.channel_A);
+        mBarChartB = root.findViewById(R.id.channel_B);
+        mBarChartC = root.findViewById(R.id.channel_C);
+        mBarChartD = root.findViewById(R.id.channel_D);
+
+        mBarCharts.add(mBarChartA);
+        mBarCharts.add(mBarChartB);
+        mBarCharts.add(mBarChartC);
+        mBarCharts.add(mBarChartD);
+
+        noDataChannels.add(noDataA);
+        noDataChannels.add(noDataB);
+        noDataChannels.add(noDataC);
+        noDataChannels.add(noDataD);
 
         chooseStatisticBtn.setOnClickListener(this);
         chooseDateBtn.setOnClickListener(this);
 
         setupStatisticChart(TYPE_DAY);
+        setupBarChart(mBarChartA, TYPE_WEEK);
+        setupBarChart(mBarChartB, TYPE_WEEK);
+        setupBarChart(mBarChartC, TYPE_WEEK);
+        setupBarChart(mBarChartD, TYPE_WEEK);
         return root;
     }
 
@@ -108,15 +139,14 @@ public class StatisticFragment extends Fragment implements
     }
 
     @Override
-    public void updateDayStatistic(ArrayList<BarEntry> yVals, boolean visible) {
+    public void updateBarChartStatistic(ArrayList<BarEntry> yVals, boolean visible, int type) {
+        mBarChart.clear();
         if (!visible) {
             noData.setVisibility(View.VISIBLE);
             return;
         } else {
             noData.setVisibility(View.GONE);
         }
-
-        mBarChart.clear();
 
         BarDataSet set1;
         if (mBarChart.getData() != null && mBarChart.getData().getDataSetCount() > 0) {
@@ -138,69 +168,56 @@ public class StatisticFragment extends Fragment implements
             mBarChart.setData(data);
         }
 
-        mBarChart.getXAxis().setAxisMaximum(24);
+        switch (type) {
+            case TYPE_DAY:
+                mBarChart.getXAxis().setAxisMaximum(24);
+                break;
+            case TYPE_WEEK:
+                mBarChart.getXAxis().setAxisMaximum(7);
+                break;
+            case TYPE_MONTH:
+                mBarChart.getXAxis().setAxisMaximum(31);
+                break;
+            case TYPE_YEAR:
+                mBarChart.getXAxis().setAxisMaximum(12);
+                break;
+        }
         mBarChart.invalidate();
         mBarChart.animateXY(1000, 1500);
     }
 
     @Override
-    public void updateWeekStatistic(ArrayList<BarEntry> yVals, boolean visible) {
+    public void updateComfortStatistic(ArrayList<BarEntry> yVals,
+                                       boolean visible,
+                                       int position) {
+        mBarCharts.get(position).clear();
         if (!visible) {
-            noData.setVisibility(View.VISIBLE);
+            noDataChannels.get(position).setVisibility(View.VISIBLE);
             return;
         } else {
-            noData.setVisibility(View.GONE);
+            noDataChannels.get(position).setVisibility(View.GONE);
         }
 
-        mBarChart.clear();
-
         BarDataSet set1;
-        if (mBarChart.getData() != null && mBarChart.getData().getDataSetCount() > 0) {
-            set1 = (BarDataSet) mBarChart.getData().getDataSetByIndex(0);
+        if (mBarCharts.get(position).getData() != null
+                && mBarCharts.get(position).getData().getDataSetCount() > 0) {
+            set1 = (BarDataSet) mBarCharts.get(position).getData().getDataSetByIndex(0);
             set1.setValues(yVals);
-            mBarChart.getData().notifyDataChanged();
-            mBarChart.notifyDataSetChanged();
+            mBarCharts.get(position).getData().notifyDataChanged();
+            mBarCharts.get(position).notifyDataSetChanged();
         } else {
             set1 = new BarDataSet(yVals, "佩戴时间");
             set1.setDrawValues(false);
-            set1.setColor(ActivityCompat.getColor(getActivity(), R.color.banana));
-            set1.setValueTextColor(ActivityCompat.getColor(getActivity(), R.color.textOrIcons));
+            set1.setColor(ActivityCompat.getColor(getActivity(), R.color.blueSky));
+            set1.setValueTextColor(ActivityCompat.getColor(getActivity(), R.color.thinkDark));
 
             ArrayList<IBarDataSet> dataSets = new ArrayList<>();
             dataSets.add(set1);
 
             BarData data = new BarData(dataSets);
             data.setValueTextSize(10f);
-            mBarChart.setData(data);
+            mBarCharts.get(position).setData(data);
         }
-
-        mBarChart.getXAxis().setAxisMaximum(7);
-        mBarChart.invalidate();
-        mBarChart.animateXY(1000, 1500);
-    }
-
-    @Override
-    public void updateMonthStatistic(ArrayList<BarEntry> yVals, boolean visible) {
-        if (!visible) {
-            noData.setVisibility(View.VISIBLE);
-            return;
-        } else {
-            noData.setVisibility(View.GONE);
-        }
-
-        mBarChart.clear();
-    }
-
-    @Override
-    public void updateYearStatistic(ArrayList<BarEntry> yVals, boolean visible) {
-        if (!visible) {
-            noData.setVisibility(View.VISIBLE);
-            return;
-        } else {
-            noData.setVisibility(View.GONE);
-        }
-
-        mBarChart.clear();
     }
 
     @Override
@@ -215,21 +232,37 @@ public class StatisticFragment extends Fragment implements
                         switch (menuItem.getItemId()) {
                             case R.id.day_statistic:
                                 setupStatisticChart(TYPE_DAY);
+                                setupBarChart(mBarChartA, TYPE_WEEK);
+                                setupBarChart(mBarChartB, TYPE_WEEK);
+                                setupBarChart(mBarChartC, TYPE_WEEK);
+                                setupBarChart(mBarChartD, TYPE_WEEK);
                                 mPresenter.loadDayStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_day);
                                 return true;
                             case R.id.week_statistic:
                                 setupStatisticChart(TYPE_WEEK);
+                                setupBarChart(mBarChartA, TYPE_WEEK);
+                                setupBarChart(mBarChartB, TYPE_WEEK);
+                                setupBarChart(mBarChartC, TYPE_WEEK);
+                                setupBarChart(mBarChartD, TYPE_WEEK);
                                 mPresenter.loadWeekStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_week);
                                 return true;
                             case R.id.month_statistic:
                                 setupStatisticChart(TYPE_MONTH);
+                                setupBarChart(mBarChartA, TYPE_YEAR);
+                                setupBarChart(mBarChartB, TYPE_YEAR);
+                                setupBarChart(mBarChartC, TYPE_YEAR);
+                                setupBarChart(mBarChartD, TYPE_YEAR);
                                 mPresenter.loadMonthStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_month);
                                 return true;
                             case R.id.year_statistic:
                                 setupStatisticChart(TYPE_YEAR);
+                                setupBarChart(mBarChartA, TYPE_YEAR);
+                                setupBarChart(mBarChartB, TYPE_YEAR);
+                                setupBarChart(mBarChartC, TYPE_YEAR);
+                                setupBarChart(mBarChartD, TYPE_YEAR);
                                 mPresenter.loadYearStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_year);
                                 return true;
@@ -277,33 +310,48 @@ public class StatisticFragment extends Fragment implements
         xAxis.setDrawGridLines(false);
         xAxis.setCenterAxisLabels(false);
 
+        YAxis leftAxis = mBarChart.getAxisLeft();
+        leftAxis.setDrawGridLines(false);
+        leftAxis.setSpaceTop(15f);
+        leftAxis.setTextColor(white);
+        leftAxis.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART);
+        leftAxis.setValueFormatter(new MyAxisValueFormatter(type));
+        mBarChart.getAxisRight().setEnabled(false);
+
         switch (type) {
             case TYPE_DAY:
+                xAxis.setValueFormatter(new IAxisValueFormatter() {
+                    @Override
+                    public String getFormattedValue(float value, AxisBase axis) {
+                        return String.valueOf((int) value) + "时";
+                    }
+                });
+                leftAxis.setAxisMinimum(1f);
+                break;
             case TYPE_MONTH:
                 xAxis.setValueFormatter(new IAxisValueFormatter() {
                     @Override
                     public String getFormattedValue(float value, AxisBase axis) {
-                        return String.valueOf((int) value);
+                        return String.valueOf((int) value + 1) + "日";
                     }
                 });
+                leftAxis.setAxisMinimum(1f);
                 break;
             case TYPE_WEEK:
                 xAxis.setValueFormatter(new WeekDayAxisValueFormatter());
+                leftAxis.setAxisMinimum(1f);
                 break;
             case TYPE_YEAR:
-                xAxis.setValueFormatter(new DayAxisValueFormatter(mBarChart));
+                xAxis.setValueFormatter(new IAxisValueFormatter() {
+                    @Override
+                    public String getFormattedValue(float value, AxisBase axis) {
+                        if (value < 0 || value > 11) return "";
+                        return mMonths[(int) value];
+                    }
+                });
+                leftAxis.setAxisMinimum(0.1f);
                 break;
         }
-
-        YAxis leftAxis = mBarChart.getAxisLeft();
-        leftAxis.setDrawGridLines(false);
-        leftAxis.setSpaceTop(15f);
-        leftAxis.setAxisMinimum(1f);
-        leftAxis.setTextColor(white);
-        leftAxis.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART);
-        leftAxis.setValueFormatter(new MyAxisValueFormatter(type));
-
-        mBarChart.getAxisRight().setEnabled(false);
 
         Legend l = mBarChart.getLegend();
         l.setForm(Legend.LegendForm.SQUARE);
@@ -312,5 +360,59 @@ public class StatisticFragment extends Fragment implements
         MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view, type);
         mv.setChartView(mBarChart);
         mBarChart.setMarker(mv);
+    }
+
+    private void setupBarChart(BarChart barChart, int type) {
+        int thinkDark = ActivityCompat.getColor(getActivity(), R.color.thinkDark);
+
+        barChart.setDrawGridBackground(false);
+        barChart.setBorderColor(thinkDark);
+        barChart.getDescription().setEnabled(false);
+
+        barChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(Entry e, Highlight h) {
+                Log.d(TAG, "entry: X = " + e.getX() + "// Y = " + e.getY());
+            }
+
+            @Override
+            public void onNothingSelected() {
+
+            }
+        });
+
+        barChart.setDoubleTapToZoomEnabled(false);
+        barChart.setPinchZoom(true);
+        barChart.setClickable(false);
+
+        XAxis xAxis = barChart.getXAxis();
+        xAxis.setGranularity(1f);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setTextColor(thinkDark);
+        xAxis.setDrawGridLines(false);
+        xAxis.setCenterAxisLabels(false);
+        xAxis.setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                return mxAxis[(int) value];
+            }
+        });
+
+        YAxis leftAxis = barChart.getAxisLeft();
+        leftAxis.setDrawGridLines(false);
+        leftAxis.setSpaceTop(15f);
+        leftAxis.setAxisMinimum(0.1f);
+        leftAxis.setTextColor(thinkDark);
+        leftAxis.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART);
+        leftAxis.setValueFormatter(new MyAxisValueFormatter(type));
+
+        barChart.getAxisRight().setEnabled(false);
+
+        Legend l = barChart.getLegend();
+        l.setEnabled(false);
+
+        MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view, type);
+        mv.setChartView(barChart);
+        barChart.setMarker(mv);
     }
 }

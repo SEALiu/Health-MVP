@@ -72,4 +72,5 @@ dependencies {
     //noinspection GradleCompatible
     androidTestCompile "com.android.support:appcompat-v7:$rootProject.supportLibraryVersion"
     androidTestCompile "com.android.support:design:$rootProject.supportLibraryVersion"
+    compile 'junit:junit:4.12'
 }

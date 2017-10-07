@@ -17,7 +17,7 @@ import java.util.Locale;
  */
 
 public class Fun {
-    static String rightPad(String originalString, int length) {
+    public static String rightPad(String originalString, int length) {
 
         StringBuilder originalStringBuilder = new StringBuilder(originalString);
         while (originalStringBuilder.length() < length) {
@@ -27,7 +27,7 @@ public class Fun {
         return originalString;
     }
 
-    static String leftPad(@Nullable String originalString, int length) {
+    public static String leftPad(@Nullable String originalString, int length) {
         if (originalString == null) originalString = "";
         int strSize = originalString.length();
         int padLen = length - strSize;

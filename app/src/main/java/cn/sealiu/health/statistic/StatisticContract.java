@@ -21,13 +21,9 @@ public interface StatisticContract {
 
         void showInfo(int strId);
 
-        void updateDayStatistic(ArrayList<BarEntry> yVals, boolean visible);
+        void updateBarChartStatistic(ArrayList<BarEntry> yVals, boolean visible, int type);
 
-        void updateWeekStatistic(ArrayList<BarEntry> yVals, boolean visible);
-
-        void updateMonthStatistic(ArrayList<BarEntry> yVals, boolean visible);
-
-        void updateYearStatistic(ArrayList<BarEntry> yVals, boolean visible);
+        void updateComfortStatistic(ArrayList<BarEntry> yVals, boolean visible, int position);
     }
 
     interface Presenter extends BasePresenter {
