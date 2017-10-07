@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.AxisBase;
@@ -27,16 +28,25 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import cn.sealiu.health.R;
+import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.main.MyMarkerView;
 import cn.sealiu.health.util.MyAxisValueFormatter;
 import cn.sealiu.health.util.WeekDayAxisValueFormatter;
 
 import static android.content.ContentValues.TAG;
+import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -46,7 +56,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class StatisticFragment extends Fragment implements
         StatisticContract.View,
-        View.OnClickListener {
+        View.OnClickListener, DatePickerDialog.OnDateSetListener {
 
     public final static int TYPE_DAY = 1;
     public final static int TYPE_WEEK = 2;
@@ -55,6 +65,8 @@ public class StatisticFragment extends Fragment implements
 
     private StatisticContract.Presenter mPresenter;
     private AppCompatButton chooseStatisticBtn, chooseDateBtn;
+    private TextView selectedDateRange;
+
     private BarChart mBarChart;
     private BarChart mBarChartA, mBarChartB, mBarChartC, mBarChartD;
     private View noData, noDataA, noDataB, noDataC, noDataD;
@@ -64,6 +76,8 @@ public class StatisticFragment extends Fragment implements
     private String[] mMonths = new String[]{
             "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"
     };
+    private String chooseDayStr = "";
+    private DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     public StatisticFragment() {
     }
@@ -85,6 +99,13 @@ public class StatisticFragment extends Fragment implements
         chooseDateBtn = root.findViewById(R.id.choose_date);
         chooseStatisticBtn = root.findViewById(R.id.choose_statistic);
         mBarChart = root.findViewById(R.id.statistic_chart);
+
+        selectedDateRange = root.findViewById(R.id.comfort_statistic_range);
+        Calendar yesterday = Calendar.getInstance();
+        yesterday.add(Calendar.DATE, -1);
+        chooseDayStr = df.format(yesterday.getTime());
+        selectedDateRange.setText(chooseDayStr);
+
         noData = root.findViewById(R.id.no_data);
         noDataA = root.findViewById(R.id.no_data_A);
         noDataB = root.findViewById(R.id.no_data_B);
@@ -108,6 +129,15 @@ public class StatisticFragment extends Fragment implements
 
         chooseStatisticBtn.setOnClickListener(this);
         chooseDateBtn.setOnClickListener(this);
+
+        ((TextView) root.findViewById(R.id.channel_A_title))
+                .setText(sharedPref.getString(MainActivity.DEVICE_CHANNEL_ONE, "通道1"));
+        ((TextView) root.findViewById(R.id.channel_B_title))
+                .setText(sharedPref.getString(MainActivity.DEVICE_CHANNEL_TWO, "通道2"));
+        ((TextView) root.findViewById(R.id.channel_C_title))
+                .setText(sharedPref.getString(MainActivity.DEVICE_CHANNEL_THREE, "通道3"));
+        ((TextView) root.findViewById(R.id.channel_D_title))
+                .setText(sharedPref.getString(MainActivity.DEVICE_CHANNEL_FOUR, "通道4"));
 
         setupStatisticChart(TYPE_DAY);
         setupBarChart(mBarChartA, TYPE_WEEK);
@@ -226,6 +256,10 @@ public class StatisticFragment extends Fragment implements
             case R.id.choose_statistic:
                 PopupMenu popupMenu = new PopupMenu(getActivity(), chooseStatisticBtn);
                 popupMenu.getMenuInflater().inflate(R.menu.statistic_popup_menu, popupMenu.getMenu());
+
+                final Calendar yesterday = Calendar.getInstance();
+                yesterday.add(Calendar.DATE, -1);
+
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem menuItem) {
@@ -236,8 +270,19 @@ public class StatisticFragment extends Fragment implements
                                 setupBarChart(mBarChartB, TYPE_WEEK);
                                 setupBarChart(mBarChartC, TYPE_WEEK);
                                 setupBarChart(mBarChartD, TYPE_WEEK);
-                                mPresenter.loadDayStatistic(null);
+
+                                final String[] dateArray = chooseDayStr.split("-");
+                                Calendar chooseDay = Calendar.getInstance();
+                                chooseDay.set(Calendar.YEAR, Integer.valueOf(dateArray[0]));
+                                chooseDay.set(Calendar.MONTH, Integer.valueOf(dateArray[1]) - 1);
+                                chooseDay.set(Calendar.DATE, Integer.valueOf(dateArray[2]));
+
+                                mPresenter.loadDayStatistic(chooseDay);
                                 chooseStatisticBtn.setText(R.string.by_day);
+
+                                selectedDateRange.setText(chooseDayStr);
+
+                                chooseDateBtn.setVisibility(View.VISIBLE);
                                 return true;
                             case R.id.week_statistic:
                                 setupStatisticChart(TYPE_WEEK);
@@ -247,6 +292,15 @@ public class StatisticFragment extends Fragment implements
                                 setupBarChart(mBarChartD, TYPE_WEEK);
                                 mPresenter.loadWeekStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_week);
+
+                                yesterday.add(Calendar.DATE, -1);
+                                String yesterdayStr = df.format(yesterday.getTime());
+
+                                yesterday.add(Calendar.DATE, -7);
+                                String sevenDaysBeforeStr = df.format(yesterday.getTime());
+
+                                selectedDateRange.setText(String.format("%s至%s", yesterdayStr, sevenDaysBeforeStr));
+                                chooseDateBtn.setVisibility(View.GONE);
                                 return true;
                             case R.id.month_statistic:
                                 setupStatisticChart(TYPE_MONTH);
@@ -256,6 +310,11 @@ public class StatisticFragment extends Fragment implements
                                 setupBarChart(mBarChartD, TYPE_YEAR);
                                 mPresenter.loadMonthStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_month);
+
+
+                                selectedDateRange.setText(String.format("%s月", yesterday.get(Calendar.MONTH) + 1));
+
+                                chooseDateBtn.setVisibility(View.GONE);
                                 return true;
                             case R.id.year_statistic:
                                 setupStatisticChart(TYPE_YEAR);
@@ -265,6 +324,10 @@ public class StatisticFragment extends Fragment implements
                                 setupBarChart(mBarChartD, TYPE_YEAR);
                                 mPresenter.loadYearStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_year);
+
+                                selectedDateRange.setText(String.format("%s年", yesterday.get(Calendar.YEAR)));
+
+                                chooseDateBtn.setVisibility(View.GONE);
                                 return true;
                             default:
                                 return false;
@@ -274,7 +337,41 @@ public class StatisticFragment extends Fragment implements
                 popupMenu.show();
                 break;
             case R.id.choose_date:
-                // TODO: 2017/10/6 choose date
+                Calendar yesterday1 = Calendar.getInstance();
+                yesterday1.add(Calendar.DATE, -1);
+
+                int year, month, day;
+                if (chooseDayStr.equals("")) {
+                    year = yesterday1.get(Calendar.YEAR);
+                    month = yesterday1.get(Calendar.MONTH);
+                    day = yesterday1.get(Calendar.DAY_OF_MONTH);
+                } else {
+                    final String[] dateArray = chooseDayStr.split("-");
+
+                    year = Integer.valueOf(dateArray[0]);
+                    month = Integer.valueOf(dateArray[1]) - 1;
+                    day = Integer.valueOf(dateArray[2]);
+                }
+
+                DatePickerDialog dpd = DatePickerDialog.newInstance(this, year, month, day);
+                dpd.setAccentColor(getResources().getColor(R.color.colorPrimary));
+
+                String startUseStr = sharedPref.getString(MainActivity.DEVICE_START_USING_DATE, "");
+                Date startUseDate = null;
+                try {
+                    startUseDate = df.parse(startUseStr);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                if (startUseDate != null) {
+                    Calendar startCalendar = Calendar.getInstance();
+                    startCalendar.setTime(startUseDate);
+
+                    dpd.setMinDate(startCalendar);
+                    dpd.setMaxDate(yesterday1);
+                    dpd.show(getActivity().getFragmentManager(), "DatePicker");
+                }
                 break;
         }
     }
@@ -414,5 +511,19 @@ public class StatisticFragment extends Fragment implements
         MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view, type);
         mv.setChartView(barChart);
         barChart.setMarker(mv);
+    }
+
+    @Override
+    public void onDateSet(DatePickerDialog datePickerDialog, int year, int monthOfYear, int dayOfMonth) {
+        chooseDayStr = year + "-" + (monthOfYear + 1) + "-" + dayOfMonth;
+        selectedDateRange.setText(chooseDayStr);
+        datePickerDialog.dismiss();
+
+        Calendar chooseDay = Calendar.getInstance();
+        chooseDay.set(Calendar.YEAR, year);
+        chooseDay.set(Calendar.MONTH, monthOfYear);
+        chooseDay.set(Calendar.DATE, dayOfMonth);
+
+        mPresenter.loadDayStatistic(chooseDay);
     }
 }

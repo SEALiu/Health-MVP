@@ -128,11 +128,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
+                <TextView
+                    android:id="@+id/channel_A_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="通道1"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="8dp"
+                    android:textColor="@color/tomato" />
+
                 <com.github.mikephil.charting.charts.BarChart
                     android:id="@+id/channel_A"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="16dp"
+                    android:layout_below="@id/channel_A_title" />
 
                 <TextView
                     android:id="@+id/no_data_A"
@@ -161,11 +172,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
+                <TextView
+                    android:id="@+id/channel_B_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="通道2"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="8dp"
+                    android:textColor="@color/banana" />
+
                 <com.github.mikephil.charting.charts.BarChart
                     android:id="@+id/channel_B"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="16dp"
+                    android:layout_below="@id/channel_B_title" />
 
                 <TextView
                     android:id="@+id/no_data_B"
@@ -196,11 +218,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
+                <TextView
+                    android:id="@+id/channel_C_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="通道3"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="8dp"
+                    android:textColor="@color/blueSky" />
+
                 <com.github.mikephil.charting.charts.BarChart
                     android:id="@+id/channel_C"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="16dp"
+                    android:layout_below="@id/channel_C_title" />
 
                 <TextView
                     android:id="@+id/no_data_C"
@@ -231,11 +264,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
+                <TextView
+                    android:id="@+id/channel_D_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="通道4"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="8dp"
+                    android:textColor="@color/cucumber" />
+
                 <com.github.mikephil.charting.charts.BarChart
                     android:id="@+id/channel_D"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="16dp"
+                    android:layout_below="@id/channel_D_title" />
 
                 <TextView
                     android:id="@+id/no_data_D"
