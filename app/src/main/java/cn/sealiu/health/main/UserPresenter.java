@@ -313,7 +313,6 @@ public class UserPresenter implements UserContract.Presenter {
         });
     }
 
-    // TODO: 2017/10/8 更新本地数据库 datastatus.tb
     private void updateDataStatus(HealthDbHelper dbHelper, List<String> unsyncDays) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();

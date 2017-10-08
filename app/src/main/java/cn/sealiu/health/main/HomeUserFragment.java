@@ -475,6 +475,11 @@ public class HomeUserFragment extends Fragment implements
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        if (mConnected == BluetoothLeService.STATE_CONNECTED) {
+            mPresenter.stopRealtime();
+        }
+
         if (mServiceConnection != null && mBluetoothLeService != null) {
             getActivity().unbindService(mServiceConnection);
             mBluetoothLeService.disconnect();
