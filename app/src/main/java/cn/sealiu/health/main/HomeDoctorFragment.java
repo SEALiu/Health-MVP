@@ -134,7 +134,10 @@ public class HomeDoctorFragment extends Fragment implements DoctorContract.View 
 
     @Override
     public void gotoLogin() {
-        getActivity().startActivity(new Intent(getActivity(), LoginActivity.class));
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        getActivity().startActivity(intent);
         getActivity().finish();
     }
 

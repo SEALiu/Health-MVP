@@ -293,13 +293,12 @@ public class StatisticFragment extends Fragment implements
                                 mPresenter.loadWeekStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_week);
 
-                                yesterday.add(Calendar.DATE, -1);
                                 String yesterdayStr = df.format(yesterday.getTime());
 
                                 yesterday.add(Calendar.DATE, -7);
                                 String sevenDaysBeforeStr = df.format(yesterday.getTime());
 
-                                selectedDateRange.setText(String.format("%s至%s", yesterdayStr, sevenDaysBeforeStr));
+                                selectedDateRange.setText(String.format("%s至%s", sevenDaysBeforeStr, yesterdayStr));
                                 chooseDateBtn.setVisibility(View.GONE);
                                 return true;
                             case R.id.month_statistic:
