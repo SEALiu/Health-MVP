@@ -1,5 +1,6 @@
 package cn.sealiu.health.main;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -8,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -240,6 +242,15 @@ public class HomeUserFragment extends Fragment implements
         dots.add((ImageView) root.findViewById(R.id.dot_2));
         dots.add((ImageView) root.findViewById(R.id.dot_3));
         dots.add((ImageView) root.findViewById(R.id.dot_4));
+
+        for (ImageView iv : dots) iv.setVisibility(View.GONE);
+
+        int channelNum = sharedPref.getInt(MainActivity.DEVICE_CHANNEL_NUM, 4);
+        for (int i = 0; i < channelNum; i++) {
+            dots.get(i).setVisibility(View.VISIBLE);
+        }
+
+        root.findViewById(R.id.comfort_range_help).setOnClickListener(this);
 
         colors.add(ActivityCompat.getColor(getActivity(), R.color.tomato));
         colors.add(ActivityCompat.getColor(getActivity(), R.color.banana));
@@ -630,6 +641,21 @@ public class HomeUserFragment extends Fragment implements
                     mPresenter.stopRealtime();
                 }
                 break;
+            case R.id.comfort_range_help:
+                AlertDialog.Builder comfortRangeHelper = new AlertDialog.Builder(getActivity());
+                View comfortHelpView = getActivity().getLayoutInflater().inflate(R.layout.comfort_range_dia, null);
+
+                comfortRangeHelper.setCancelable(true)
+                        .setTitle(getString(R.string.comfort_range_help))
+                        .setView(comfortHelpView)
+                        .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .show();
+                break;
         }
     }
 
@@ -737,9 +763,9 @@ public class HomeUserFragment extends Fragment implements
         }
 
         int lightIndex = Integer.valueOf(status);
-        if (lightIndex >= 0 && lightIndex < 4) {
-            dots.get(index).setImageDrawable(comfortableDrawables.get(lightIndex));
-        }
+        if (lightIndex <= 0 || lightIndex > 4) lightIndex = 1;
+
+        dots.get(index).setImageDrawable(comfortableDrawables.get(lightIndex - 1));
     }
 
     @Override

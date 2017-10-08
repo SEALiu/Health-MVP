@@ -749,9 +749,8 @@ public class UserPresenter implements UserContract.Presenter {
 
             voltages[indexTemp] = (Integer.valueOf(item.substring(1, 4), 16) - offset) / slope;
 
-            if (voltages[indexTemp] < 0)
-                voltages[indexTemp] = 0;
-            voltages_status[indexTemp++] = item.substring(0, 1);
+            if (voltages[indexTemp] < 0) voltages[indexTemp] = 0;
+            voltages_status[indexTemp++] = item.substring(0, 1); // 0,1,2,3,4
         }
 
         mUserView.updateLineChartRT(voltages[0], voltages_status[0], 0);

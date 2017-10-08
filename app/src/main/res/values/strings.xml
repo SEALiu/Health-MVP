@@ -149,4 +149,9 @@
     <string name="comfort_statistic">舒适度统计</string>
     <string name="only_wifi">设置已保存，仅使用无线网络上传/下载数据</string>
     <string name="use_cell">设置已保存，使用无线网络/移动数据网络上传/下载数据</string>
+    <string name="blank">空载</string>
+    <string name="loose">佩戴松</string>
+    <string name="comfort">佩戴松紧合适</string>
+    <string name="tight">佩戴紧</string>
+    <string name="comfort_range_help">舒适度范围</string>
 </resources>
