@@ -1,5 +1,6 @@
 package cn.sealiu.health.main;
 
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
@@ -15,6 +16,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -71,6 +73,7 @@ import cn.sealiu.health.data.local.HealthDbHelper;
 import cn.sealiu.health.fixcriterion.FixCriterionActivity;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.statistic.StatisticActivity;
+import cn.sealiu.health.util.ActivityUtils;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.Fun;
 import cn.sealiu.health.util.MyAxisValueFormatter;
@@ -108,6 +111,7 @@ public class HomeUserFragment extends Fragment implements
     private List<String> labels = new ArrayList<>();
     private List<Integer> colors = new ArrayList<>();
     List<Drawable> comfortableDrawables = new ArrayList<>();
+    public ProgressDialog mProgressDialog;
 
     private String historyDate = "";
     /**
@@ -396,6 +400,12 @@ public class HomeUserFragment extends Fragment implements
             if (D) Log.e(TAG, "history data request over");
             showInfo("设备数据请求完毕");
 
+            // 检查是否可以上传数据（条件：时间，网络，数据状态）
+            if (prepareSyncData() == 0) {
+                showProgressDialog();
+                mPresenter.syncLocalData(dbHelper);
+            }
+
             // 继续接收实时数据
             if (mConnected == BluetoothLeService.STATE_CONNECTED
                     && mWantedCharacteristic != null
@@ -411,6 +421,38 @@ public class HomeUserFragment extends Fragment implements
     public void saveHistoryData() {
         if (dbHelper == null) dbHelper = new HealthDbHelper(getActivity());
         mPresenter.doSaveHistoryData(dbHelper, historyDate);
+    }
+
+    @Override
+    public void showProgressDialog() {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(getActivity());
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setTitle(R.string.upload_data);
+            mProgressDialog.setIcon(ActivityCompat.getDrawable(getActivity(),
+                    R.drawable.ic_cloud_upload_bluesky_24dp));
+            mProgressDialog.setMessage("正在上传数据，请稍候...");
+            mProgressDialog.setIndeterminate(true);
+        }
+
+        mProgressDialog.show();
+
+        // 3分钟后自动隐藏加载框
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mProgressDialog != null && mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+            }
+        }, 3 * 60 * 1000);
+    }
+
+    @Override
+    public void hideProgressDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+            mProgressDialog = null;
+        }
     }
 
     @Override
@@ -478,7 +520,25 @@ public class HomeUserFragment extends Fragment implements
                 break;
             case R.id.sync:
                 // TODO: 2017/10/1 检查本地数据表，更新，找到为上传的数据，检查网络，然后上传
-                mPresenter.syncLocalData();
+
+                int checkResult = prepareSyncData();
+                switch (checkResult) {
+                    case 1:
+                    case 4:
+                        showInfo("本地数据已同步完成");
+                        break;
+                    case 2:
+                        showInfo("无网络连接，请检查");
+                        break;
+                    case 3:
+                        showInfo("没有连接无线网络");
+                        break;
+                    case 0:
+                        showProgressDialog();
+                        mPresenter.syncLocalData(dbHelper);
+                        break;
+                }
+
                 break;
         }
 
@@ -845,5 +905,40 @@ public class HomeUserFragment extends Fragment implements
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
         set.setValueTextSize(10f);
         return set;
+    }
+
+    /**
+     * 上传数据前的准备工作:
+     * - 检查上次同步时间是不是和今天是同一天，避免重复同步(same day :1)
+     * - 根据网络设置，检查网络情况(no network: 2; with setting[only use wifi] but no wifi connected, : 3)
+     * - 检查本地数据的同步标示，是否有未同步数据 (no unsync data: 4)
+     *
+     * @return int check result (everything looks good: 0)
+     */
+    private int prepareSyncData() {
+        // 检查上次同步时间，同一天:返回1
+        String lastSyncDateStr = sharedPref.getString(MainActivity.HISTORY_DATA_SYNC_DATE, "");
+        String todayStr = df.format(new Date());
+        if (lastSyncDateStr.equals(todayStr)) return 1;
+
+        // 检查网络，没有网络：返回2
+        if (!ActivityUtils.isNetworkAvailable()) return 2;
+        // 有网络连接，设置仅使用wifi，但是wifi不可用：返回3
+        if (sharedPref.getBoolean(MainActivity.NETWORK_ONLY_WIFI, false) &&
+                !ActivityUtils.isConnectedWifi()) return 3;
+
+        // 检查未同步的数据，没有未同步的数据：返回4
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT * FROM " + DataStatusEntry.TABLE_NAME + " WHERE " +
+                DataStatusEntry.COLUMN_NAME_STATUS + " = 1 AND " +
+                DataStatusEntry.COLUMN_NAME_SYNC + " = 0";
+
+        Cursor c = db.rawQuery(sql, null);
+        int unsyncNum = c.getCount();
+        c.close();
+        if (unsyncNum == 0) return 4;
+
+        // 通过所有的检查，返回0
+        return 0;
     }
 }

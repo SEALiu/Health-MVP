@@ -22,7 +22,6 @@ import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 
 import cn.sealiu.health.BaseActivity;
 
@@ -73,5 +72,14 @@ public class ActivityUtils {
                 BaseActivity.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
+    public static boolean isConnectedWifi() {
+        ConnectivityManager cm = (ConnectivityManager)
+                BaseActivity.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo info = cm.getActiveNetworkInfo();
+
+        return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI);
     }
 }

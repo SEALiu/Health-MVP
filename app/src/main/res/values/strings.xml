@@ -98,6 +98,7 @@
     <string name="skip">跳过，以后再进行定标</string>
     <string name="bluetooth_status">蓝牙状态</string>
     <string name="sync">同步</string>
+    <string name="upload_data">数据上传</string>
     <string name="connect_failed">无法连接到 %1$s</string>
     <string name="connect_success">已连接到 %1$s</string>
     <string name="bluetooth_disconnected">蓝牙设备断开连接</string>

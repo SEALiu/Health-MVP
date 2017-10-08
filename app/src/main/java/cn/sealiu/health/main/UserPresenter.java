@@ -13,7 +13,9 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.github.mikephil.charting.data.BarEntry;
+import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -21,18 +23,28 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
 import cn.sealiu.health.data.bean.DataBean;
 import cn.sealiu.health.data.local.HealthDbHelper;
+import cn.sealiu.health.data.response.MiniResponse;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.ProtocolMsg;
 import cn.sealiu.health.util.SampleGattAttributes;
 import cn.sealiu.health.util.UnboxResponseProtocol;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
@@ -202,8 +214,111 @@ public class UserPresenter implements UserContract.Presenter {
     }
 
     @Override
-    public void syncLocalData() {
+    public void syncLocalData(final HealthDbHelper dbHelper) {
+        String mid = sharedPref.getString(MainActivity.DEVICE_MID, "");
+        Map<String, Object> historyDataMap = new HashMap<>();
+        int totalCount = 0;
 
+        // 获取本地数据未同步的日期 datastatus.tb
+        final SQLiteDatabase db = dbHelper.getWritableDatabase();
+        String sql1 = "SELECT " + DataStatusEntry.COLUMN_NAME_TIME + " FROM " +
+                DataStatusEntry.TABLE_NAME + " WHERE " +
+                DataStatusEntry.COLUMN_NAME_STATUS + " = 1 AND " +
+                DataStatusEntry.COLUMN_NAME_SYNC + " != 1";
+        Cursor c1 = db.rawQuery(sql1, null);
+
+        final List<String> unsyncDays = new ArrayList<>();
+        if (c1.moveToFirst()) {
+            do {
+                unsyncDays.add(c1.getString(c1.getColumnIndex(DataStatusEntry.COLUMN_NAME_TIME)));
+            } while (c1.moveToNext());
+            c1.close();
+        }
+
+        // 获取未同步的数据, 保存到 List<DataBean> dataBeans 中
+        List<DataBean> dataBeans = new ArrayList<>();
+        for (String time : unsyncDays) {
+            String sql = "SELECT * FROM " + DataEntry.TABLE_NAME + " WHERE " +
+                    DataEntry.COLUMN_NAME_MID + " = '" + mid +
+                    "' AND " + DataEntry.COLUMN_NAME_TIME + " LIKE '" + time + "%'";
+
+            Cursor c = db.rawQuery(sql, null);
+            if (c.moveToFirst()) {
+                do {
+                    DataBean bean = new DataBean(mid,
+                            c.getInt(c.getColumnIndex(DataEntry.COLUMN_NAME_SEQUENCE)),
+                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_AA)),
+                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_BB)),
+                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_CC)),
+                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_DD)),
+                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_TIME))
+                    );
+
+                    totalCount++;
+
+                    dataBeans.add(bean);
+                } while (c.moveToNext());
+                c.close();
+            }
+        }
+
+        historyDataMap.put("count", totalCount);
+        historyDataMap.put("data", dataBeans);
+
+        // 格式化
+        String uploadDataJson = new Gson().toJson(historyDataMap);
+
+        // 调用同步接口，执行上传操作
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("upLoad", uploadDataJson)
+                .build();
+
+        Request uploadDataRequest = new Request.Builder()
+                .url(BaseActivity.REMOTE_URL + "/data/upLoadData")
+                .method("POST", RequestBody.create(null, new byte[0]))
+                .post(requestBody)
+                .build();
+
+        new OkHttpClient().newCall(uploadDataRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                mUserView.hideProgressDialog();
+                if (D) Log.e(TAG, e.getLocalizedMessage());
+                mUserView.showInfo("upload history data interface error");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String json = response.body().string();
+
+                if (D) Log.d(TAG, json);
+
+                MiniResponse miniResponse = new Gson().fromJson(json, MiniResponse.class);
+                mUserView.hideProgressDialog();
+
+                if (miniResponse.getStatus().equals("200")) {
+                    mUserView.showInfo("本地数据已同步完成");
+                    updateDataStatus(dbHelper, unsyncDays);
+                } else {
+                    mUserView.showInfo("数据上传失败，请重试");
+                }
+            }
+        });
+    }
+
+    // TODO: 2017/10/8 更新本地数据库 datastatus.tb
+    private void updateDataStatus(HealthDbHelper dbHelper, List<String> unsyncDays) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(DataStatusEntry.COLUMN_NAME_SYNC, 1);
+
+        for (String time : unsyncDays) {
+            db.update(DataStatusEntry.TABLE_NAME,
+                    values,
+                    DataStatusEntry.COLUMN_NAME_TIME + "=" + time,
+                    null);
+        }
     }
 
     @Override

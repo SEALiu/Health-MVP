@@ -65,6 +65,10 @@ public interface UserContract {
         void updateHistoryData();
 
         void saveHistoryData();
+
+        void showProgressDialog();
+
+        void hideProgressDialog();
     }
 
     interface Presenter extends BasePresenter {
@@ -101,7 +105,7 @@ public interface UserContract {
 
         void syncTime();
 
-        void syncLocalData();
+        void syncLocalData(HealthDbHelper dbHelper);
 
         void onGattServicesDiscovered();
 
