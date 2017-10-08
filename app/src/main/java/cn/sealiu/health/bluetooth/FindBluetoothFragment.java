@@ -424,7 +424,10 @@ public class FindBluetoothFragment extends Fragment
         sharedPref.edit().putString(MainActivity.DEVICE_NAME, mChosenBTName).apply();
         sharedPref.edit().putString(MainActivity.DEVICE_ADDRESS, mChosenBTAddress).apply();
 
-        getActivity().startActivity(new Intent(getActivity(), MainActivity.class));
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        getActivity().startActivity(intent);
         getActivity().finish();
     }
 

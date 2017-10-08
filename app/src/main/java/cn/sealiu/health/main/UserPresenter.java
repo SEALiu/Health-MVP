@@ -20,6 +20,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -63,6 +64,7 @@ public class UserPresenter implements UserContract.Presenter {
     private static final String TAG = "UserPresenter";
     private String dataCache = "";
     private String highMid = "", lowMid = "";
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     // 1: realtime data;
     // 2: history data;
@@ -300,6 +302,10 @@ public class UserPresenter implements UserContract.Presenter {
                 if (miniResponse.getStatus().equals("200")) {
                     mUserView.showInfo("本地数据已同步完成");
                     updateDataStatus(dbHelper, unsyncDays);
+
+                    // 保存最近一次的更新时间
+                    sharedPref.edit().putString(
+                            MainActivity.HISTORY_DATA_SYNC_DATE, df.format(new Date())).apply();
                 } else {
                     mUserView.showInfo("数据上传失败，请重试");
                 }

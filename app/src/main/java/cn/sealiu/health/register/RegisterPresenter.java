@@ -35,7 +35,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class RegisterPresenter implements RegisterContract.Presenter {
 
     private static final String TAG = "RegisterPresenter";
-    private boolean isRegistered = false;
 
     @NonNull
     private final RegisterContract.View mRegisterView;
@@ -70,13 +69,7 @@ public class RegisterPresenter implements RegisterContract.Presenter {
         // do register after checking phone number and code;
         OkHttpClient okHttpClient = new OkHttpClient();
 
-        if (checkPhoneRegistered(okHttpClient, phone)) {
-            mRegisterView.showPhoneRegistered();
-        } else if (isDoctor && !checkDoctorCode(okHttpClient, code)) {
-            mRegisterView.showRegisterError("身份验证码错误");
-        } else {
-            doRegister(okHttpClient, phone, pwd, isDoctor);
-        }
+        checkPhoneRegistered(okHttpClient, phone, pwd, isDoctor, code);
     }
 
     // check phone number, password, confirm-password, role and verify code
@@ -126,8 +119,8 @@ public class RegisterPresenter implements RegisterContract.Presenter {
     }
 
     // check phone number is registered
-    // return a boolean value
-    private boolean checkPhoneRegistered(OkHttpClient okHttp, String phone) {
+    private void checkPhoneRegistered(final OkHttpClient okHttp, final String phone, final String pwd,
+                                      final boolean isDoctor, final String code) {
         Request phoneCheckRequest = BaseActivity.buildHttpGetRequest("/user/isRepeatLoginName?" +
                 "userPhone=" + phone);
         okHttp.newCall(phoneCheckRequest).enqueue(new Callback() {
@@ -135,7 +128,6 @@ public class RegisterPresenter implements RegisterContract.Presenter {
             public void onFailure(Call call, IOException e) {
                 if (D) Log.e(TAG, e.getMessage());
                 mRegisterView.showRegisterError("check phone interface error");
-
             }
 
             @Override
@@ -144,17 +136,21 @@ public class RegisterPresenter implements RegisterContract.Presenter {
                 if (D) Log.d(TAG, json);
 
                 MiniResponse result = new Gson().fromJson(json, MiniResponse.class);
-                isRegistered = result.getResult().equals("true");
+                if (result.getResult().equals("true")) {
+                    mRegisterView.showPhoneRegistered();
+                } else {
+                    // 手机号未注册过
+                    if (isDoctor)
+                        checkDoctorCode(okHttp, phone, pwd, code);
+                    else
+                        doRegister(okHttp, phone, pwd, false);
+                }
             }
         });
-
-        return isRegistered;
     }
 
     // check doctor code is correct
-    // return a boolean value
-    private boolean checkDoctorCode(OkHttpClient okHttp, String code) {
-        final boolean[] isCorrect = {false};
+    private void checkDoctorCode(final OkHttpClient okHttp, final String phone, final String pwd, String code) {
         Request checkCodeRequest = BaseActivity.buildHttpGetRequest("/sys/isCorrectCode?" +
                 "svalue=" + code);
 
@@ -168,14 +164,16 @@ public class RegisterPresenter implements RegisterContract.Presenter {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 String json = response.body().string();
-                if (D) Log.d(TAG, json);
+                if (D) Log.d(TAG, "checkDoctorCode: " + json);
 
                 MiniResponse result = new Gson().fromJson(json, MiniResponse.class);
-                isCorrect[0] = result.getStatus().equals("200");
+                if (result.getStatus().equals("200")) {
+                    doRegister(okHttp, phone, pwd, true);
+                } else {
+                    mRegisterView.showRegisterError("身份验证码错误");
+                }
             }
         });
-
-        return isCorrect[0];
     }
 
     // through all checking

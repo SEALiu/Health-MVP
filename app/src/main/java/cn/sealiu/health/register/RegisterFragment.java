@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatCheckBox;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import cn.sealiu.health.bluetooth.FindBluetoothActivity;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
 
+import static cn.sealiu.health.BaseActivity.D;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -30,6 +32,7 @@ public class RegisterFragment extends Fragment implements
         RegisterContract.View,
         View.OnClickListener {
 
+    private final static String TAG = "RegisterFragment";
     private RegisterContract.Presenter mPresenter;
     private EditText mPhoneET, mPwdET, mRePwdET, mCodeET;
     private AppCompatCheckBox mDoctorCB;
@@ -147,7 +150,11 @@ public class RegisterFragment extends Fragment implements
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                getActivity().startActivity(new Intent(getActivity(), MainActivity.class));
+                Intent intent = new Intent(getActivity(), MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                getActivity().startActivity(intent);
+
                 getActivity().finish();
             }
         }, 1000);
@@ -173,11 +180,18 @@ public class RegisterFragment extends Fragment implements
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.register_btn:
+                if (D) Log.e(TAG, mPhoneET.getText().toString() + "\n" +
+                        mPwdET.getText().toString() + "\n" +
+                        mDoctorCB.isChecked() + "\n" +
+                        mCodeET.getText().toString()
+                );
+
                 mPresenter.register(mPhoneET.getText().toString(),
                         mPwdET.getText().toString(),
                         mRePwdET.getText().toString(),
                         mDoctorCB.isChecked(),
                         mCodeET.getText().toString());
+
                 break;
             case R.id.login_btn:
                 getActivity().startActivity(new Intent(getActivity(), LoginActivity.class));

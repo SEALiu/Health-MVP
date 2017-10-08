@@ -166,8 +166,10 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 sharedPref.edit().putBoolean(USER_LOGIN, false).apply();
                                 Intent intent = new Intent(getActivity(), LoginActivity.class);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
+                                getActivity().finish();
                             }
                         }).show();
                 break;

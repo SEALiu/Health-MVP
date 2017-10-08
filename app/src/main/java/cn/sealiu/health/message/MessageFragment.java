@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -21,8 +22,11 @@ import java.util.List;
 import cn.sealiu.health.R;
 import cn.sealiu.health.data.bean.Message;
 import cn.sealiu.health.login.LoginActivity;
+import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.main.ScrollChildSwipeRefreshLayout;
 
+import static cn.sealiu.health.BaseActivity.IDENTITY_DOCTOR;
+import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class MessageFragment extends Fragment implements MessageContract.View {
@@ -64,13 +68,20 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         noMsgView = root.findViewById(R.id.no_message);
         listView.setAdapter(mMsgAdapter);
 
-        getActivity().findViewById(R.id.fab_add_message)
-                .setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        // TODO: 2017/10/1 群／单发消息
-                    }
-                });
+        FloatingActionButton fabAddMessage = getActivity().findViewById(R.id.fab_add_message);
+        fabAddMessage.setVisibility(View.GONE);
+
+        String userType = sharedPref.getString(MainActivity.USER_TYPE, "-1");
+        if (userType.equals(IDENTITY_DOCTOR)) {
+
+            fabAddMessage.setVisibility(View.VISIBLE);
+            fabAddMessage.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // TODO: 2017/10/1 群／单发消息
+                }
+            });
+        }
 
         ScrollChildSwipeRefreshLayout swipeRefreshLayout = root.findViewById(R.id.refresh_layout);
         swipeRefreshLayout.setColorSchemeColors(
