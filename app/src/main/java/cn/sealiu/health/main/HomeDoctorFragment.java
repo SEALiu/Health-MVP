@@ -112,6 +112,7 @@ public class HomeDoctorFragment extends Fragment implements DoctorContract.View 
 
     @Override
     public void showUsers(final List<User> users) {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -124,6 +125,7 @@ public class HomeDoctorFragment extends Fragment implements DoctorContract.View 
 
     @Override
     public void showNoUsers() {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

@@ -121,6 +121,7 @@ public class MessageFragment extends Fragment implements MessageContract.View {
 
     @Override
     public void showNoMessage() {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -131,6 +132,7 @@ public class MessageFragment extends Fragment implements MessageContract.View {
 
     @Override
     public void showMessages(final List<Message> messages) {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

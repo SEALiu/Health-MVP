@@ -681,6 +681,7 @@ public class HomeUserFragment extends Fragment implements
     @Override
     public void changeMenuBluetoothIcon(final int resourceId) {
         if (menu != null) {
+            if (getActivity() == null) return;
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

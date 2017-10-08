@@ -134,6 +134,7 @@ public class PostDetailFragment extends Fragment implements PostDetailContract.V
 
     @Override
     public void showPostDetail(final Post post) {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -147,6 +148,7 @@ public class PostDetailFragment extends Fragment implements PostDetailContract.V
 
     @Override
     public void showComments(final List<Comment> comments) {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

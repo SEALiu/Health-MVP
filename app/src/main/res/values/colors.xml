@@ -12,6 +12,8 @@
     <color name="colorDivider">#ececec</color>
     <color name="lightBg">#f4f4f4</color>
 
+    <color name="moonGray">#d6d6d6</color>
+
     <color name="tomato">#F44336</color>
     <color name="cucumber">#4CAF50</color>
     <color name="banana">#ffc107</color>

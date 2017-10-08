@@ -236,7 +236,7 @@ public class UserDetailFragment extends Fragment implements
     @Override
     public void showUserDetail(final User user) {
         userName = user.getUsername();
-
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -277,6 +277,7 @@ public class UserDetailFragment extends Fragment implements
 
     @Override
     public void updateBarChartStatistic(final ArrayList<BarEntry> yVals, final boolean visible, final int type) {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -332,6 +333,7 @@ public class UserDetailFragment extends Fragment implements
     public void updateComfortStatistic(final ArrayList<BarEntry> yVals,
                                        final boolean visible,
                                        final int position) {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

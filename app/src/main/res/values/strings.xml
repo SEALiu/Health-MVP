@@ -154,4 +154,5 @@
     <string name="comfort">佩戴松紧合适</string>
     <string name="tight">佩戴紧</string>
     <string name="comfort_range_help">舒适度范围</string>
+    <string name="bind_patients_list">您负责的患者列表</string>
 </resources>

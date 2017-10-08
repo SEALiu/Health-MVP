@@ -131,6 +131,7 @@ public class ProfileFragment extends Fragment implements ProfileContract.View, V
 
     @Override
     public void updateUserInfo(final User user) {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

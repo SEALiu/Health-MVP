@@ -139,6 +139,7 @@ public class ForumFragment extends Fragment implements ForumContract.View {
 
     @Override
     public void showPosts(final List<Post> posts) {
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
