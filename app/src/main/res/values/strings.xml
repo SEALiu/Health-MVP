@@ -134,7 +134,7 @@
     <string name="channel_number_unchanged">显示通道数量未改变</string>
     <string name="channel_number_error">设置通道数量最小为1，最大为4</string>
     <string name="set_channel_name">通道命名</string>
-    <string name="network_setting">网络设置</string>
+    <string name="network_setting">仅使用无线网络上传/下载数据</string>
     <string name="channel_name_unchanged">通道未命名</string>
     <string name="channel_name_toolong">通道命名最多两个字符</string>
     <string name="patient_detail">患者详情</string>
@@ -146,4 +146,6 @@
     <string name="no_data">暂无数据</string>
     <string name="choose_date">选择日期</string>
     <string name="comfort_statistic">舒适度统计</string>
+    <string name="only_wifi">设置已保存，仅使用无线网络上传/下载数据</string>
+    <string name="use_cell">设置已保存，使用无线网络/移动数据网络上传/下载数据</string>
 </resources>

@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatRadioButton;
+import android.support.v7.widget.SwitchCompat;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,6 +43,7 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
     private static final int REQUEST_FIX = 1;
     private SettingContract.Presenter mPresenter;
     private TextView showChannelNumTV;
+    private SwitchCompat setNetworkSwitch;
     private String userType;
 
     public SettingFragment() {
@@ -68,6 +70,14 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.settings_frag, container, false);
 
+        setNetworkSwitch = root.findViewById(R.id.set_network_switch);
+        if (sharedPref.getBoolean(MainActivity.NETWORK_ONLY_WIFI, false)) {
+            //only use wifi
+            setNetworkSwitch.setChecked(true);
+        } else {
+            setNetworkSwitch.setChecked(false);
+        }
+
         showChannelNumTV = root.findViewById(R.id.show_channel_num);
         updateChannelNum();
 
@@ -79,9 +89,9 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
         View setNetwork = root.findViewById(R.id.set_network);
 
         setChannelName.setOnClickListener(this);
-        setNetwork.setOnClickListener(this);
         fixCriterion.setOnClickListener(this);
         showChannel.setOnClickListener(this);
+        setNetworkSwitch.setOnClickListener(this);
 
         root.findViewById(R.id.about).setOnClickListener(this);
 
@@ -269,7 +279,14 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
                         });
                 builder1.show();
                 break;
-            case R.id.set_network:
+            case R.id.set_network_switch:
+                sharedPref.edit().putBoolean(MainActivity.NETWORK_ONLY_WIFI, setNetworkSwitch.isChecked())
+                        .apply();
+
+                if (setNetworkSwitch.isChecked())
+                    showInfo(R.string.only_wifi);
+                else
+                    showInfo(R.string.use_cell);
                 break;
         }
     }

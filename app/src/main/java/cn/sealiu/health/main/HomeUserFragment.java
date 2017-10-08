@@ -351,6 +351,7 @@ public class HomeUserFragment extends Fragment implements
                     values.put(DataStatusEntry.COLUMN_NAME_ID, UUID.randomUUID().toString());
                     values.put(DataStatusEntry.COLUMN_NAME_TIME, dateStr);
                     values.put(DataStatusEntry.COLUMN_NAME_STATUS, 3); //未请求
+                    values.put(DataStatusEntry.COLUMN_NAME_SYNC, 0);
 
                     db.insert(DataStatusEntry.TABLE_NAME, null, values);
                 }

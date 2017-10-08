@@ -106,11 +106,10 @@
             android:layout_weight="1"
             android:text="@string/network_setting" />
 
-        <TextView
-            android:id="@+id/show_network"
+        <android.support.v7.widget.SwitchCompat
+            android:id="@+id/set_network_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:drawableEnd="@drawable/ic_chevron_right_black_24dp"
             android:gravity="center_vertical" />
     </LinearLayout>
 

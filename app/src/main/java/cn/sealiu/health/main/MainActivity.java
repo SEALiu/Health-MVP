@@ -54,6 +54,8 @@ public class MainActivity extends BaseActivity {
     public static final String DEVICE_COMFORT_C = "COMFORT_C";
     public static final String DEVICE_COMFORT_D = "COMFORT_D";
 
+    public static final String NETWORK_ONLY_WIFI = "network_only_wifi";
+
     public static final String HISTORY_DATA_SYNC_DATE = "history_data_sync_date";
 
     private DrawerLayout mDrawerLayout;
