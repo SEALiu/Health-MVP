@@ -6,14 +6,18 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.data.bean.Message;
 import cn.sealiu.health.data.bean.Responsible;
 import cn.sealiu.health.data.bean.User;
 import cn.sealiu.health.data.response.MessageResponse;
+import cn.sealiu.health.data.response.MiniResponse;
 import cn.sealiu.health.data.response.ResponsibleResponse;
 import cn.sealiu.health.main.MainActivity;
 import okhttp3.Call;
@@ -65,6 +69,51 @@ public class MessagePresenter implements MessageContract.Presenter {
                 break;
         }
         mMessageView.setLoadingIndicator(false);
+    }
+
+    @Override
+    public void doSentMsg(String[] ids, String content) {
+        final String userId = sharedPref.getString(MainActivity.USER_ID, "");
+        if (userId.equals("")) {
+            mMessageView.gotoLogin();
+            return;
+        }
+
+        Map<String, Object> groupMessage = new HashMap<>();
+        List<Msg> msgs = new ArrayList<>();
+        for (String id : ids) {
+            Msg msg = new Msg(userId, id, content);
+            msgs.add(msg);
+        }
+
+        groupMessage.put("GroupMessage", msgs);
+        String messageJson = new Gson().toJson(groupMessage);
+
+        if (D) Log.e(TAG, messageJson);
+
+        Request sendMsgsRequest = BaseActivity.buildHttpGetRequest("/message/sendGroupMessage?" +
+                "groupMessage=" + URLEncoder.encode(messageJson));
+
+        new OkHttpClient().newCall(sendMsgsRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                if (D) Log.e(TAG, e.getLocalizedMessage());
+                mMessageView.showInfo("send group message interface error");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String json = response.body().string();
+                MiniResponse miniResponse = new Gson().fromJson(json, MiniResponse.class);
+
+                if (miniResponse.getStatus().equals("200")) {
+                    mMessageView.showInfo("信息已发送");
+                    loadMessages();
+                } else {
+                    mMessageView.showInfo("信息发送失败");
+                }
+            }
+        });
     }
 
     private void userGetMsgList() {
@@ -221,6 +270,42 @@ public class MessagePresenter implements MessageContract.Presenter {
 
         public void setDoctorId(String doctorId) {
             DoctorId = doctorId;
+        }
+    }
+
+    private class Msg {
+        private String fromId;
+        private String toId;
+        private String content;
+
+        public Msg(String fromId, String toId, String content) {
+            this.fromId = fromId;
+            this.toId = toId;
+            this.content = content;
+        }
+
+        public String getFromId() {
+            return fromId;
+        }
+
+        public void setFromId(String fromId) {
+            this.fromId = fromId;
+        }
+
+        public String getToId() {
+            return toId;
+        }
+
+        public void setToId(String toId) {
+            this.toId = toId;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public void setContent(String content) {
+            this.content = content;
         }
     }
 }

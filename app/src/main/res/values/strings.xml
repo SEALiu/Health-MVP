@@ -139,7 +139,7 @@
     <string name="channel_name_unchanged">通道未命名</string>
     <string name="channel_name_toolong">通道命名最多两个字符</string>
     <string name="patient_detail">患者详情</string>
-    <string name="base_info">%1$s | %2$s | %3$s岁</string>
+    <string name="base_info">%1$s | %2$s | %3$s</string>
     <string name="send_msg">发送消息</string>
     <string name="message_empty">信息为空，未发送</string>
     <string name="close">关闭</string>
@@ -155,4 +155,6 @@
     <string name="tight">佩戴紧</string>
     <string name="comfort_range_help">舒适度范围</string>
     <string name="bind_patients_list">您负责的患者列表</string>
+    <string name="select_all">全选</string>
+    <string name="choose_receiver">选择收件人</string>
 </resources>

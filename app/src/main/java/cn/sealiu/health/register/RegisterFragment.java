@@ -131,8 +131,14 @@ public class RegisterFragment extends Fragment implements
 
     @Override
     public void showPhoneRegistered() {
-        mPhoneET.setText("");
-        Snackbar.make(mPwdET, R.string.phone_registered_error, Snackbar.LENGTH_LONG).show();
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mPhoneET.setText("");
+                Snackbar.make(mPwdET, R.string.phone_registered_error, Snackbar.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override

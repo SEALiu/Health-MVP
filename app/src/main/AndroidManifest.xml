@@ -74,6 +74,10 @@
         <activity
             android:name=".postdetail.PostDetailActivity"
             android:parentActivityName=".forum.ForumActivity" />
+
+        <activity
+            android:name=".chooserecevier.ChooseReceiverActivity"
+            android:parentActivityName=".message.MessageActivity" />
     </application>
 
 </manifest>

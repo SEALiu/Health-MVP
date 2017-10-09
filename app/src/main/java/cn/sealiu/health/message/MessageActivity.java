@@ -18,6 +18,7 @@ import cn.sealiu.health.util.ActivityUtils;
 
 public class MessageActivity extends BaseActivity {
     private DrawerLayout mDrawerLayout;
+    public static int REQUEST_RECEIVER = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

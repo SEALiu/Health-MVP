@@ -1,5 +1,7 @@
 package cn.sealiu.health.message;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -13,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -20,17 +23,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.sealiu.health.R;
+import cn.sealiu.health.chooserecevier.ChooseReceiverActivity;
 import cn.sealiu.health.data.bean.Message;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.main.ScrollChildSwipeRefreshLayout;
 
+import static android.app.Activity.RESULT_OK;
 import static cn.sealiu.health.BaseActivity.IDENTITY_DOCTOR;
 import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class MessageFragment extends Fragment implements MessageContract.View {
 
+    private final static String TAG = "MessageFragment";
     private MessageContract.Presenter mPresenter;
     private MessageAdapter mMsgAdapter;
     private View noMsgView;
@@ -78,7 +84,9 @@ public class MessageFragment extends Fragment implements MessageContract.View {
             fabAddMessage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    // TODO: 2017/10/1 群／单发消息
+                    // 选择收件人
+                    Intent intent = new Intent(getActivity(), ChooseReceiverActivity.class);
+                    startActivityForResult(intent, MessageActivity.REQUEST_RECEIVER);
                 }
             });
         }
@@ -162,6 +170,55 @@ public class MessageFragment extends Fragment implements MessageContract.View {
         getActivity().finish();
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == MessageActivity.REQUEST_RECEIVER) {
+            if (resultCode == RESULT_OK) {
+                final String[] ids = data.getStringArrayExtra("ids");
+                String[] names = data.getStringArrayExtra("names");
+
+                LayoutInflater inflater = getActivity().getLayoutInflater();
+                View dialogView = inflater.inflate(R.layout.send_msg_dia, null);
+                TextView receiversTV = dialogView.findViewById(R.id.receivers);
+                final EditText content = dialogView.findViewById(R.id.content);
+
+                StringBuilder receivers = new StringBuilder();
+                for (String name : names) {
+                    receivers.append(name).append(" ");
+                }
+                receiversTV.setText(String.format("收件人: %s", receivers));
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+                builder.setTitle(getString(R.string.send_msg))
+                        .setView(dialogView)
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                            }
+                        })
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                String contentStr = content.getText().toString();
+                                if (contentStr.isEmpty()) {
+                                    showInfo(R.string.message_empty);
+                                    dialogInterface.dismiss();
+                                } else {
+                                    mPresenter.doSentMsg(ids, contentStr);
+                                    dialogInterface.dismiss();
+                                }
+                            }
+                        });
+                builder.show();
+
+            } else {
+                showInfo("未选择收件人");
+            }
+        }
+    }
+
     private static class MessageAdapter extends BaseAdapter {
 
         private List<Message> mMessages;
@@ -203,7 +260,7 @@ public class MessageFragment extends Fragment implements MessageContract.View {
             TextView contactNameTV = rowView.findViewById(R.id.contact_name);
             TextView content = rowView.findViewById(R.id.content);
 
-            contactNameTV.setText(msg.getFromWho());
+            contactNameTV.setText(msg.getFromWho() == null ? "未命名" : msg.getFromWho());
             content.setText(msg.getContent());
 
             return rowView;

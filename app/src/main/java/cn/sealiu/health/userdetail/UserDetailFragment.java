@@ -235,7 +235,9 @@ public class UserDetailFragment extends Fragment implements
 
     @Override
     public void showUserDetail(final User user) {
-        userName = user.getUsername();
+        userName = user.getUsername() == null ? "未命名" : user.getUsername();
+        final String age = user.getAge() == null ? "年龄未知" : user.getAge() + "岁";
+
         if (getActivity() == null) return;
         getActivity().runOnUiThread(new Runnable() {
             @Override
@@ -244,9 +246,9 @@ public class UserDetailFragment extends Fragment implements
                     String gender = user.getGender() == 1 ? "男" : "女";
 
                     baseInfoTV.setText(String.format(getString(R.string.base_info),
-                            user.getUsername(),
+                            userName,
                             gender,
-                            user.getAge()));
+                            age));
 
                     phoneTV.setText(user.getPhone());
                     emailTV.setText(user.getEmail());
