@@ -302,6 +302,8 @@ public class HomeUserFragment extends Fragment implements
 
                 if (dbHelper == null) dbHelper = new HealthDbHelper(getActivity());
                 mPresenter.loadWeekBarChartData(dbHelper);
+
+                updateDataStatus();
             }
         });
 
@@ -388,7 +390,7 @@ public class HomeUserFragment extends Fragment implements
      */
     @Override
     public void updateHistoryData() {
-
+        db = dbHelper.getReadableDatabase();
         // 按照本地数据库 datastatus.tb 请求历史数据
         String sql = "SELECT * FROM " + DataStatusEntry.TABLE_NAME +
                 " WHERE " + DataStatusEntry.COLUMN_NAME_STATUS + " = 3";

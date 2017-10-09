@@ -34,6 +34,7 @@ import okhttp3.Response;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
+import static cn.sealiu.health.main.HomeUserFragment.BIND_SUCCESS;
 import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_FAILED_NUMBER_LIMIT;
 import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_FAILED_UID_EXIST;
 import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_FAILED_WRONG_MID;
@@ -325,7 +326,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
             }
 
         }
-        /*
+
         switch (data) {
             case "00":
                 mFindBluetoothView.requestCompleteMid();
@@ -347,7 +348,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                 mFindBluetoothView.bindWithMid();
                 break;
         }
-        */
+
     }
 
     @Override

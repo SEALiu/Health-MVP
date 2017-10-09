@@ -23,15 +23,14 @@ public interface FixCriterionContract {
 
         int getCurrentFix();
 
-        void updateUI(boolean[] fixFlags);
+        void updateUI();
     }
 
     interface Presenter extends BasePresenter {
-        void loadFixInfo();
 
         void uploadFixResult();
 
-        void doSentRequest(BluetoothGattCharacteristic c, BluetoothLeService s, String d);
+        void doSentRequest(BluetoothGattCharacteristic c, BluetoothLeService s, String d, int currentFix);
 
         BluetoothGattCharacteristic discoverCharacteristic(BluetoothLeService service);
 
