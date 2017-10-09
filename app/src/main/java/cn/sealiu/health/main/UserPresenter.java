@@ -795,6 +795,9 @@ public class UserPresenter implements UserContract.Presenter {
             mUserView.updateBattery(powerLeft + "%");
             mUserView.updateStorage(storageLeft + "MB");
             mUserView.updateTime(systemTime);
+
+            if (Integer.valueOf(powerLeft) < 10) mUserView.showInfo("电量不足10%");
+            if (Integer.valueOf(storageLeft) < 100) mUserView.showInfo("SD卡即将满容，请转移数据");
         }
 
         if (unboxResponseProtocol.isParam()) {
