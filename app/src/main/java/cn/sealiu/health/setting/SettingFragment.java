@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
+import cn.sealiu.health.bluetooth.FindBluetoothActivity;
 import cn.sealiu.health.fixcriterion.FixCriterionActivity;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
@@ -87,6 +88,7 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
         View fixCriterion = root.findViewById(R.id.fix_criterion);
         View setChannelName = root.findViewById(R.id.set_channel_name);
         View setNetwork = root.findViewById(R.id.set_network);
+        View changeDevice = root.findViewById(R.id.change_device);
 
         setChannelName.setOnClickListener(this);
         fixCriterion.setOnClickListener(this);
@@ -94,12 +96,14 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
         setNetworkSwitch.setOnClickListener(this);
 
         root.findViewById(R.id.about).setOnClickListener(this);
+        changeDevice.setOnClickListener(this);
 
         if (userType.equals(IDENTITY_DOCTOR)) {
             showChannel.setVisibility(View.GONE);
             fixCriterion.setVisibility(View.GONE);
             setChannelName.setVisibility(View.GONE);
             setNetwork.setVisibility(View.GONE);
+            changeDevice.setVisibility(View.GONE);
         }
 
         return root;
@@ -143,6 +147,27 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.change_device:
+                new AlertDialog.Builder(getActivity())
+                        .setTitle(R.string.change_device)
+                        .setMessage(R.string.change_device_confirm)
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Intent intent = new Intent(getActivity(), FindBluetoothActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                                getActivity().finish();
+                            }
+                        }).show();
+                break;
             case R.id.about:
                 new AlertDialog.Builder(getActivity())
                         .setTitle(R.string.about)

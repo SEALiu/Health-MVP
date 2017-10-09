@@ -157,4 +157,6 @@
     <string name="bind_patients_list">您负责的患者列表</string>
     <string name="select_all">全选</string>
     <string name="choose_receiver">选择收件人</string>
+    <string name="change_device">更换设备</string>
+    <string name="change_device_confirm">断开当前设备连接，然后重新搜索并连接一个新的设备。现在立即更换设备？</string>
 </resources>

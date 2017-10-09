@@ -149,39 +149,99 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
         }
     }
 
+    /**
+     * 涉及到换绑情况，所以需要判断，当前用户是否已有绑定的设备
+     *
+     * @param uuid      user uuid
+     * @param machineId 要绑定的device id
+     */
     @Override
     public void bindDevice2User(@NonNull String uuid, @NonNull String machineId) {
-        String id = checkNotNull(uuid);
+        final String id = checkNotNull(uuid);
         final String mid = checkNotNull(machineId);
 
-        Request bindRequest = BaseActivity.buildHttpGetRequest("/user/bindMachine?" +
-                "userUid=" + id + "&" +
-                "userMid=" + mid);
+        // 检测当前登录的用户是否已有绑定的设备
+        String currentMid = sharedPref.getString(MainActivity.DEVICE_MID, "");
 
-        OkHttpClient okHttpClient = new OkHttpClient();
+        final OkHttpClient okHttpClient = new OkHttpClient();
 
-        if (D) Log.d(TAG, bindRequest.url().toString());
+        if (currentMid.equals("")) {
+            // 当前用户没有已绑定的设备，直接绑定当前设备
+            Request bindRequest = BaseActivity.buildHttpGetRequest("/user/bindMachine?" +
+                    "userUid=" + id + "&" +
+                    "userMid=" + mid);
 
-        okHttpClient.newCall(bindRequest).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                if (D) Log.e(TAG, e.getLocalizedMessage());
-                mFindBluetoothView.showInfo("bind machine interface error");
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                MiniResponse miniResponse = new Gson().fromJson(
-                        response.body().string(), MiniResponse.class);
-
-                if (miniResponse.getStatus().equals("200")) {
-                    sharedPref.edit().putString(MainActivity.DEVICE_MID, mid).apply();
-                    mFindBluetoothView.gotoHome();
-                } else {
-                    if (D) Log.e(TAG, "can not upload bind info to remote database");
+            okHttpClient.newCall(bindRequest).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    if (D) Log.e(TAG, e.getLocalizedMessage());
+                    mFindBluetoothView.showInfo("bind machine interface error");
                 }
-            }
-        });
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    MiniResponse miniResponse = new Gson().fromJson(
+                            response.body().string(), MiniResponse.class);
+
+                    if (miniResponse.getStatus().equals("200")) {
+                        sharedPref.edit().putString(MainActivity.DEVICE_MID, mid).apply();
+                        mFindBluetoothView.gotoHome();
+                    } else {
+                        if (D) Log.e(TAG, "can not upload bind info to remote database");
+                    }
+                }
+            });
+        } else if (!currentMid.equals(machineId)) {
+            // 当前用户已有绑定的设备，且不是现在欲绑定的设备
+            // 保存历史设备
+            Request saveDeviceRequest = BaseActivity.buildHttpGetRequest("/HistoryMid/memoryHistMid?" +
+                    "userUid=" + id);
+            okHttpClient.newCall(saveDeviceRequest).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    if (D) Log.e(TAG, e.getLocalizedMessage());
+                    mFindBluetoothView.showInfo("save history device interface error");
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    MiniResponse mini = new Gson().fromJson(
+                            response.body().string(), MiniResponse.class);
+
+                    // 保存历史设备保存成功，保存新设备
+                    if (mini.getStatus().equals("200")) {
+                        Request bindRequest = BaseActivity.buildHttpGetRequest("/user/bindMachine?" +
+                                "userUid=" + id + "&" +
+                                "userMid=" + mid);
+
+                        okHttpClient.newCall(bindRequest).enqueue(new Callback() {
+                            @Override
+                            public void onFailure(Call call, IOException e) {
+                                if (D) Log.e(TAG, e.getLocalizedMessage());
+                                mFindBluetoothView.showInfo("bind machine interface error");
+                            }
+
+                            @Override
+                            public void onResponse(Call call, Response response) throws IOException {
+                                MiniResponse miniResponse = new Gson().fromJson(
+                                        response.body().string(), MiniResponse.class);
+
+                                if (miniResponse.getStatus().equals("200")) {
+                                    sharedPref.edit().putString(MainActivity.DEVICE_MID, mid).apply();
+                                    mFindBluetoothView.gotoHome();
+                                } else {
+                                    if (D)
+                                        Log.e(TAG, "can not upload bind info to remote database");
+                                }
+                            }
+                        });
+                    } else {
+                        mFindBluetoothView.showInfo("保存旧设备信息失败，请重试");
+                    }
+                }
+            });
+
+        }
     }
 
     @Override
@@ -212,7 +272,6 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
     public void analyzeData(String data) {
         if (D) Log.d(TAG, "data: " + data + "\n length: " + data.length());
 
-        // TODO: 2017/9/28 由于收到的报文错位：20字节 + 14字节
         Pattern p24 = Pattern.compile("^FF24[\\dA-F]{24}FF0D0AFF23[\\dA-F]{2}");
         Pattern p = Pattern.compile("[\\dA-F]{22}FF0D0A$");
 
@@ -254,8 +313,8 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                         break;
                     case EXECUTE_FAILED_WRONG_MID:
                         // TODO: 2017/9/28 代码完成后需要恢复
-                        //mFindBluetoothView.showInfo(R.string.input_mid_error);
-                        //mFindBluetoothView.bindWithMid();
+//                        mFindBluetoothView.showInfo(R.string.input_mid_error);
+//                        mFindBluetoothView.bindWithMid();
 
                         // TODO: 2017/9/28 移除下面的代码
                         if (!uuid.equals("")) {

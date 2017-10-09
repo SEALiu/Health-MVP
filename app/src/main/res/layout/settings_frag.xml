@@ -153,4 +153,15 @@
         android:drawablePadding="8dp"
         android:textColor="@color/tomato"
         android:gravity="center_vertical"/>
+
+    <TextView
+        android:id="@+id/change_device"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/change_device"
+        android:layout_marginTop="16dp"
+        android:gravity="center_horizontal"
+        android:background="@color/textOrIcons"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="16dp" />
 </LinearLayout>
