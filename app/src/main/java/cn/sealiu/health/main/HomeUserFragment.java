@@ -397,8 +397,15 @@ public class HomeUserFragment extends Fragment implements
         Cursor c = db.rawQuery(sql, null);
 
         if (c.moveToFirst()) {
+            if (mProgressDialog == null || !mProgressDialog.isShowing()) {
+                showProgressDialog(getString(R.string.request_history_data),
+                        "正在请求历史数据，请不要退出应用",
+                        5 * 60 * 1000);
+            }
+
             historyDate = c.getString(c.getColumnIndex(DataStatusEntry.COLUMN_NAME_TIME));
             if (D) Log.e(TAG, "request history: Date is " + historyDate);
+            updateProgressDialog("正在请求" + historyDate + "的数据...");
 
             if (mConnected == BluetoothLeService.STATE_CONNECTED
                     && mWantedCharacteristic != null
@@ -407,17 +414,13 @@ public class HomeUserFragment extends Fragment implements
                         BoxRequestProtocol.boxRequestHistoryData(historyDate));
             } else {
                 if (D) Log.e(TAG, "device disconnected");
+                hideProgressDialog();
                 showInfo("设备未连接");
             }
         } else {
             if (D) Log.e(TAG, "history data request over");
+            hideProgressDialog();
             showInfo("设备数据请求完毕");
-
-            // 检查是否可以上传数据（条件：时间，网络，数据状态）
-            if (prepareSyncData() == 0) {
-                showProgressDialog();
-                mPresenter.syncLocalData(dbHelper);
-            }
 
             // 继续接收实时数据
             if (mConnected == BluetoothLeService.STATE_CONNECTED
@@ -426,6 +429,52 @@ public class HomeUserFragment extends Fragment implements
                 mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
                         BoxRequestProtocol.boxStartUpload());
             }
+
+            if (prepareSyncData() == 0) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("上传数据")
+                        .setMessage("监测到本地有未上传的数据，是否现在上传数据?")
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        }).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        showProgressDialog(getString(R.string.upload_data),
+                                "正在上传数据，请稍候...",
+                                5 * 60 * 1000);
+                        uploadHistoryData();
+                    }
+                }).show();
+            }
+        }
+        c.close();
+    }
+
+    @Override
+    public void uploadHistoryData() {
+        // 获取本地数据未同步的日期 datastatus.tb
+        db = dbHelper.getWritableDatabase();
+        String sql1 = "SELECT " + DataStatusEntry.COLUMN_NAME_TIME + " FROM " +
+                DataStatusEntry.TABLE_NAME + " WHERE " +
+                DataStatusEntry.COLUMN_NAME_STATUS + " = 1 AND " +
+                DataStatusEntry.COLUMN_NAME_SYNC + " != 1";
+        Cursor c = db.rawQuery(sql1, null);
+
+        if (c.moveToFirst()) {
+            String time = c.getString(c.getColumnIndex(DataStatusEntry.COLUMN_NAME_TIME));
+
+            updateProgressDialog("正在上传" + time + "的数据...");
+
+            mPresenter.syncLocalDataDaily(dbHelper, time);
+        } else {
+            // 保存最近一次的同步时间
+            sharedPref.edit().putString(
+                    MainActivity.HISTORY_DATA_SYNC_DATE, df.format(new Date())).apply();
+            hideProgressDialog();
+            showInfo("数据同步完成");
         }
         c.close();
     }
@@ -437,14 +486,12 @@ public class HomeUserFragment extends Fragment implements
     }
 
     @Override
-    public void showProgressDialog() {
+    public void showProgressDialog(String title, String content, long delayMillis) {
         if (mProgressDialog == null) {
             mProgressDialog = new ProgressDialog(getActivity());
             mProgressDialog.setCancelable(false);
-            mProgressDialog.setTitle(R.string.upload_data);
-            mProgressDialog.setIcon(ActivityCompat.getDrawable(getActivity(),
-                    R.drawable.ic_cloud_upload_bluesky_24dp));
-            mProgressDialog.setMessage("正在上传数据，请稍候...");
+            mProgressDialog.setTitle(title);
+            mProgressDialog.setMessage(content);
             mProgressDialog.setIndeterminate(true);
         }
 
@@ -454,10 +501,24 @@ public class HomeUserFragment extends Fragment implements
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (mProgressDialog != null && mProgressDialog.isShowing())
+                if (mProgressDialog != null && mProgressDialog.isShowing()) {
                     mProgressDialog.dismiss();
+                    mProgressDialog = null;
+                }
             }
-        }, 3 * 60 * 1000);
+        }, delayMillis);
+    }
+
+    @Override
+    public void updateProgressDialog(final String content) {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mProgressDialog.setMessage(content);
+                }
+            });
+        }
     }
 
     @Override
@@ -552,8 +613,10 @@ public class HomeUserFragment extends Fragment implements
                         showInfo("没有连接无线网络");
                         break;
                     case 0:
-                        showProgressDialog();
-                        mPresenter.syncLocalData(dbHelper);
+                        showProgressDialog(getString(R.string.upload_data),
+                                "正在上传数据，请稍候...",
+                                5 * 60 * 1000);
+                        uploadHistoryData();
                         break;
                 }
 
@@ -750,7 +813,6 @@ public class HomeUserFragment extends Fragment implements
         } else {
             showInfo(R.string.bluetooth_disconnected);
         }
-
     }
 
     @Override

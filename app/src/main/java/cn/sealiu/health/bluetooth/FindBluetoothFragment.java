@@ -56,7 +56,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * functions:
  * 1. find bluetooth device，and connection.
  * 2. verify user.
- *
+ * <p>
  * Created by liuyang
  * on 2017/9/14.
  */
@@ -415,8 +415,14 @@ public class FindBluetoothFragment extends Fragment
     public void requestCompleteMid() {
         mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
                 BoxRequestProtocol.boxRequestDeviceParam(ProtocolMsg.DEVICE_PARAM_HIGH_MID, null));
-        mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
-                BoxRequestProtocol.boxRequestDeviceParam(ProtocolMsg.DEVICE_PARAM_LOW_MID, null));
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                        BoxRequestProtocol.boxRequestDeviceParam(ProtocolMsg.DEVICE_PARAM_LOW_MID, null));
+            }
+        }, 500);
     }
 
     @Override

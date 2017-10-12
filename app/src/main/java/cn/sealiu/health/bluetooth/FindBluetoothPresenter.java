@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.BluetoothLeService;
@@ -25,7 +24,6 @@ import cn.sealiu.health.data.response.MiniResponse;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.SampleGattAttributes;
-import cn.sealiu.health.util.UnboxResponseProtocol;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -35,12 +33,6 @@ import okhttp3.Response;
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
 import static cn.sealiu.health.main.HomeUserFragment.BIND_SUCCESS;
-import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_FAILED_NUMBER_LIMIT;
-import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_FAILED_UID_EXIST;
-import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_FAILED_WRONG_MID;
-import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_FAILED_WRONG_UID;
-import static cn.sealiu.health.util.ProtocolMsg.EXECUTE_SUCCESS;
-import static cn.sealiu.health.util.ProtocolMsg.RE_CERTIFICATION;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -184,6 +176,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                     MiniResponse miniResponse = new Gson().fromJson(
                             response.body().string(), MiniResponse.class);
 
+                    if (D) Log.e(TAG, response.body().string());
                     if (miniResponse.getStatus().equals("200")) {
                         sharedPref.edit().putString(MainActivity.DEVICE_MID, mid).apply();
                         mFindBluetoothView.gotoHome();
@@ -241,7 +234,8 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                     }
                 }
             });
-
+        } else {
+            mFindBluetoothView.gotoHome();
         }
     }
 
@@ -271,9 +265,10 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
 
     @Override
     public void analyzeData(String data) {
-        if (D) Log.d(TAG, "data: " + data + "\n length: " + data.length());
+        if (D) Log.d(TAG, "find data: " + data);
 
-        Pattern p24 = Pattern.compile("^FF24[\\dA-F]{24}FF0D0AFF23[\\dA-F]{2}");
+        /*
+        Pattern p24 = Pattern.compile("^FF2408[\\dA-F]{22}FF0D0AFF2308");
         Pattern p = Pattern.compile("[\\dA-F]{22}FF0D0A$");
 
         if (p24.matcher(data.toUpperCase()).find()) {
@@ -282,6 +277,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
             data = dataCache + data;
             dataCache = "";
 
+            if (D) Log.d(TAG, "find data: " + data.substring(34, 68));
             UnboxResponseProtocol protocol = new UnboxResponseProtocol(data.substring(34, 68));
 
             String resultType = protocol.getExecuteResultType();
@@ -314,40 +310,55 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                         break;
                     case EXECUTE_FAILED_WRONG_MID:
                         // TODO: 2017/9/28 代码完成后需要恢复
-//                        mFindBluetoothView.showInfo(R.string.input_mid_error);
-//                        mFindBluetoothView.bindWithMid();
+                        mFindBluetoothView.showInfo(R.string.input_mid_error);
+                        mFindBluetoothView.bindWithMid();
 
                         // TODO: 2017/9/28 移除下面的代码
-                        if (!uuid.equals("")) {
-                            bindDevice2User(uuid, mid);
-                        }
+//                        if (!uuid.equals("")) {
+//                            bindDevice2User(uuid, mid);
+//                        }
                         break;
                 }
             }
 
         }
+        */
 
-        switch (data) {
-            case "00":
-                mFindBluetoothView.requestCompleteMid();
-                sharedPref.edit().putString(MainActivity.DEVICE_MID, BIND_SUCCESS).apply();
-                mFindBluetoothView.gotoHome();
-                break;
-            case "01":
-                mFindBluetoothView.gotoLogin();
-                break;
-            case "02":
-                mFindBluetoothView.showInfo("该设备绑定用户已达到限制");
-                break;
-            case "03":
-                mFindBluetoothView.showInfo("请输入设备ID后8位进行验证");
-                mFindBluetoothView.bindWithMid();
-                break;
-            case "04":
-                mFindBluetoothView.showInfo("设备ID输入错误，请重新输入");
-                mFindBluetoothView.bindWithMid();
-                break;
+        // TODO: 2017/10/12 移除下面的代码
+        if (data.equals("00")) {//认证成功返回00，然后再次点击返回的是：0x230804......
+            Log.e(TAG, data);
+
+            //mFindBluetoothView.requestCompleteMid();
+            String uuid = sharedPref.getString(MainActivity.USER_UID, "");
+
+            if (!uuid.equals("")) {
+                bindDevice2User(uuid, BIND_SUCCESS);
+            } else {
+                if (D) Log.e(TAG, "user id is empty");
+            }
         }
+
+//        switch (data) {
+//            case "00":
+//                mFindBluetoothView.requestCompleteMid();
+//                sharedPref.edit().putString(MainActivity.DEVICE_MID, BIND_SUCCESS).apply();
+//                mFindBluetoothView.gotoHome();
+//                break;
+//            case "01":
+//                mFindBluetoothView.gotoLogin();
+//                break;
+//            case "02":
+//                mFindBluetoothView.showInfo("该设备绑定用户已达到限制");
+//                break;
+//            case "03":
+//                mFindBluetoothView.showInfo("请输入设备ID后8位进行验证");
+//                mFindBluetoothView.bindWithMid();
+//                break;
+//            case "04":
+//                mFindBluetoothView.showInfo("设备ID输入错误，请重新输入");
+//                mFindBluetoothView.bindWithMid();
+//                break;
+//        }
 
     }
 

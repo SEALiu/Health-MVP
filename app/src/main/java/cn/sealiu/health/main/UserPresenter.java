@@ -20,7 +20,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -215,62 +214,48 @@ public class UserPresenter implements UserContract.Presenter {
         mUserView.setSyncTime();
     }
 
+    // 从 datastatus.tb 中找到为同步的数据，按天上传数据至服务器
     @Override
-    public void syncLocalData(final HealthDbHelper dbHelper) {
+    public void syncLocalDataDaily(final HealthDbHelper dbHelper, String time) {
         String mid = sharedPref.getString(MainActivity.DEVICE_MID, "");
         Map<String, Object> historyDataMap = new HashMap<>();
-        int totalCount = 0;
+        int count = 0;
 
-        // 获取本地数据未同步的日期 datastatus.tb
-        final SQLiteDatabase db = dbHelper.getWritableDatabase();
-        String sql1 = "SELECT " + DataStatusEntry.COLUMN_NAME_TIME + " FROM " +
-                DataStatusEntry.TABLE_NAME + " WHERE " +
-                DataStatusEntry.COLUMN_NAME_STATUS + " = 1 AND " +
-                DataStatusEntry.COLUMN_NAME_SYNC + " != 1";
-        Cursor c1 = db.rawQuery(sql1, null);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT * FROM " + DataEntry.TABLE_NAME + " WHERE " +
+                DataEntry.COLUMN_NAME_MID + " = '" + mid +
+                "' AND " + DataEntry.COLUMN_NAME_TIME + " LIKE '" + time + "%'";
 
-        final List<String> unsyncDays = new ArrayList<>();
-        if (c1.moveToFirst()) {
-            do {
-                unsyncDays.add(c1.getString(c1.getColumnIndex(DataStatusEntry.COLUMN_NAME_TIME)));
-            } while (c1.moveToNext());
-            c1.close();
-        }
-
-        // 获取未同步的数据, 保存到 List<DataBean> dataBeans 中
+        Cursor c = db.rawQuery(sql, null);
         List<DataBean> dataBeans = new ArrayList<>();
-        for (String time : unsyncDays) {
-            String sql = "SELECT * FROM " + DataEntry.TABLE_NAME + " WHERE " +
-                    DataEntry.COLUMN_NAME_MID + " = '" + mid +
-                    "' AND " + DataEntry.COLUMN_NAME_TIME + " LIKE '" + time + "%'";
+        if (c.moveToFirst()) {
+            do {
+                DataBean bean = new DataBean(mid,
+                        c.getInt(c.getColumnIndex(DataEntry.COLUMN_NAME_SEQUENCE)),
+                        c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_AA)),
+                        c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_BB)),
+                        c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_CC)),
+                        c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_DD)),
+                        c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_TIME))
+                );
 
-            Cursor c = db.rawQuery(sql, null);
-            if (c.moveToFirst()) {
-                do {
-                    DataBean bean = new DataBean(mid,
-                            c.getInt(c.getColumnIndex(DataEntry.COLUMN_NAME_SEQUENCE)),
-                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_AA)),
-                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_BB)),
-                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_CC)),
-                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_DD)),
-                            c.getString(c.getColumnIndex(DataEntry.COLUMN_NAME_TIME))
-                    );
+                count++;
 
-                    totalCount++;
-
-                    dataBeans.add(bean);
-                } while (c.moveToNext());
-                c.close();
-            }
+                dataBeans.add(bean);
+            } while (c.moveToNext());
+            c.close();
         }
 
-        historyDataMap.put("count", totalCount);
+        historyDataMap.put("count", count);
         historyDataMap.put("data", dataBeans);
 
         // 格式化
         String uploadDataJson = new Gson().toJson(historyDataMap);
 
-        // 调用同步接口，执行上传操作
+        doUploadHistoryData(uploadDataJson, dbHelper, time);
+    }
+
+    private void doUploadHistoryData(String uploadDataJson, final HealthDbHelper dbHelper, final String syncDate) {
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("upLoad", uploadDataJson)
@@ -297,33 +282,28 @@ public class UserPresenter implements UserContract.Presenter {
                 if (D) Log.d(TAG, json);
 
                 MiniResponse miniResponse = new Gson().fromJson(json, MiniResponse.class);
-                mUserView.hideProgressDialog();
 
-                if (miniResponse.getStatus().equals("200")) {
-                    mUserView.showInfo("本地数据已同步完成");
-                    updateDataStatus(dbHelper, unsyncDays);
-
-                    // 保存最近一次的更新时间
-                    sharedPref.edit().putString(
-                            MainActivity.HISTORY_DATA_SYNC_DATE, df.format(new Date())).apply();
+                if (miniResponse.getStatus().equals("200") || miniResponse.getStatus().equals("400")) {
+                    updateDataStatus(dbHelper, syncDate);
                 } else {
-                    mUserView.showInfo("数据上传失败，请重试");
+                    if (D) Log.e(TAG, "upload history data interface error");
                 }
             }
         });
     }
 
-    private void updateDataStatus(HealthDbHelper dbHelper, List<String> unsyncDays) {
+    private void updateDataStatus(HealthDbHelper dbHelper, String time) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(DataStatusEntry.COLUMN_NAME_SYNC, 1);
 
-        for (String time : unsyncDays) {
-            db.update(DataStatusEntry.TABLE_NAME,
-                    values,
-                    DataStatusEntry.COLUMN_NAME_TIME + "=" + time,
-                    null);
-        }
+        int result = db.update(DataStatusEntry.TABLE_NAME,
+                values,
+                DataStatusEntry.COLUMN_NAME_TIME + "='" + time + "'",
+                null);
+        Log.e(TAG, "update result: " + result);
+
+        mUserView.uploadHistoryData();
     }
 
     @Override
