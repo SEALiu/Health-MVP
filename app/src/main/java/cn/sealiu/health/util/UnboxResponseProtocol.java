@@ -253,9 +253,8 @@ public class UnboxResponseProtocol extends ProtocolMsg {
      * 例如：设备认证返回的设备id
      */
     public String getExecuteBindedData() {
-        // TODO: 2017/9/28 uncomment code below when 0x23 08 is done
-        //if (!this.type.equals(RS_EXECUTE_STATUS)) return "";
-        return this.msg.substring(10, 28);
+        if (!this.type.equals(RS_EXECUTE_STATUS)) return "";
+        return this.msg.substring(8, 28);
     }
 
     /**

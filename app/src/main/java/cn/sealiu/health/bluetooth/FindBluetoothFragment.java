@@ -310,8 +310,16 @@ public class FindBluetoothFragment extends Fragment
                 if (mid.length() != 8) {
                     showMessage(getString(R.string.mid_length_error));
                 } else {
+                    char[] chars = mid.toCharArray();
+
+                    StringBuilder sbu = new StringBuilder();
+
+                    for (char c : chars) {
+                        sbu.append(Integer.toHexString((int) c));
+                    }
+
                     mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
-                            BoxRequestProtocol.boxRequestCertification(mid));
+                            BoxRequestProtocol.boxRequestCertification(sbu.toString()));
                 }
                 break;
         }

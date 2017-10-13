@@ -79,6 +79,8 @@ public class ProfileFragment extends Fragment implements ProfileContract.View, V
             root.findViewById(R.id.machine_id_holder).setVisibility(View.GONE);
         }
 
+        setupBaseInfo();
+
         ScrollChildSwipeRefreshLayout swipeRefreshLayout = root.findViewById(R.id.refresh_layout);
         swipeRefreshLayout.setColorSchemeColors(
                 ContextCompat.getColor(getActivity(), R.color.colorPrimary),
@@ -404,5 +406,18 @@ public class ProfileFragment extends Fragment implements ProfileContract.View, V
                     }
                 });
         builder.show();
+    }
+
+    private void setupBaseInfo() {
+        usernameTV.setText(sharedPref.getString(ProfileActivity.PROFILE_USERNAME, ""));
+        int gender = sharedPref.getInt(ProfileActivity.PROFILE_GENDER, 0);
+        if (gender == 1) genderTV.setText("男");
+        if (gender == 0) genderTV.setText("女");
+        String age = sharedPref.getString(ProfileActivity.PROFILE_AGE, "0");
+        if (!age.equals("0")) ageTV.setText(age);
+
+        phoneTV.setText(sharedPref.getString(ProfileActivity.PROFILE_PHONE, ""));
+        emailTV.setText(sharedPref.getString(ProfileActivity.PROFILE_EMAIL, ""));
+        midTV.setText(sharedPref.getString(ProfileActivity.PROFILE_MID, ""));
     }
 }

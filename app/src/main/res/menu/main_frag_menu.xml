@@ -10,4 +10,9 @@
         android:title="@string/sync"
         android:icon="@drawable/ic_cloud_upload_24dp"
         app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/fix_criterion"
+        android:title="@string/fix_criterion"
+        app:showAsAction="never" />
 </menu>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/activity_vertical_margin">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            app:srcCompat="@drawable/ic_live_help_black_24dp"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="@string/fix_criterion_info" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorDivider"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp" />
+
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/fix_blank"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fix_blank" />
+
+        <RadioButton
+            android:id="@+id/fix_loose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fix_loose" />
+
+        <RadioButton
+            android:id="@+id/fix_comfort"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fix_comfort" />
+
+        <RadioButton
+            android:id="@+id/fix_tight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fix_tight" />
+    </RadioGroup>
+
+    <!--<LinearLayout-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:orientation="horizontal">-->
+    <!--<android.support.v7.widget.AppCompatButton-->
+    <!--android:id="@+id/fix_blank"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:text="@string/fix_blank"-->
+    <!--android:textColor="@color/textOrIcons"-->
+    <!--app:backgroundTint="@color/colorAccent" />-->
+
+    <!--<android.support.v7.widget.AppCompatButton-->
+    <!--android:id="@+id/fix_loose"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:text="@string/fix_loose"-->
+    <!--android:textColor="@color/textOrIcons"-->
+    <!--app:backgroundTint="@color/colorAccent" />-->
+
+    <!--<android.support.v7.widget.AppCompatButton-->
+    <!--android:id="@+id/fix_comfort"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:text="@string/fix_comfort"-->
+    <!--android:textColor="@color/textOrIcons"-->
+    <!--app:backgroundTint="@color/colorAccent" />-->
+
+    <!--<android.support.v7.widget.AppCompatButton-->
+    <!--android:id="@+id/fix_tight"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:text="@string/fix_tight"-->
+    <!--android:textColor="@color/textOrIcons"-->
+    <!--app:backgroundTint="@color/colorAccent" />-->
+    <!--</LinearLayout>-->
+</LinearLayout>

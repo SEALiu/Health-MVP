@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,10 +28,10 @@ import cn.sealiu.health.R;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
+import cn.sealiu.health.util.ProtocolMsg;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
-import static cn.sealiu.health.main.HomeUserFragment.gattUpdateIntentFilter;
 import static cn.sealiu.health.main.HomeUserFragment.mBluetoothLeService;
 import static cn.sealiu.health.main.HomeUserFragment.mChosenBTAddress;
 import static cn.sealiu.health.main.HomeUserFragment.mConnected;
@@ -54,6 +55,15 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
 
     private int currentFix = -1;
     private boolean[] flags = new boolean[4];
+
+    private IntentFilter gattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        return intentFilter;
+    }
 
     public final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
@@ -105,10 +115,6 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getContext().registerReceiver(mGattUpdateReceiver, gattUpdateIntentFilter());
-        if (mBluetoothLeService != null) {
-            final boolean result = mBluetoothLeService.connect(mChosenBTAddress);
-            if (D) Log.d(TAG, "Connect request result=" + result);
-        }
     }
 
     @Nullable
@@ -286,8 +292,12 @@ public class FixCriterionFragment extends Fragment implements FixCriterionContra
                                 mWantedCharacteristic, true);
                     }
 
+//                    mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+//                            BoxRequestProtocol.boxRequestFixNorm(), currentFix);
+
                     mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
-                            BoxRequestProtocol.boxRequestFixNorm(), currentFix);
+                            BoxRequestProtocol.boxRequestDeviceParam(
+                                    ProtocolMsg.DEVICE_PARAM_COMFORT_ONE, null), currentFix);
                 }
                 break;
         }

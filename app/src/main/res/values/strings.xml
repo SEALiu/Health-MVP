@@ -160,4 +160,8 @@
     <string name="change_device">更换设备</string>
     <string name="change_device_confirm">断开当前设备连接，然后重新搜索并连接一个新的设备。现在立即更换设备？</string>
     <string name="request_history_data">请求历史数据</string>
+    <string name="fix_blank">空载定标</string>
+    <string name="fix_loose">松定标</string>
+    <string name="fix_comfort">合适定标</string>
+    <string name="fix_tight">紧定标</string>
 </resources>

@@ -219,7 +219,7 @@ public class FixCriterionPresenter implements FixCriterionContract.Presenter {
 
         // TODO: 2017/10/9 remove code below
         // test interface
-        fixValue[currentFix] = 23.5;
-        uploadFixResult();
+//        fixValue[currentFix] = 23.5;
+//        uploadFixResult();
     }
 }

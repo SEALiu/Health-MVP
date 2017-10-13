@@ -35,6 +35,7 @@ import cn.sealiu.health.data.bean.DataBean;
 import cn.sealiu.health.data.local.HealthDbHelper;
 import cn.sealiu.health.data.response.MiniResponse;
 import cn.sealiu.health.util.BoxRequestProtocol;
+import cn.sealiu.health.util.Fun;
 import cn.sealiu.health.util.ProtocolMsg;
 import cn.sealiu.health.util.SampleGattAttributes;
 import cn.sealiu.health.util.UnboxResponseProtocol;
@@ -136,9 +137,7 @@ public class UserPresenter implements UserContract.Presenter {
 
     @Override
     public void requestDeviceEnableDate() {
-        if (sharedPref.getString(MainActivity.DEVICE_ENABLE_DATE, "").equals("")) {
-            mUserView.requestDeviceParam(ProtocolMsg.DEVICE_PARAM_ENABLE_DATE);
-        }
+        mUserView.requestDeviceParam(ProtocolMsg.DEVICE_PARAM_ENABLE_DATE);
     }
 
     @Override
@@ -308,20 +307,18 @@ public class UserPresenter implements UserContract.Presenter {
 
     @Override
     public void onGattServicesDiscovered() {
-        int delay = 100;
-        final int period = 100;
-
-        // request battery left, storage left, system time
-        requestBaseInfo();
+        int delay = 1000;
+        final int period = 1000;
 
         // set sync time
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                syncTime();
-            }
-        }, delay);
-        delay += period;
+//        mHandler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                syncTime();
+//            }
+//        }, delay);
+//        delay += period;
+        syncTime();
 
         // request device mid, if not complete;
         if (sharedPref.getString(MainActivity.DEVICE_COMPLETED_MID, "").equals("")) {
@@ -341,17 +338,7 @@ public class UserPresenter implements UserContract.Presenter {
             delay += period;
         }
 
-        // request device enable date, if not exist;
-        if (sharedPref.getString(MainActivity.DEVICE_ENABLE_DATE, "").equals("")) {
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    requestDeviceEnableDate();
-                }
-            }, delay);
-            delay += period;
-        }
-
+        /*
         // request device channel number, if not exist;
         if (sharedPref.getInt(MainActivity.DEVICE_CHANNEL_NUM, 0) == 0) {
             mHandler.postDelayed(new Runnable() {
@@ -407,6 +394,7 @@ public class UserPresenter implements UserContract.Presenter {
             }, delay);
             delay += period;
         }
+        */
 
         // request device slope, if not exist;
         if (sharedPref.getFloat(MainActivity.DEVICE_SLOPE, 0f) == 0f) {
@@ -430,6 +418,7 @@ public class UserPresenter implements UserContract.Presenter {
             delay += period;
         }
 
+        /*
         if (sharedPref.getInt(MainActivity.DEVICE_SAMPLING_FREQUENCY, 0) == 0) {
             mHandler.postDelayed(new Runnable() {
                 @Override
@@ -439,13 +428,33 @@ public class UserPresenter implements UserContract.Presenter {
             }, delay);
             delay += period;
         }
+        */
 
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                startRealtime();
+                requestBaseInfo();
             }
         }, delay);
+        delay += period;
+
+        // request device enable date, if not exist;
+        if (sharedPref.getString(MainActivity.DEVICE_ENABLE_DATE, "").equals("")) {
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    requestDeviceEnableDate();
+                }
+            }, delay);
+            delay += period;
+        }
+
+//        mHandler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                startRealtime();
+//            }
+//        }, delay);
     }
 
     @Override
@@ -531,23 +540,20 @@ public class UserPresenter implements UserContract.Presenter {
     public void analyzeData(String data) {
         if (D) Log.d(TAG, "receive data: " + data);
 
-        // TODO: 2017/9/28 由于收到的报文错位：20字节 + 14字节
-        Pattern p20 = Pattern.compile("^FF24[\\dA-F]{24}FF0D0AFF[\\dA-F]{4}");
-        Pattern p14 = Pattern.compile("[\\dA-F]{22}FF0D0A$");
-        //Pattern p17 = Pattern.compile("^FF[\\dA-F]{26}FF0D0A$");
-
         // 请求历史数据的确认报文
         Pattern pHistoryBegin = Pattern.compile("FF2403");
-
         // 历史数据传输完成的确认报文
         Pattern pHistoryEnd = Pattern.compile("2303");
 
+        // 开始接收历史数据
         if (pHistoryBegin.matcher(data.toUpperCase()).find()) {
             realtimeOrHistoryDataFlag = 2;
             historyStringBuilder = new StringBuilder();
         }
 
-        if (pHistoryEnd.matcher(data.toUpperCase()).find()) {
+        // 历史数据接收完毕
+        if (realtimeOrHistoryDataFlag == 2 &&
+                (pHistoryEnd.matcher(data.toUpperCase()).find() || data.length() < 34)) {
             realtimeOrHistoryDataFlag = 1;
             // 该天的历史数据传输完成，下一步：
             // 保存到本地数据库 data.tb
@@ -560,39 +566,25 @@ public class UserPresenter implements UserContract.Presenter {
             return;
         }
 
-        if (p20.matcher(data.toUpperCase()).find()) {
-            dataCache = data;
-            return;
-        } else if (data.length() < 34 && p14.matcher(data.toUpperCase()).find() && !dataCache.equals("")) {
-            data = (dataCache + data).substring(34, 68);
-            dataCache = "";
-        }
+        if (realtimeOrHistoryDataFlag == 1 && data.length() < 34) return;
 
-        if (D) Log.e(TAG, "data: " + data);
-
-        UnboxResponseProtocol unboxResponseProtocol = new UnboxResponseProtocol(data);
-
-        if (D) Log.d(TAG, unboxResponseProtocol.getType());
-
-        // 如果报文长度小于17字节，或者其无法匹配"FF[\\dA-F]{26}FF0D0A" 说明数据无效，丢弃不处理。
-        if (data.length() >= 34 && unboxResponseProtocol.getIsValidate()) {
-            switch (unboxResponseProtocol.getType()) {
-                case ProtocolMsg.RS_DATA:
-                    // 实时数据
-                    onRealTimeDataResponse(unboxResponseProtocol);
-                    break;
-                case ProtocolMsg.RS_STATUS_OR_PARAM:
-                    // 设备状态／参数响应包
-                    onStatusOrParamResponse(unboxResponseProtocol);
-                    break;
-                case RS_EXECUTE_STATUS:
-                    // 处理指令执行结果
-                    onExecutedResponse(unboxResponseProtocol);
-                    break;
-                case RS_ACK:
-                    onACKResponse(unboxResponseProtocol);
-                    break;
-            }
+        UnboxResponseProtocol protocol = new UnboxResponseProtocol(data);
+        switch (protocol.getType()) {
+            case ProtocolMsg.RS_DATA:
+                // 实时数据
+                onRealTimeDataResponse(protocol);
+                break;
+            case ProtocolMsg.RS_STATUS_OR_PARAM:
+                // 设备状态／参数响应包
+                onStatusOrParamResponse(protocol);
+                break;
+            case RS_EXECUTE_STATUS:
+                // 处理指令执行结果
+                onExecutedResponse(protocol);
+                break;
+            case RS_ACK:
+                onACKResponse(protocol);
+                break;
         }
     }
 
@@ -602,6 +594,8 @@ public class UserPresenter implements UserContract.Presenter {
         String mid = sharedPref.getString(MainActivity.DEVICE_MID, "");
 
         Pattern pHistory = Pattern.compile("FF01[\\dA-F]{24}FF0D0A");
+
+        if (historyStringBuilder == null) historyStringBuilder = new StringBuilder();
         Matcher matcher = pHistory.matcher(historyStringBuilder.toString());
 
         while (matcher.find()) {
@@ -788,27 +782,58 @@ public class UserPresenter implements UserContract.Presenter {
                 // 获取向设备请求启用参数，如果存在则保存至本地 shared preference
                 // 如果没有则需要进行定标操作
                 case ProtocolMsg.DEVICE_PARAM_ENABLE_DATE:
-                    // TODO: 2017/10/1 error data: 0108E1070000000500
-                    //FF220200010108E1070000000500FF0D0A
                     if (D) Log.e(TAG, "DEVICE_PARAM_ENABLE_DATE: " + data);
-                    //sharedPref.edit().putString(MainActivity.DEVICE_ENABLE_DATE, "").apply();
-                    if (sharedPref.getString(MainActivity.DEVICE_START_USING_DATE, "").equals("")) {
-                        mUserView.gotoFixCriterion();
-                    } else {
-                        mUserView.updateDataStatus();
-                    }
+
+                    int year = Integer.valueOf(data.substring(0, 4), 16);
+                    int month = Integer.valueOf(data.substring(4, 6), 16);
+                    int day = Integer.valueOf(data.substring(6, 8), 16);
+
+                    String enableDate = year + "-" +
+                            Fun.leftPad(month + "", 2) + "-" +
+                            Fun.leftPad(day + "", 2);
+                    Log.e(TAG, "DEVICE_PARAM_ENABLE_DATE: " + enableDate);
+
+
+                    sharedPref.edit().putString(MainActivity.DEVICE_START_USING_DATE, enableDate).apply();
+                    mUserView.updateDataStatus();
+
+                    uploadDeviceEnableDate();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_CHANNEL_NUM:
                     int channelNum = Integer.valueOf(data.substring(0, 2), 16);
-                    sharedPref.edit().putInt(MainActivity.DEVICE_CHANNEL_NUM, channelNum).apply();
+                    if (channelNum == 0)
+                        sharedPref.edit().putInt(MainActivity.DEVICE_CHANNEL_NUM, 4).apply();
+                    else
+                        sharedPref.edit().putInt(MainActivity.DEVICE_CHANNEL_NUM, channelNum).apply();
+
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_ONE:
+                    Log.e(TAG, "fix criterion data: " + data);
+                    int comA = Integer.valueOf(data.substring(0, 4), 16);
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A, comA + "").apply();
+                    uploadFixResultItem(comA + "", "A");
+                    mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_TWO:
+                    Log.e(TAG, "fix criterion data: " + data);
+                    int comB = Integer.valueOf(data.substring(0, 4), 16);
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B, comB + "").apply();
+                    uploadFixResultItem(comB + "", "B");
+                    mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_THREE:
+                    Log.e(TAG, "fix criterion data: " + data);
+                    int comC = Integer.valueOf(data.substring(0, 4), 16);
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C, comC + "").apply();
+                    uploadFixResultItem(comC + "", "C");
+                    mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR:
+                    Log.e(TAG, "fix criterion data: " + data);
+                    int comD = Integer.valueOf(data.substring(0, 4), 16);
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D, comD + "").apply();
+                    uploadFixResultItem(comD + "", "D");
+                    mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_SLOPE:
                     float slope = Integer.valueOf(data.substring(0, 4), 16) / 1000f;
@@ -884,5 +909,73 @@ public class UserPresenter implements UserContract.Presenter {
                 executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
             mUserView.showInfo("停止接收实时数据");
         }
+    }
+
+    private void uploadDeviceEnableDate() {
+        String uuid = sharedPref.getString(MainActivity.USER_UID, "");
+        String enableDate = sharedPref.getString(MainActivity.DEVICE_START_USING_DATE, "");
+
+        if (uuid.equals("")) mUserView.gotoLogin();
+        if (enableDate.equals("")) requestDeviceEnableDate();
+
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request request = BaseActivity.buildHttpGetRequest("/user/firstCalibTime?" +
+                "userUid=" + uuid + "&" +
+                "firstCalibTime=" + enableDate);
+
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                if (D) Log.e(TAG, e.getLocalizedMessage());
+                mUserView.showInfo("upload device enable date interface error");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String json = response.body().string();
+                Log.e(TAG, json);
+                MiniResponse mini = new Gson().fromJson(json, MiniResponse.class);
+
+                if (mini.getStatus().equals("200")) {
+                    mUserView.showInfo("设备启用日期保存成功");
+                } else {
+                    mUserView.showInfo("设备启用日期保存失败");
+                }
+            }
+        });
+    }
+
+    private void uploadFixResultItem(final String value, String type) {
+        String uuid = sharedPref.getString(MainActivity.USER_UID, "");
+
+        /*
+        http://localhost:8080/user/upLoadComfortA?userUid=testUid&userComfortA=239.00
+         */
+        Request request = BaseActivity.buildHttpGetRequest("/user/upLoadComfort" + type + "?" +
+                "userUid=" + uuid + "&" +
+                "userComfort" + type + "=" + value);
+
+        if (D) Log.d(TAG, "request url is: " + request.url());
+
+        new OkHttpClient().newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                if (D) Log.e(TAG, e.getLocalizedMessage());
+                mUserView.showInfo("upload comfort interface error");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String json = response.body().string();
+                if (D) Log.e(TAG, "response: " + json);
+
+                MiniResponse mini = new Gson().fromJson(json, MiniResponse.class);
+                if (mini.getStatus().equals("200")) {
+                    mUserView.showInfo("定标成功");
+                } else {
+                    mUserView.showInfo("定标数据保存失败");
+                }
+            }
+        });
     }
 }

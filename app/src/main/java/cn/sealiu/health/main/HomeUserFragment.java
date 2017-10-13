@@ -37,6 +37,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
@@ -79,6 +80,7 @@ import cn.sealiu.health.util.ActivityUtils;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.Fun;
 import cn.sealiu.health.util.MyAxisValueFormatter;
+import cn.sealiu.health.util.ProtocolMsg;
 import cn.sealiu.health.util.WeekDayAxisValueFormatter;
 
 import static android.app.Activity.RESULT_OK;
@@ -149,7 +151,7 @@ public class HomeUserFragment extends Fragment implements
         }
     };
 
-    public static IntentFilter gattUpdateIntentFilter() {
+    private IntentFilter gattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
@@ -532,7 +534,14 @@ public class HomeUserFragment extends Fragment implements
     @Override
     public void onResume() {
         super.onResume();
+        getContext().registerReceiver(mGattUpdateReceiver, gattUpdateIntentFilter());
         mPresenter.start();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getContext().unregisterReceiver(mGattUpdateReceiver);
     }
 
     @Override
@@ -546,7 +555,6 @@ public class HomeUserFragment extends Fragment implements
         if (mServiceConnection != null && mBluetoothLeService != null) {
             getActivity().unbindService(mServiceConnection);
             mBluetoothLeService.disconnect();
-            getActivity().unregisterReceiver(mGattUpdateReceiver);
         }
     }
 
@@ -620,6 +628,69 @@ public class HomeUserFragment extends Fragment implements
                         break;
                 }
 
+                break;
+            case R.id.fix_criterion:
+                LayoutInflater inflater = getActivity().getLayoutInflater();
+                View dialogView = inflater.inflate(R.layout.fixcriterion_dia, null);
+                final RadioButton blankRB = dialogView.findViewById(R.id.fix_blank);
+                final RadioButton looseRB = dialogView.findViewById(R.id.fix_loose);
+                final RadioButton comfortRB = dialogView.findViewById(R.id.fix_comfort);
+                final RadioButton tightRB = dialogView.findViewById(R.id.fix_tight);
+
+                String comfortA = sharedPref.getString(MainActivity.DEVICE_COMFORT_A, "");
+                String comfortB = sharedPref.getString(MainActivity.DEVICE_COMFORT_B, "");
+                String comfortC = sharedPref.getString(MainActivity.DEVICE_COMFORT_C, "");
+                String comfortD = sharedPref.getString(MainActivity.DEVICE_COMFORT_D, "");
+
+                if (!comfortA.equals("")) {
+                    blankRB.setEnabled(false);
+                    blankRB.setText("空载定标已完成");
+                }
+                if (!comfortB.equals("")) {
+                    looseRB.setEnabled(false);
+                    looseRB.setText("松定标已完成");
+                }
+                if (!comfortC.equals("")) {
+                    comfortRB.setEnabled(false);
+                    comfortRB.setText("合适定标已完成");
+                }
+                if (!comfortD.equals("")) {
+                    tightRB.setEnabled(false);
+                    tightRB.setText("紧定标已完成");
+                }
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+                builder.setView(dialogView)
+                        .setTitle(R.string.fix_criterion)
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .setPositiveButton(R.string.fix_criterion, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                if (blankRB.isChecked()) {
+                                    if (D) Log.e(TAG, "blank");
+                                    requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_ONE);
+                                    showProgressDialog("正在定标中", "", 3 * 60 * 1000);
+                                } else if (looseRB.isChecked()) {
+                                    if (D) Log.e(TAG, "loose");
+                                    requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_TWO);
+                                    showProgressDialog("正在定标中", "", 3 * 60 * 1000);
+                                } else if (comfortRB.isChecked()) {
+                                    if (D) Log.e(TAG, "comfort");
+                                    requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_THREE);
+                                    showProgressDialog("正在定标中", "", 3 * 60 * 1000);
+                                } else if (tightRB.isChecked()) {
+                                    if (D) Log.e(TAG, "tight");
+                                    requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR);
+                                    showProgressDialog("正在定标中", "", 3 * 60 * 1000);
+                                }
+                            }
+                        }).show();
                 break;
         }
 

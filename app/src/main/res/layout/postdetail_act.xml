@@ -36,6 +36,7 @@
             app:srcCompat="@drawable/ic_add"
             app:fabSize="normal"
             app:layout_anchor="@id/contentFrame"
+            android:visibility="gone"
             app:layout_anchorGravity="bottom|right|end"/>
     </android.support.design.widget.CoordinatorLayout>
 </LinearLayout>

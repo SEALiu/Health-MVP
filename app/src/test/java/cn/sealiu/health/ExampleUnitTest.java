@@ -99,4 +99,63 @@ public class ExampleUnitTest {
             System.out.println(str);
         }
     }
+
+    @Test
+    public void testAsic() {
+        String str = "30303538";
+        char[] chars = str.toCharArray();
+
+        StringBuilder sbu = new StringBuilder();
+
+        for (char c : chars) {
+            sbu.append(Integer.toHexString((int) c));
+        }
+
+        System.out.print(sbu.toString());
+    }
+
+    @Test
+    public void testAscii2String() {
+        String str = "3330333033353338";
+        StringBuilder builder = new StringBuilder();
+
+        for (int i = 0; i < str.length() - 1; i += 2) {
+            int value = Integer.valueOf(str.substring(i, i + 2), 16);
+            builder.append((char) value);
+        }
+
+        System.out.print(builder.toString());
+    }
+
+    @Test
+    public void stringToAscii() {
+        int value = Integer.valueOf("30", 16);
+        System.out.print((char) value);
+
+//        System.out.print(value + "\n");
+//
+//        StringBuilder sbu = new StringBuilder();
+//        char[] chars = value.toCharArray();
+//        for (int i = 0; i < chars.length; i++) {
+//            if (i != chars.length - 1) {
+//                sbu.append((int) chars[i]).append(",");
+//            } else {
+//                sbu.append((int) chars[i]);
+//            }
+//        }
+//        System.out.print(sbu.toString());
+    }
+
+    @Test
+    public void test1() {
+        String data = "230300454F463E00E300000000FF0D0A";
+        Pattern pHistoryEnd = Pattern.compile("2303");
+
+        if (pHistoryEnd.matcher(data.toUpperCase()).find()) {
+            System.out.print("match");
+        } else {
+            System.out.print("unmatch");
+        }
+    }
 }
+

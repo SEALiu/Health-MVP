@@ -90,6 +90,9 @@ public class SettingFragment extends Fragment implements SettingContract.View, V
         View setNetwork = root.findViewById(R.id.set_network);
         View changeDevice = root.findViewById(R.id.change_device);
 
+        //在设置里面取消定标操作
+        fixCriterion.setVisibility(View.GONE);
+
         setChannelName.setOnClickListener(this);
         fixCriterion.setOnClickListener(this);
         showChannel.setOnClickListener(this);
