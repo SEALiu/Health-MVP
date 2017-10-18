@@ -12,6 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import java.util.regex.Pattern;
+
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.R;
 import cn.sealiu.health.bluetooth.FindBluetoothActivity;
@@ -30,13 +32,13 @@ public class LoginFragment extends Fragment implements
         View.OnClickListener {
 
     private LoginContract.Presenter mPresenter;
-    private EditText mPhoneET, mPwdET;
+    private EditText mPhoneET, mPwdET, customIpET;
     private AppCompatCheckBox mRememberCB;
 
     public LoginFragment() {
     }
 
-    public static LoginFragment newInstance(){
+    public static LoginFragment newInstance() {
         return new LoginFragment();
     }
 
@@ -58,11 +60,14 @@ public class LoginFragment extends Fragment implements
         mPhoneET = root.findViewById(R.id.phone_number);
         mPwdET = root.findViewById(R.id.password);
         mRememberCB = root.findViewById(R.id.remember_me);
+        customIpET = root.findViewById(R.id.custom_ip);
 
         mRememberCB.setChecked(true);
 
         root.findViewById(R.id.login_btn).setOnClickListener(this);
         root.findViewById(R.id.register_btn).setOnClickListener(this);
+        root.findViewById(R.id.set_ip).setOnClickListener(this);
+        root.findViewById(R.id.offline_model).setOnClickListener(this);
 
         // restore phone and password if checkbox "remember me" is checked last time;
         mPresenter.restore();
@@ -80,6 +85,22 @@ public class LoginFragment extends Fragment implements
                 break;
             case R.id.register_btn:
                 getActivity().startActivity(new Intent(getActivity(), RegisterActivity.class));
+                break;
+            case R.id.offline_model:
+                mPresenter.offlineMode();
+                break;
+            case R.id.set_ip:
+                String customIp = customIpET.getText().toString();
+
+                String IP_PATTERN = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
+                Pattern ipPattern = Pattern.compile(IP_PATTERN);
+
+                if (customIp.equals(""))
+                    Snackbar.make(mPwdET, "IP地址为空", Snackbar.LENGTH_LONG).show();
+                else if (!ipPattern.matcher(customIp).matches())
+                    Snackbar.make(mPwdET, "IP地址格式错误", Snackbar.LENGTH_LONG).show();
+                else
+                    mPresenter.setCustomIp(customIp);
                 break;
         }
     }

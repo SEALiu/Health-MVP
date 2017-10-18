@@ -157,5 +157,24 @@ public class ExampleUnitTest {
             System.out.print("unmatch");
         }
     }
+
+    @Test
+    public void testIp() {
+        String IP_PATTERN = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
+
+        Pattern ipPattern = Pattern.compile(IP_PATTERN);
+
+        String[] ips = {
+                "192.168.1.254",
+                "192.168.1.256",
+                "224.168.1.256",
+                "224.0.1.250",
+                "1234.0.0.1"
+        };
+
+        for (String ip : ips) {
+            System.out.println(ipPattern.matcher(ip).matches());
+        }
+    }
 }
 

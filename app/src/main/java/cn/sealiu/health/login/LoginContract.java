@@ -35,5 +35,9 @@ public interface LoginContract {
         void restore();
 
         void login(String phone, String pwd, boolean isRemember);
+
+        void offlineMode();
+
+        void setCustomIp(String ip);
     }
 }

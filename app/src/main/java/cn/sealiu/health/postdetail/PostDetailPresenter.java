@@ -60,6 +60,9 @@ public class PostDetailPresenter implements PostDetailContract.Presenter {
 
         Request detailRequest = BaseActivity.buildHttpGetRequest("/post/getPostDetail?" +
                 "id=" + postId);
+
+        if (detailRequest == null) return;
+
         okHttpClient.newCall(detailRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -109,6 +112,8 @@ public class PostDetailPresenter implements PostDetailContract.Presenter {
                 "startNumber=" + startNum + "&" +
                 "limitNumber=" + ITEM_PER_PAGE);
 
+        if (getCommentsRequest == null) return;
+
         Log.e(BaseActivity.TAG, getCommentsRequest.url().toString());
 
         okHttpClient.newCall(getCommentsRequest).enqueue(new Callback() {
@@ -147,6 +152,8 @@ public class PostDetailPresenter implements PostDetailContract.Presenter {
                 "content=" + comment + "&" +
                 "target_id=" + mPostId + "&" +
                 "type_id=1");
+
+        if (sendCommentRequest == null) return;
 
         okHttpClient.newCall(sendCommentRequest).enqueue(new Callback() {
             @Override

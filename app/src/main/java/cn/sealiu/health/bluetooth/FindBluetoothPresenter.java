@@ -10,26 +10,16 @@ import android.location.LocationManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.gson.Gson;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
-import cn.sealiu.health.data.response.MiniResponse;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.SampleGattAttributes;
 import cn.sealiu.health.util.UnboxResponseProtocol;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
@@ -164,6 +154,12 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
         // 检测当前登录的用户是否已有绑定的设备
         String currentMid = sharedPref.getString(MainActivity.DEVICE_MID, "");
 
+
+        // TODO: 2017/10/18 离线模式下不保存用户mid到服务器，而是只保存在本地。如果需要服务器端时，再恢复下面代码
+        // todo 移除下行代码：
+        sharedPref.edit().putString(MainActivity.DEVICE_MID, mid).apply();
+        // todo 解除代码注释：
+        /*
         final OkHttpClient okHttpClient = new OkHttpClient();
 
         if (currentMid.equals("")) {
@@ -171,6 +167,8 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
             Request bindRequest = BaseActivity.buildHttpGetRequest("/user/bindMachine?" +
                     "userUid=" + id + "&" +
                     "userMid=" + mid);
+
+            if (bindRequest == null) return;
 
             okHttpClient.newCall(bindRequest).enqueue(new Callback() {
                 @Override
@@ -198,6 +196,8 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
             // 保存历史设备
             Request saveDeviceRequest = BaseActivity.buildHttpGetRequest("/HistoryMid/memoryHistMid?" +
                     "userUid=" + id);
+            if (saveDeviceRequest == null) return;
+
             okHttpClient.newCall(saveDeviceRequest).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
@@ -215,6 +215,8 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                         Request bindRequest = BaseActivity.buildHttpGetRequest("/user/bindMachine?" +
                                 "userUid=" + id + "&" +
                                 "userMid=" + mid);
+
+                        if (bindRequest == null) return;
 
                         okHttpClient.newCall(bindRequest).enqueue(new Callback() {
                             @Override
@@ -245,6 +247,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
         } else {
             mFindBluetoothView.gotoHome();
         }
+        */
     }
 
     @Override
@@ -276,7 +279,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
         if (D) Log.e(TAG, "find data: " + data);
 
         if (data.equals("00")) {
-            mFindBluetoothView.showInfo("认证失败，请重新点击设备");
+            mFindBluetoothView.showInfo("请重新点击设备");
             return;
         }
 

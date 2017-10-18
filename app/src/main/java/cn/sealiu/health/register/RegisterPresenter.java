@@ -123,6 +123,9 @@ public class RegisterPresenter implements RegisterContract.Presenter {
                                       final boolean isDoctor, final String code) {
         Request phoneCheckRequest = BaseActivity.buildHttpGetRequest("/user/isRepeatLoginName?" +
                 "userPhone=" + phone);
+
+        if (phoneCheckRequest == null) return;
+
         okHttp.newCall(phoneCheckRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -153,6 +156,8 @@ public class RegisterPresenter implements RegisterContract.Presenter {
     private void checkDoctorCode(final OkHttpClient okHttp, final String phone, final String pwd, String code) {
         Request checkCodeRequest = BaseActivity.buildHttpGetRequest("/sys/isCorrectCode?" +
                 "svalue=" + code);
+
+        if (checkCodeRequest == null) return;
 
         okHttp.newCall(checkCodeRequest).enqueue(new Callback() {
             @Override
@@ -190,6 +195,9 @@ public class RegisterPresenter implements RegisterContract.Presenter {
                 "userPwd=" + Fun.encode("MD5", pwd) + "&" +
                 "t_id=" + identity + "&" +
                 "userUid=" + uuid);
+
+        if (registerRequest == null) return;
+
         if (D) Log.d(TAG, registerRequest.url().toString());
 
         okHttp.newCall(registerRequest).enqueue(new Callback() {

@@ -52,6 +52,8 @@ public class DoctorPresenter implements DoctorContract.Presenter {
         Request getBindUserRequest = BaseActivity.buildHttpGetRequest("/res/getBoundUser?" +
                 "docId=" + doctorId);
 
+        if (getBindUserRequest == null) return;
+
         okHttpClient.newCall(getBindUserRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {

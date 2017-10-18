@@ -53,6 +53,8 @@ public class ProfilePresenter implements ProfileContract.Presenter {
         final Request getProfileRequest = BaseActivity.buildHttpGetRequest("/user/getProfile?" +
                 "id=" + uid);
 
+        if (getProfileRequest == null) return;
+
         okHttpClient.newCall(getProfileRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -109,6 +111,7 @@ public class ProfilePresenter implements ProfileContract.Presenter {
                         "userId=" + userId +
                         "&userName=" + name
         );
+        if (changeNameRequest == null) return;
 
         okHttpClient.newCall(changeNameRequest).enqueue(new Callback() {
             @Override
@@ -134,6 +137,7 @@ public class ProfilePresenter implements ProfileContract.Presenter {
                         "userId=" + userId +
                         "&userGender=" + gender
         );
+        if (changeGenderRequest == null) return;
 
         okHttpClient.newCall(changeGenderRequest).enqueue(new Callback() {
             @Override
@@ -160,6 +164,8 @@ public class ProfilePresenter implements ProfileContract.Presenter {
                         "&Age=" + age
         );
 
+        if (changeAgeRequest == null) return;
+
         okHttpClient.newCall(changeAgeRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -184,6 +190,7 @@ public class ProfilePresenter implements ProfileContract.Presenter {
                         "userId=" + userId +
                         "&userPhone=" + phone
         );
+        if (changePhoneRequest == null) return;
 
         okHttpClient.newCall(changePhoneRequest).enqueue(new Callback() {
             @Override
@@ -210,6 +217,7 @@ public class ProfilePresenter implements ProfileContract.Presenter {
                         "&userEmail=" + email
         );
 
+        if (changeEmailRequest == null) return;
         okHttpClient.newCall(changeEmailRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -236,6 +244,7 @@ public class ProfilePresenter implements ProfileContract.Presenter {
                         "&newPassWord=" + Fun.encode("MD5", newPwd)
         );
 
+        if (changePasswordRequest == null) return;
         okHttpClient.newCall(changePasswordRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {

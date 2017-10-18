@@ -61,6 +61,8 @@ public class UserDetailPresenter implements UserDetailContract.Presenter {
         final Request getProfileRequest = BaseActivity.buildHttpGetRequest("/user/getProfile?" +
                 "id=" + userId);
 
+        if (getProfileRequest == null) return;
+
         okHttpClient.newCall(getProfileRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -117,6 +119,7 @@ public class UserDetailPresenter implements UserDetailContract.Presenter {
                         "fromId=" + fromId + "&" +
                         "toId=" + toId + "&" +
                         "content=" + content);
+        if (getMsgListRequest == null) return;
         if (D) Log.e(TAG, getMsgListRequest.url().toString());
 
         okHttpClient.newCall(getMsgListRequest).enqueue(new Callback() {
@@ -176,6 +179,8 @@ public class UserDetailPresenter implements UserDetailContract.Presenter {
                 "mid=" + userMid + "&" +
                 "startTime=" + start + "&" +
                 "endTime=" + end);
+
+        if (request == null) return;
 
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
@@ -277,6 +282,8 @@ public class UserDetailPresenter implements UserDetailContract.Presenter {
                 "mid=" + userMid + "&" +
                 "startTime=" + start + "&" +
                 "endTime=" + end);
+
+        if (request == null) return;
 
         if (D) Log.d(TAG, "request url: " + request.url());
 
@@ -388,6 +395,8 @@ public class UserDetailPresenter implements UserDetailContract.Presenter {
                 "startTime=" + start + "&" +
                 "endTime=" + end);
 
+        if (request == null) return;
+
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -482,6 +491,8 @@ public class UserDetailPresenter implements UserDetailContract.Presenter {
                 "mid=" + userMid + "&" +
                 "startTime=" + start + "&" +
                 "endTime=" + end);
+
+        if (request == null) return;
 
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override

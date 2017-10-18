@@ -21,11 +21,12 @@ public class BaseActivity extends AppCompatActivity {
     public static final String TAG = "BaseActivity";
     public static final String IDENTITY_USER = "1";
     public static final String IDENTITY_DOCTOR = "2";
+    public static final String SERVER_IP = "server ip";
 
     // 模拟器调试地址
     //public static final String REMOTE_URL = "http://10.0.2.2:8080";
     // 真机调试地址
-    public static final String REMOTE_URL = "http://172.20.10.2:8080";
+    public static String REMOTE_URL = "";
 
     public static SharedPreferences sharedPref, settingPref;
 
@@ -42,6 +43,9 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public static Request buildHttpGetRequest(String short_url) {
+        REMOTE_URL = sharedPref.getString(SERVER_IP, "");
+        if (REMOTE_URL.equals("")) return null;
+
         return new Request.Builder()
                 .url(REMOTE_URL + short_url)
                 .header("Content-Type", "text/html; charset=utf-8")

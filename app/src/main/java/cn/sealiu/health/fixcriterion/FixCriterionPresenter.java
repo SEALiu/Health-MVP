@@ -88,6 +88,8 @@ public class FixCriterionPresenter implements FixCriterionContract.Presenter {
                 "userUid=" + uuid + "&" +
                 "userComfort" + type + "=" + value);
 
+        if (request == null) return;
+
         if (D) Log.d(TAG, "request url is: " + request.url());
 
         new OkHttpClient().newCall(request).enqueue(new Callback() {

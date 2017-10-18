@@ -51,6 +51,9 @@ public class ForumPresenter implements ForumContract.Presenter {
         Request getPostListRequest = BaseActivity.buildHttpGetRequest(
                 "/post/getPostList?startNumber=" + startNum + "&limitNumber=" +
                         ForumFragment.ITEM_PER_PAGE);
+
+        if (getPostListRequest == null) return;
+
         okHttpClient.newCall(getPostListRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -101,6 +104,8 @@ public class ForumPresenter implements ForumContract.Presenter {
         OkHttpClient okHttpClient = new OkHttpClient();
         Request sendCommentRequest = BaseActivity.buildHttpGetRequest("/post/sendPosts?author_id=" +
                 userId + "&title=" + title + "&content=" + content + "&type_id=0");
+
+        if (sendCommentRequest == null) return;
 
         okHttpClient.newCall(sendCommentRequest).enqueue(new Callback() {
             @Override

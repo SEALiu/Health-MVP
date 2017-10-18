@@ -300,8 +300,9 @@ public class UserPresenter implements UserContract.Presenter {
                 values,
                 DataStatusEntry.COLUMN_NAME_TIME + "='" + time + "'",
                 null);
-        Log.e(TAG, "update result: " + result);
+        if (D) Log.e(TAG, "update result: " + result);
 
+        // TODO: 2017/10/18 离线模式下无法上传数据
         mUserView.uploadHistoryData();
     }
 
@@ -439,7 +440,7 @@ public class UserPresenter implements UserContract.Presenter {
         delay += period;
 
         // request device enable date, if not exist;
-        if (sharedPref.getString(MainActivity.DEVICE_ENABLE_DATE, "").equals("")) {
+        if (sharedPref.getString(MainActivity.DEVICE_START_USING_DATE, "").equals("")) {
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -795,7 +796,7 @@ public class UserPresenter implements UserContract.Presenter {
 
 
                     sharedPref.edit().putString(MainActivity.DEVICE_START_USING_DATE, enableDate).apply();
-                    mUserView.updateDataStatus();
+                    //mUserView.updateDataStatus();
 
                     uploadDeviceEnableDate();
                     break;
@@ -811,28 +812,48 @@ public class UserPresenter implements UserContract.Presenter {
                     Log.e(TAG, "fix criterion data: " + data);
                     int comA = Integer.valueOf(data.substring(0, 4), 16);
                     sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A, comA + "").apply();
-                    uploadFixResultItem(comA + "", "A");
+
+                    // TODO: 2017/10/18 离线模式下无法上传数据
+                    // uploadFixResultItem(comA + "", "A");
+                    // todo remove the line below
+                    mUserView.showInfo("定标成功");
+
                     mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_TWO:
                     Log.e(TAG, "fix criterion data: " + data);
                     int comB = Integer.valueOf(data.substring(0, 4), 16);
                     sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B, comB + "").apply();
-                    uploadFixResultItem(comB + "", "B");
+
+                    // TODO: 2017/10/18 离线模式下无法上传数据
+                    //uploadFixResultItem(comB + "", "B");
+                    // todo remove the line below
+                    mUserView.showInfo("定标成功");
+
                     mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_THREE:
                     Log.e(TAG, "fix criterion data: " + data);
                     int comC = Integer.valueOf(data.substring(0, 4), 16);
                     sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C, comC + "").apply();
-                    uploadFixResultItem(comC + "", "C");
+
+                    // TODO: 2017/10/18 离线模式下无法上传数据
+                    //uploadFixResultItem(comC + "", "C");
+                    // todo remove the line below
+                    mUserView.showInfo("定标成功");
+
                     mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR:
                     Log.e(TAG, "fix criterion data: " + data);
                     int comD = Integer.valueOf(data.substring(0, 4), 16);
                     sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D, comD + "").apply();
-                    uploadFixResultItem(comD + "", "D");
+
+                    // TODO: 2017/10/18 离线模式下无法上传数据
+                    //uploadFixResultItem(comD + "", "D");
+                    // todo remove the line below
+                    mUserView.showInfo("定标成功");
+
                     mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_SLOPE:
@@ -923,6 +944,8 @@ public class UserPresenter implements UserContract.Presenter {
                 "userUid=" + uuid + "&" +
                 "firstCalibTime=" + enableDate);
 
+        if (request == null) return;
+
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -945,7 +968,7 @@ public class UserPresenter implements UserContract.Presenter {
         });
     }
 
-    private void uploadFixResultItem(final String value, String type) {
+    private void uploadFixResultItem(final String value, final String type) {
         String uuid = sharedPref.getString(MainActivity.USER_UID, "");
 
         /*
@@ -955,6 +978,8 @@ public class UserPresenter implements UserContract.Presenter {
                 "userUid=" + uuid + "&" +
                 "userComfort" + type + "=" + value);
 
+        if (request == null) return;
+
         if (D) Log.d(TAG, "request url is: " + request.url());
 
         new OkHttpClient().newCall(request).enqueue(new Callback() {
@@ -962,6 +987,21 @@ public class UserPresenter implements UserContract.Presenter {
             public void onFailure(Call call, IOException e) {
                 if (D) Log.e(TAG, e.getLocalizedMessage());
                 mUserView.showInfo("upload comfort interface error");
+
+                switch (type) {
+                    case "A":
+                        sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A, "0.0").apply();
+                        break;
+                    case "B":
+                        sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B, "0.0").apply();
+                        break;
+                    case "C":
+                        sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C, "0.0").apply();
+                        break;
+                    case "D":
+                        sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D, "0.0").apply();
+                        break;
+                }
             }
 
             @Override

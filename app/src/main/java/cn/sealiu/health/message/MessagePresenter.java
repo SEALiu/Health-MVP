@@ -94,6 +94,8 @@ public class MessagePresenter implements MessageContract.Presenter {
         Request sendMsgsRequest = BaseActivity.buildHttpGetRequest("/message/sendGroupMessage?" +
                 "groupMessage=" + URLEncoder.encode(messageJson));
 
+        if (sendMsgsRequest == null) return;
+
         new OkHttpClient().newCall(sendMsgsRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -127,6 +129,8 @@ public class MessagePresenter implements MessageContract.Presenter {
         Request getBindDoctorRequest = BaseActivity.buildHttpGetRequest("/res/getBoundDoctor?" +
                 "patId=" + userId);
 
+        if (getBindDoctorRequest == null) return;
+
         okHttpClient.newCall(getBindDoctorRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -152,6 +156,8 @@ public class MessagePresenter implements MessageContract.Presenter {
                     Request getMsgListRequest =
                             BaseActivity.buildHttpGetRequest("/message/getMessageList?" +
                                     "PatId=" + userId + "&DocId=" + bindDoctorId);
+
+                    if (getMsgListRequest == null) return;
 
                     okHttpClient.newCall(getMsgListRequest).enqueue(new Callback() {
                         @Override
@@ -198,6 +204,8 @@ public class MessagePresenter implements MessageContract.Presenter {
         Request getBindUserRequest = BaseActivity.buildHttpGetRequest("/res/getBoundUser?" +
                 "docId=" + doctorId);
 
+        if (getBindUserRequest == null) return;
+
         okHttpClient.newCall(getBindUserRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -229,6 +237,8 @@ public class MessagePresenter implements MessageContract.Presenter {
                     Request getMsgListRequest =
                             BaseActivity.buildHttpGetRequest("/message/getMessageList?" +
                                     "PatId=" + user.getId() + "&DocId=" + doctorId);
+
+                    if (getMsgListRequest == null) return;
 
                     okHttpClient.newCall(getMsgListRequest).enqueue(new Callback() {
                         @Override

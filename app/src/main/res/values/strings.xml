@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Health_MVP</string>
+    <string name="app_name">Health</string>
 
     <string name="title_home">首页</string>
     <string name="title_forum">论坛</string>
@@ -13,11 +13,8 @@
     <string name="register_question">没有账号？立即注册</string>
     <string name="login_question">已有账号？立即登录</string>
     <string name="remember_me">下次自动补全手机号和密码</string>
-    <string name="required">不能为空</string>
     <string name="empty_phone_number">手机号不能为空</string>
     <string name="empty_pwd">密码不能为空</string>
-    <string name="error_phone_number">手机号未注册</string>
-    <string name="error_pwd">密码错误，请检查</string>
     <string name="login_success">登录成功</string>
     <string name="re_password">确认密码</string>
     <string name="re_password_not_same">确认密码不一致</string>
@@ -32,7 +29,6 @@
     <string name="re_pwd_error">确认密码不一致</string>
     <string name="phone_registered_error">该号码已注册</string>
     <string name="empty_code">医生注册必须填写身份验证码</string>
-    <string name="format_error">格式错误</string>
     <string name="code_format_error">身份验证码格式错误，请检查</string>
     <string name="login_error_help">请检查手机号和密码是否正确</string>
 
@@ -49,7 +45,6 @@
     <string name="open_bluetooth_info">请打开手机蓝牙</string>
     <string name="bt_device_wrong">不支持所选蓝牙设备</string>
     <string name="unknown_device">未知设备</string>
-    <string name="searched">搜索完成</string>
     <string name="upto_bind_number_limit">设备绑定用户数量达到限制</string>
     <string name="input_mid_error">输入的设备ID错误</string>
     <string name="device_connected">设备已连接</string>
@@ -62,10 +57,8 @@
     <string name="all_statistic">全部</string>
     <string name="week_barchart_title">本周统计</string>
     <string name="start_realtime">显示实时数据</string>
-    <string name="realtime_linechart">实时数据图</string>
     <string name="patient_card_title">患者资料卡</string>
     <!--username | gender | age-->
-    <string name="patient_base_info">%1$s | %2$s | %3$s</string>
     <string name="by_day">按天</string>
     <string name="by_week">按周</string>
     <string name="by_month">按月</string>
@@ -85,7 +78,7 @@
     <string name="set_show_channel">设置显示通道数</string>
     <string name="channel_number">显示的通道数量</string>
     <string name="logout">注销登录</string>
-    <string name="about">关于 Health-MVP</string>
+    <string name="about">关于 Health</string>
     <string name="request_post_cannot_be_null">帖子没有内容</string>
     <string name="post_detail">帖子详情</string>
     <string name="blank_fix_criterion">未佩戴</string>
@@ -98,8 +91,6 @@
     <string name="skip">跳过，以后再进行定标</string>
     <string name="bluetooth_status">蓝牙状态</string>
     <string name="sync">同步</string>
-    <string name="upload_data">数据上传</string>
-    <string name="connect_failed">无法连接到 %1$s</string>
     <string name="connect_success">已连接到 %1$s</string>
     <string name="bluetooth_disconnected">蓝牙设备断开连接</string>
     <string name="verifing">设备已连接，认证中…</string>
@@ -136,7 +127,6 @@
     <string name="channel_number_error">设置通道数量最小为1，最大为4</string>
     <string name="set_channel_name">通道命名</string>
     <string name="network_setting">仅使用无线网络上传/下载数据</string>
-    <string name="channel_name_unchanged">通道未命名</string>
     <string name="channel_name_toolong">通道命名最多两个字符</string>
     <string name="patient_detail">患者详情</string>
     <string name="base_info">%1$s | %2$s | %3$s</string>
@@ -155,7 +145,6 @@
     <string name="tight">佩戴紧</string>
     <string name="comfort_range_help">舒适度范围</string>
     <string name="bind_patients_list">您负责的患者列表</string>
-    <string name="select_all">全选</string>
     <string name="choose_receiver">选择收件人</string>
     <string name="change_device">更换设备</string>
     <string name="change_device_confirm">断开当前设备连接，然后重新搜索并连接一个新的设备。现在立即更换设备？</string>
@@ -164,4 +153,5 @@
     <string name="fix_loose">松定标</string>
     <string name="fix_comfort">合适定标</string>
     <string name="fix_tight">紧定标</string>
+    <string name="offline">离线模式</string>
 </resources>

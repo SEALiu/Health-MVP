@@ -6,6 +6,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.data.response.LoginAndRegisterResponse;
@@ -78,6 +79,8 @@ public class LoginPresenter implements LoginContract.Presenter {
                 "userPhone=" + phone + "&" +
                 "userPwd=" + Fun.encode("MD5", pwd));
 
+        if (loginRequest == null) return;
+
         okHttpClient.newCall(loginRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -146,5 +149,37 @@ public class LoginPresenter implements LoginContract.Presenter {
                 }
             }
         });
+    }
+
+    /**
+     * 为程序提供一个固定用户（患者），可以使用离线功能
+     */
+    @Override
+    public void offlineMode() {
+        sharedPref.edit().putBoolean(MainActivity.USER_LOGIN, true).apply();
+        if (sharedPref.getString(MainActivity.USER_UID, "").equals(""))
+            sharedPref.edit().putString(MainActivity.USER_UID, UUID.randomUUID().toString().replace("-", "")).apply();
+
+        sharedPref.edit().putString(MainActivity.USER_ID, "999").apply();
+        sharedPref.edit().putString(MainActivity.USER_TYPE, IDENTITY_USER).apply();
+
+        if (sharedPref.getString(MainActivity.DEVICE_ADDRESS, "").equals("") ||
+                sharedPref.getString(MainActivity.DEVICE_MID, "").equals("")) {
+            // there is no bluetooth mac address or
+            // device machine id in shardPref
+            mLoginView.gotoFindBluetooth();
+        } else {
+            mLoginView.gotoHome();
+        }
+    }
+
+    /**
+     * 自定义服务器ip地址
+     *
+     * @param ip 服务器ip地址
+     */
+    @Override
+    public void setCustomIp(String ip) {
+        sharedPref.edit().putString(BaseActivity.SERVER_IP, ip).apply();
     }
 }

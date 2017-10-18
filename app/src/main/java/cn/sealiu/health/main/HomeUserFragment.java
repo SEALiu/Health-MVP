@@ -331,7 +331,7 @@ public class HomeUserFragment extends Fragment implements
 
     /**
      * 维护本地数据状态表 datastatus.tb
-     * 该表保存了设备启用日期到当前日期的历史数据的请求情况(已请求本地缓存有数据，已请求但设备无数据，未请求)
+     * 该表保存了设备启用日期到当前日期的历史数据的请求情况(已请求本地缓存有数据1，已请求但设备无数据2，未请求3)
      */
     @Override
     public void updateDataStatus() {
@@ -434,22 +434,31 @@ public class HomeUserFragment extends Fragment implements
 
             if (prepareSyncData() == 0) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+//                builder.setTitle("上传数据")
+//                        .setMessage("监测到本地有未上传的数据，是否现在上传数据?")
+//                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialogInterface, int i) {
+//                                dialogInterface.dismiss();
+//                            }
+//                        }).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialogInterface, int i) {
+//                        showProgressDialog(getString(R.string.upload_data),
+//                                "正在上传数据，请稍候...",
+//                                5 * 60 * 1000);
+//                        uploadHistoryData();
+//                    }
+//                }).show();
+
                 builder.setTitle("上传数据")
-                        .setMessage("监测到本地有未上传的数据，是否现在上传数据?")
-                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        .setMessage("当前为离线模式，无法上传数据")
+                        .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 dialogInterface.dismiss();
                             }
-                        }).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        showProgressDialog(getString(R.string.upload_data),
-                                "正在上传数据，请稍候...",
-                                5 * 60 * 1000);
-                        uploadHistoryData();
-                    }
-                }).show();
+                        }).show();
             }
         }
         c.close();
@@ -621,10 +630,12 @@ public class HomeUserFragment extends Fragment implements
                         showInfo("没有连接无线网络");
                         break;
                     case 0:
-                        showProgressDialog(getString(R.string.upload_data),
-                                "正在上传数据，请稍候...",
-                                5 * 60 * 1000);
-                        uploadHistoryData();
+                        // TODO: 2017/10/18 离线模式下无法上传数据
+//                        showProgressDialog(getString(R.string.upload_data),
+//                                "正在上传数据，请稍候...",
+//                                5 * 60 * 1000);
+//                        uploadHistoryData();
+                        showInfo("离线模式，无法上传数据");
                         break;
                 }
 
@@ -637,24 +648,24 @@ public class HomeUserFragment extends Fragment implements
                 final RadioButton comfortRB = dialogView.findViewById(R.id.fix_comfort);
                 final RadioButton tightRB = dialogView.findViewById(R.id.fix_tight);
 
-                String comfortA = sharedPref.getString(MainActivity.DEVICE_COMFORT_A, "");
-                String comfortB = sharedPref.getString(MainActivity.DEVICE_COMFORT_B, "");
-                String comfortC = sharedPref.getString(MainActivity.DEVICE_COMFORT_C, "");
-                String comfortD = sharedPref.getString(MainActivity.DEVICE_COMFORT_D, "");
+                String comfortA = sharedPref.getString(MainActivity.DEVICE_COMFORT_A, "0.0");
+                String comfortB = sharedPref.getString(MainActivity.DEVICE_COMFORT_B, "0.0");
+                String comfortC = sharedPref.getString(MainActivity.DEVICE_COMFORT_C, "0.0");
+                String comfortD = sharedPref.getString(MainActivity.DEVICE_COMFORT_D, "0.0");
 
-                if (!comfortA.equals("")) {
+                if (!comfortA.equals("0.0")) {
                     blankRB.setEnabled(false);
                     blankRB.setText("空载定标已完成");
                 }
-                if (!comfortB.equals("")) {
+                if (!comfortB.equals("0.0")) {
                     looseRB.setEnabled(false);
                     looseRB.setText("松定标已完成");
                 }
-                if (!comfortC.equals("")) {
+                if (!comfortC.equals("0.0")) {
                     comfortRB.setEnabled(false);
                     comfortRB.setText("合适定标已完成");
                 }
-                if (!comfortD.equals("")) {
+                if (!comfortD.equals("0.0")) {
                     tightRB.setEnabled(false);
                     tightRB.setText("紧定标已完成");
                 }
