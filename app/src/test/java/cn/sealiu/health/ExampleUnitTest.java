@@ -176,5 +176,12 @@ public class ExampleUnitTest {
             System.out.println(ipPattern.matcher(ip).matches());
         }
     }
+
+    @Test
+    public void testHanziLen() {
+        String postTitle = "大家好我是鹿晗, LH";
+
+        System.out.print(postTitle.length());
+    }
 }
 

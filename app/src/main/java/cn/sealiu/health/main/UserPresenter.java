@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -255,18 +256,33 @@ public class UserPresenter implements UserContract.Presenter {
     }
 
     private void doUploadHistoryData(String uploadDataJson, final HealthDbHelper dbHelper, final String syncDate) {
+        String serveIp = sharedPref.getString(BaseActivity.SERVER_IP, "");
+        if (serveIp.equals("")) {
+            mUserView.showInfo("当前为离线模式，无法上传数据");
+            return;
+        }
+
+        if (D) Log.e(TAG, serveIp);
+//        if (D) Log.e(TAG, "data: " + uploadDataJson);
+
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("upLoad", uploadDataJson)
                 .build();
 
         Request uploadDataRequest = new Request.Builder()
-                .url(BaseActivity.REMOTE_URL + "/data/upLoadData")
+                .url(serveIp + "/data/upLoadData")
                 .method("POST", RequestBody.create(null, new byte[0]))
                 .post(requestBody)
                 .build();
 
-        new OkHttpClient().newCall(uploadDataRequest).enqueue(new Callback() {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
+
+        client.newCall(uploadDataRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 mUserView.hideProgressDialog();

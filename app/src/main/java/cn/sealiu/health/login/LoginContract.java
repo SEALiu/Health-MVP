@@ -29,6 +29,8 @@ public interface LoginContract {
         void gotoFindBluetooth();
 
         void gotoHome();
+
+        void showInfo(String msg);
     }
 
     interface Presenter extends BasePresenter {

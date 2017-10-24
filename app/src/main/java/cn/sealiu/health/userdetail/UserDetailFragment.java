@@ -215,10 +215,16 @@ public class UserDetailFragment extends Fragment implements
                                 if (contentStr.isEmpty()) {
                                     showInfo(R.string.message_empty);
                                     dialogInterface.dismiss();
-                                } else {
-                                    mPresenter.doSentMsg(userId, contentStr);
-                                    dialogInterface.dismiss();
+                                    return;
                                 }
+
+                                if (contentStr.length() > 150) {
+                                    showInfo("消息内容长度应小于150个字符");
+                                    return;
+                                }
+
+                                mPresenter.doSentMsg(userId, contentStr);
+                                dialogInterface.dismiss();
                             }
                         });
                 builder.show();

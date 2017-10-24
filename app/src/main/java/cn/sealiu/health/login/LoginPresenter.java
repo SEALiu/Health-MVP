@@ -79,7 +79,9 @@ public class LoginPresenter implements LoginContract.Presenter {
                 "userPhone=" + phone + "&" +
                 "userPwd=" + Fun.encode("MD5", pwd));
 
+
         if (loginRequest == null) return;
+        if (D) Log.e(TAG, loginRequest.url().toString());
 
         okHttpClient.newCall(loginRequest).enqueue(new Callback() {
             @Override
@@ -160,11 +162,12 @@ public class LoginPresenter implements LoginContract.Presenter {
         if (sharedPref.getString(MainActivity.USER_UID, "").equals(""))
             sharedPref.edit().putString(MainActivity.USER_UID, UUID.randomUUID().toString().replace("-", "")).apply();
 
-        sharedPref.edit().putString(MainActivity.USER_ID, "999").apply();
+        sharedPref.edit().putString(MainActivity.USER_ID, "23").apply();
         sharedPref.edit().putString(MainActivity.USER_TYPE, IDENTITY_USER).apply();
+        sharedPref.edit().putString(MainActivity.DEVICE_MID, "30303538").apply();
 
         if (sharedPref.getString(MainActivity.DEVICE_ADDRESS, "").equals("") ||
-                sharedPref.getString(MainActivity.DEVICE_MID, "").equals("")) {
+                sharedPref.getString(MainActivity.DEVICE_MID, "30303538").equals("30303538")) {
             // there is no bluetooth mac address or
             // device machine id in shardPref
             mLoginView.gotoFindBluetooth();
@@ -180,6 +183,7 @@ public class LoginPresenter implements LoginContract.Presenter {
      */
     @Override
     public void setCustomIp(String ip) {
-        sharedPref.edit().putString(BaseActivity.SERVER_IP, ip).apply();
+        sharedPref.edit().putString(BaseActivity.SERVER_IP, "http://" + ip + ":8080").apply();
+        mLoginView.showInfo("设置成功");
     }
 }

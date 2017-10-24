@@ -48,7 +48,7 @@ public class ForumFragment extends Fragment implements ForumContract.View {
     PostItemListener mItemListener = new PostItemListener() {
         @Override
         public void onPostClick(Post post) {
-            if (post == null){
+            if (post == null) {
                 showInfo(getString(R.string.request_post_cannot_be_null));
                 return;
             }
@@ -63,7 +63,7 @@ public class ForumFragment extends Fragment implements ForumContract.View {
     public ForumFragment() {
     }
 
-    public static ForumFragment newInstance(){
+    public static ForumFragment newInstance() {
         return new ForumFragment();
     }
 
@@ -89,11 +89,11 @@ public class ForumFragment extends Fragment implements ForumContract.View {
 
         getActivity().findViewById(R.id.fab_add_post)
                 .setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onAddPost();
-            }
-        });
+                    @Override
+                    public void onClick(View view) {
+                        onAddPost();
+                    }
+                });
 
         // set up no post view
         mNoPostsView = root.findViewById(R.id.no_post);
@@ -282,10 +282,22 @@ public class ForumFragment extends Fragment implements ForumContract.View {
 
                         if (titleStr.isEmpty() || contentStr.isEmpty()) {
                             showMessage(getString(R.string.post_title_or_content_empty));
-                        } else {
-                            mPresenter.addNewPost(titleStr, contentStr);
-                            dialogInterface.dismiss();
+                            return;
                         }
+
+                        if (titleStr.length() > 100) {
+                            showMessage("帖子标题长度应小于100字符");
+                            return;
+                        }
+
+                        if (contentStr.length() > 1000) {
+                            showMessage("帖子内容长度应小于1000字符");
+                            return;
+                        }
+
+                        mPresenter.addNewPost(titleStr, contentStr);
+                        dialogInterface.dismiss();
+
                     }
                 });
         builder.show();

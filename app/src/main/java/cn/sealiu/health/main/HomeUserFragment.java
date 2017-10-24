@@ -506,18 +506,20 @@ public class HomeUserFragment extends Fragment implements
             mProgressDialog.setIndeterminate(true);
         }
 
-        mProgressDialog.show();
+        if (!mProgressDialog.isShowing()) {
+            mProgressDialog.show();
 
-        // 3分钟后自动隐藏加载框
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (mProgressDialog != null && mProgressDialog.isShowing()) {
-                    mProgressDialog.dismiss();
-                    mProgressDialog = null;
+            // 3分钟后自动隐藏加载框
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+                        mProgressDialog = null;
+                    }
                 }
-            }
-        }, delayMillis);
+            }, delayMillis);
+        }
     }
 
     @Override
@@ -630,12 +632,12 @@ public class HomeUserFragment extends Fragment implements
                         showInfo("没有连接无线网络");
                         break;
                     case 0:
+                        showProgressDialog("上传数据",
+                                "正在上传数据，请稍候...",
+                                5 * 60 * 1000);
+                        uploadHistoryData();
                         // TODO: 2017/10/18 离线模式下无法上传数据
-//                        showProgressDialog(getString(R.string.upload_data),
-//                                "正在上传数据，请稍候...",
-//                                5 * 60 * 1000);
-//                        uploadHistoryData();
-                        showInfo("离线模式，无法上传数据");
+                        //showInfo("离线模式，无法上传数据");
                         break;
                 }
 
@@ -917,10 +919,12 @@ public class HomeUserFragment extends Fragment implements
             realtimeLineChart.moveViewTo(data.getEntryCount() - 7, 50f, YAxis.AxisDependency.LEFT);
         }
 
-        int lightIndex = Integer.valueOf(status);
-        if (lightIndex <= 0 || lightIndex > 4) lightIndex = 1;
+        if (status.equals("0") || status.equals("1") || status.equals("2") || status.equals("3")) {
+            int lightIndex = Integer.valueOf(status);
+            if (lightIndex <= 0 || lightIndex > 4) lightIndex = 1;
+            dots.get(index).setImageDrawable(comfortableDrawables.get(lightIndex - 1));
+        }
 
-        dots.get(index).setImageDrawable(comfortableDrawables.get(lightIndex - 1));
     }
 
     @Override

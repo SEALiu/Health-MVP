@@ -36,6 +36,8 @@ public interface FindBluetoothContract {
         void bindWithMid();
 
         void requestCompleteMid();
+
+        void userVerify();
     }
 
     interface Presenter extends BasePresenter {

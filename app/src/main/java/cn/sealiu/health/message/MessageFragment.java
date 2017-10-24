@@ -44,7 +44,7 @@ public class MessageFragment extends Fragment implements MessageContract.View {
     public MessageFragment() {
     }
 
-    public static MessageFragment newInstance(){
+    public static MessageFragment newInstance() {
         return new MessageFragment();
     }
 
@@ -205,10 +205,17 @@ public class MessageFragment extends Fragment implements MessageContract.View {
                                 if (contentStr.isEmpty()) {
                                     showInfo(R.string.message_empty);
                                     dialogInterface.dismiss();
-                                } else {
-                                    mPresenter.doSentMsg(ids, contentStr);
-                                    dialogInterface.dismiss();
+                                    return;
                                 }
+
+                                if (contentStr.length() > 150) {
+                                    showInfo("消息内容长度应小于150个字符");
+                                    return;
+                                }
+
+                                mPresenter.doSentMsg(ids, contentStr);
+                                dialogInterface.dismiss();
+
                             }
                         });
                 builder.show();

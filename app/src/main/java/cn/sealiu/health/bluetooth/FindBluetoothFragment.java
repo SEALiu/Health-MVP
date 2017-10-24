@@ -166,14 +166,9 @@ public class FindBluetoothFragment extends Fragment
 
             if (D) Log.d(TAG, mChosenBTName + "||" + mChosenBTAddress);
 
-            if (mConnected == BluetoothLeService.STATE_CONNECTED) {
-                if (D) Log.d(TAG, "connected");
-                if (mWantedCharacteristic != null) {
-                    if (D) Log.d(TAG, "wanted characteristic is not null");
-                    mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
-                            BoxRequestProtocol.boxRequestCertification(""));
-                }
-            } else {
+            userVerify();
+
+            if (mConnected != BluetoothLeService.STATE_CONNECTED) {
                 if (D) Log.d(TAG, "disconnected");
                 if (mChosenBTAddress != null && !mChosenBTAddress.isEmpty()) {
                     mServiceConnection = new ServiceConnection() {
@@ -200,7 +195,6 @@ public class FindBluetoothFragment extends Fragment
 
                     //getActivity().startService(gattServiceIntent);
 
-                    getActivity().registerReceiver(mGattUpdateReceiver, gattUpdateIntentFilter());
                     if (mBluetoothLeService != null) {
                         final boolean result = mBluetoothLeService.connect(mChosenBTAddress);
                         if (D) Log.d(TAG, "Connect request result=" + result);
@@ -227,6 +221,7 @@ public class FindBluetoothFragment extends Fragment
     public void onResume() {
         super.onResume();
         mPresenter.start();
+        getActivity().registerReceiver(mGattUpdateReceiver, gattUpdateIntentFilter());
     }
 
     @Nullable
@@ -262,18 +257,16 @@ public class FindBluetoothFragment extends Fragment
     public void onPause() {
         super.onPause();
         scanLeDevice(false);
+        getContext().unregisterReceiver(mGattUpdateReceiver);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mServiceConnection != null) {
-            getActivity().unbindService(mServiceConnection);
-        }
 
         if (mBluetoothLeService != null) {
+            getActivity().unbindService(mServiceConnection);
             mBluetoothLeService.disconnect();
-            getActivity().unregisterReceiver(mGattUpdateReceiver);
         }
     }
 
@@ -431,6 +424,15 @@ public class FindBluetoothFragment extends Fragment
                         BoxRequestProtocol.boxRequestDeviceParam(ProtocolMsg.DEVICE_PARAM_LOW_MID, null));
             }
         }, 500);
+    }
+
+    @Override
+    public void userVerify() {
+        if (mConnected == BluetoothLeService.STATE_CONNECTED && mWantedCharacteristic != null) {
+            if (D) Log.d(TAG, "wanted characteristic is not null");
+            mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                    BoxRequestProtocol.boxRequestCertification(""));
+        }
     }
 
     @Override

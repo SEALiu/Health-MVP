@@ -21,7 +21,7 @@ public class BaseActivity extends AppCompatActivity {
     public static final String TAG = "BaseActivity";
     public static final String IDENTITY_USER = "1";
     public static final String IDENTITY_DOCTOR = "2";
-    public static final String SERVER_IP = "server ip";
+    public static final String SERVER_IP = "server_ip";
 
     // 模拟器调试地址
     //public static final String REMOTE_URL = "http://10.0.2.2:8080";

@@ -82,15 +82,6 @@ public class MainActivity extends BaseActivity {
             setupDrawerContent(navigationView);
         }
 
-        // TODO: 2017/9/19 remove below fake info
-//        sharedPref.edit().putBoolean(USER_LOGIN, true).apply();
-//        sharedPref.edit().putString(USER_ID, "0").apply();
-//        sharedPref.edit().putString(USER_TYPE, "1").apply();
-//        sharedPref.edit().putString(DEVICE_MID, "fake-mid").apply();
-//        sharedPref.edit().putString(DEVICE_NAME, "CH-08").apply();
-//        sharedPref.edit().putString(DEVICE_ADDRESS, "E8:EB:11:0A:CE:7F").apply();
-
-        // check mid is exist?
         if (!sharedPref.getBoolean(USER_LOGIN, false)) {
             if (D) Log.e(TAG, "user not logged in");
             startActivity(new Intent(this, LoginActivity.class));

@@ -164,4 +164,9 @@ public class LoginFragment extends Fragment implements
         getActivity().startActivity(intent);
         getActivity().finish();
     }
+
+    @Override
+    public void showInfo(String msg) {
+        Snackbar.make(mPwdET, msg, Snackbar.LENGTH_LONG).show();
+    }
 }

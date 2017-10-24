@@ -45,7 +45,7 @@ public class PostDetailFragment extends Fragment implements PostDetailContract.V
     public PostDetailFragment() {
     }
 
-    public static PostDetailFragment newInstance(String postId){
+    public static PostDetailFragment newInstance(String postId) {
         Bundle arguments = new Bundle();
         arguments.putString(ARGUMENT_POST_ID, postId);
         PostDetailFragment fragment = new PostDetailFragment();
@@ -207,10 +207,16 @@ public class PostDetailFragment extends Fragment implements PostDetailContract.V
 
                         if (contentStr.isEmpty()) {
                             showInfo(R.string.comment_content_empty);
-                        } else {
-                            mPresenter.addComment(contentStr);
-                            dialogInterface.dismiss();
+                            return;
                         }
+
+                        if (contentStr.length() > 200) {
+                            showInfo("评论内容长度应小于200字符");
+                            return;
+                        }
+
+                        mPresenter.addComment(contentStr);
+                        dialogInterface.dismiss();
                     }
                 });
         builder.show();

@@ -279,10 +279,9 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
         if (D) Log.e(TAG, "find data: " + data);
 
         if (data.equals("00")) {
-            mFindBluetoothView.showInfo("请重新点击设备");
+            mFindBluetoothView.userVerify();
             return;
         }
-
 
         if (data.length() >= 34) {
             UnboxResponseProtocol protocol = new UnboxResponseProtocol(data.substring(0, 34));
