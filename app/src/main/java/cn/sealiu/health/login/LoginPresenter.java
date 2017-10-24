@@ -165,6 +165,7 @@ public class LoginPresenter implements LoginContract.Presenter {
         sharedPref.edit().putString(MainActivity.USER_ID, "23").apply();
         sharedPref.edit().putString(MainActivity.USER_TYPE, IDENTITY_USER).apply();
         sharedPref.edit().putString(MainActivity.DEVICE_MID, "30303538").apply();
+        sharedPref.edit().putString(BaseActivity.SERVER_IP, "").apply();
 
         if (sharedPref.getString(MainActivity.DEVICE_ADDRESS, "").equals("") ||
                 sharedPref.getString(MainActivity.DEVICE_MID, "30303538").equals("30303538")) {

@@ -259,6 +259,7 @@ public class UserPresenter implements UserContract.Presenter {
         String serveIp = sharedPref.getString(BaseActivity.SERVER_IP, "");
         if (serveIp.equals("")) {
             mUserView.showInfo("当前为离线模式，无法上传数据");
+            mUserView.hideProgressDialog();
             return;
         }
 
