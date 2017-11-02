@@ -49,10 +49,30 @@ public class MainActivity extends BaseActivity {
     public static final String DEVICE_STORAGE = "device_storage";
     public static final String DEVICE_TIME = "device_time";
     public static final String DEVICE_START_USING_DATE = "device_start_using_date";
-    public static final String DEVICE_COMFORT_A = "COMFORT_A";
-    public static final String DEVICE_COMFORT_B = "COMFORT_B";
-    public static final String DEVICE_COMFORT_C = "COMFORT_C";
-    public static final String DEVICE_COMFORT_D = "COMFORT_D";
+    public static final String DEVICE_COMFORT_A = "COMFORT_A"; // 空载定标
+    //通道
+    public static final String DEVICE_COMFORT_A1 = "COMFORT_A1"; // 空载定标1
+    public static final String DEVICE_COMFORT_A2 = "COMFORT_A2"; // 空载定标2
+    public static final String DEVICE_COMFORT_A3 = "COMFORT_A3"; // 空载定标3
+    public static final String DEVICE_COMFORT_A4 = "COMFORT_A4"; // 空载定标4
+
+    public static final String DEVICE_COMFORT_B = "COMFORT_B"; // 松定标
+    public static final String DEVICE_COMFORT_B1 = "COMFORT_B1"; // 松定标1
+    public static final String DEVICE_COMFORT_B2 = "COMFORT_B2"; // 松定标2
+    public static final String DEVICE_COMFORT_B3 = "COMFORT_B3"; // 松定标3
+    public static final String DEVICE_COMFORT_B4 = "COMFORT_B4"; // 松定标4
+
+    public static final String DEVICE_COMFORT_C = "COMFORT_C"; // 合适定标
+    public static final String DEVICE_COMFORT_C1 = "COMFORT_C1"; // 合适定标1
+    public static final String DEVICE_COMFORT_C2 = "COMFORT_C2"; // 合适定标2
+    public static final String DEVICE_COMFORT_C3 = "COMFORT_C3"; // 合适定标3
+    public static final String DEVICE_COMFORT_C4 = "COMFORT_C4"; // 合适定标4
+
+    public static final String DEVICE_COMFORT_D = "COMFORT_D"; // 紧定标
+    public static final String DEVICE_COMFORT_D1 = "COMFORT_D1"; // 紧定标1
+    public static final String DEVICE_COMFORT_D2 = "COMFORT_D2"; // 紧定标2
+    public static final String DEVICE_COMFORT_D3 = "COMFORT_D3"; // 紧定标3
+    public static final String DEVICE_COMFORT_D4 = "COMFORT_D4"; // 紧定标4
 
     public static final String NETWORK_ONLY_WIFI = "network_only_wifi";
 

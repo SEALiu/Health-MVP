@@ -319,14 +319,13 @@ public class UserPresenter implements UserContract.Presenter {
                 null);
         if (D) Log.e(TAG, "update result: " + result);
 
-        // TODO: 2017/10/18 离线模式下无法上传数据
         mUserView.uploadHistoryData();
     }
 
     @Override
     public void onGattServicesDiscovered() {
-        int delay = 1000;
-        final int period = 1000;
+        int delay = 500;
+        final int period = 500;
 
         // set sync time
 //        mHandler.postDelayed(new Runnable() {
@@ -609,7 +608,7 @@ public class UserPresenter implements UserContract.Presenter {
     @Override
     public void doSaveHistoryData(HealthDbHelper dbHelper, String historyDate) {
         List<DataBean> dataBeans = new ArrayList<>();
-        String mid = sharedPref.getString(MainActivity.DEVICE_MID, "");
+        String c_mid = sharedPref.getString(MainActivity.DEVICE_COMPLETED_MID, "");
 
         Pattern pHistory = Pattern.compile("FF01[\\dA-F]{24}FF0D0A");
 
@@ -632,7 +631,7 @@ public class UserPresenter implements UserContract.Presenter {
                 String sequenceNum = unboxResponseProtocol.getSequenceNum();
                 String[] data = unboxResponseProtocol.getData();
 
-                DataBean bean = new DataBean(mid,
+                DataBean bean = new DataBean(c_mid,
                         Integer.valueOf(sequenceNum),
                         data[0],
                         data[1],
@@ -826,52 +825,42 @@ public class UserPresenter implements UserContract.Presenter {
 
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_ONE:
-                    Log.e(TAG, "fix criterion data: " + data);
-                    int comA = Integer.valueOf(data.substring(0, 4), 16);
-                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A, comA + "").apply();
-
-                    // TODO: 2017/10/18 离线模式下无法上传数据
-                    // uploadFixResultItem(comA + "", "A");
-                    // todo remove the line below
-                    mUserView.showInfo("定标成功");
-
-                    mUserView.hideProgressDialog();
+                    Log.e(TAG, "fix criterion data:（废弃） " + data);
+//                    int comA = Integer.valueOf(data.substring(0, 4), 16);
+//                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A, comA + "").apply();
+//
+//                    uploadFixResultItem(comA + "", "A");
+//                    // mUserView.showInfo("定标成功");
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_TWO:
-                    Log.e(TAG, "fix criterion data: " + data);
-                    int comB = Integer.valueOf(data.substring(0, 4), 16);
-                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B, comB + "").apply();
-
-                    // TODO: 2017/10/18 离线模式下无法上传数据
-                    //uploadFixResultItem(comB + "", "B");
-                    // todo remove the line below
-                    mUserView.showInfo("定标成功");
-
-                    mUserView.hideProgressDialog();
+                    Log.e(TAG, "fix criterion data: （废弃）" + data);
+//                    int comB = Integer.valueOf(data.substring(0, 4), 16);
+//                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B, comB + "").apply();
+//
+//                    uploadFixResultItem(comB + "", "B");
+//                    //mUserView.showInfo("定标成功");
+//
+//                    mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_THREE:
-                    Log.e(TAG, "fix criterion data: " + data);
-                    int comC = Integer.valueOf(data.substring(0, 4), 16);
-                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C, comC + "").apply();
-
-                    // TODO: 2017/10/18 离线模式下无法上传数据
-                    //uploadFixResultItem(comC + "", "C");
-                    // todo remove the line below
-                    mUserView.showInfo("定标成功");
-
-                    mUserView.hideProgressDialog();
+                    Log.e(TAG, "fix criterion data:（废弃） " + data);
+//                    int comC = Integer.valueOf(data.substring(0, 4), 16);
+//                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C, comC + "").apply();
+//
+//                    uploadFixResultItem(comC + "", "C");
+//                    //mUserView.showInfo("定标成功");
+//
+//                    mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR:
-                    Log.e(TAG, "fix criterion data: " + data);
-                    int comD = Integer.valueOf(data.substring(0, 4), 16);
-                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D, comD + "").apply();
+                    Log.e(TAG, "fix criterion data: （废弃）" + data);
+//                    int comD = Integer.valueOf(data.substring(0, 4), 16);
+//                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D, comD + "").apply();
 
-                    // TODO: 2017/10/18 离线模式下无法上传数据
-                    //uploadFixResultItem(comD + "", "D");
-                    // todo remove the line below
-                    mUserView.showInfo("定标成功");
-
-                    mUserView.hideProgressDialog();
+//                    uploadFixResultItem(comD + "", "D");
+//                    //mUserView.showInfo("定标成功");
+//
+//                    mUserView.hideProgressDialog();
                     break;
                 case ProtocolMsg.DEVICE_PARAM_SLOPE:
                     float slope = Integer.valueOf(data.substring(0, 4), 16) / 1000f;
@@ -897,12 +886,14 @@ public class UserPresenter implements UserContract.Presenter {
                     highMid = data.substring(0, 12);
                     if (!lowMid.equals("")) {
                         sharedPref.edit().putString(MainActivity.DEVICE_COMPLETED_MID, highMid + lowMid).apply();
+                        mUserView.showInfo("设备完整MID已获取");
                     }
                     break;
                 case ProtocolMsg.DEVICE_PARAM_LOW_MID:
                     lowMid = unboxResponseProtocol.getParamContent().substring(0, 12);
                     if (!highMid.equals("")) {
                         sharedPref.edit().putString(MainActivity.DEVICE_COMPLETED_MID, highMid + lowMid).apply();
+                        mUserView.showInfo("设备完整MID已获取");
                     }
                     break;
                 case ProtocolMsg.DEVICE_PARAM_DOCTOR_ID:
@@ -917,13 +908,60 @@ public class UserPresenter implements UserContract.Presenter {
      * @param unboxResponseProtocol 解析报文
      */
     private void onExecutedResponse(UnboxResponseProtocol unboxResponseProtocol) {
+        // 报文类型
         String executeResultType = unboxResponseProtocol.getExecuteResultType();
+        // 执行结果
         String executeResult = unboxResponseProtocol.getExecuteResult();
+        // 子指令类型
+        String subType = unboxResponseProtocol.getChildExecuteResultType();
+        // 内容
+        String contentData = unboxResponseProtocol.getExecuteData(2);
 
         if (executeResultType.equals(ProtocolMsg.RE_SYNC_TIME)) {
             if (executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
                 mUserView.updateTime(null);
                 mUserView.showInfo("时间已同步");
+            }
+        }
+
+        if (executeResultType.equals(ProtocolMsg.RE_DEVICE_PARAM) &&
+                executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
+            // 定标结果
+            switch (subType) {
+                case "04":// 空载定标
+                    String blank1 = contentData.substring(0, 4);
+                    String blank2 = contentData.substring(4, 8);
+                    String blank3 = contentData.substring(8, 12);
+                    String blank4 = contentData.substring(12, 16);
+                    String[] valuesA = {blank1, blank2, blank3, blank4};
+                    uploadFixResultItem(valuesA, "A");
+                    break;
+                case "05":// 松
+                    String loose1 = contentData.substring(0, 4);
+                    String loose2 = contentData.substring(4, 8);
+                    String loose3 = contentData.substring(8, 12);
+                    String loose4 = contentData.substring(12, 16);
+                    String[] valuesB = {loose1, loose2, loose3, loose4};
+                    uploadFixResultItem(valuesB, "B");
+                    break;
+                case "06":// 合适
+                    String comfort1 = contentData.substring(0, 4);
+                    String comfort2 = contentData.substring(4, 8);
+                    String comfort3 = contentData.substring(8, 12);
+                    String comfort4 = contentData.substring(12, 16);
+                    String[] valuesC = {comfort1, comfort2, comfort3, comfort4};
+                    uploadFixResultItem(valuesC, "C");
+                    break;
+                case "07":// 紧
+                    String tight1 = contentData.substring(0, 4);
+                    String tight2 = contentData.substring(4, 8);
+                    String tight3 = contentData.substring(8, 12);
+                    String tight4 = contentData.substring(12, 16);
+                    String[] valuesD = {tight1, tight2, tight3, tight4};
+                    uploadFixResultItem(valuesD, "D");
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -985,15 +1023,23 @@ public class UserPresenter implements UserContract.Presenter {
         });
     }
 
-    private void uploadFixResultItem(final String value, final String type) {
+    private void uploadFixResultItem(final String[] values, final String type) {
         String uuid = sharedPref.getString(MainActivity.USER_UID, "");
 
         /*
-        http://localhost:8080/user/upLoadComfortA?userUid=testUid&userComfortA=239.00
+        http://localhost:8080/user/upLoadComfortA?userUid=testUid
+        &userComfortA1=239.00
+        &userComfortA2=229.00
+        &userComfortA3=219.00
+        &userComfortA4=209.00
          */
-        Request request = BaseActivity.buildHttpGetRequest("/user/upLoadComfort" + type + "?" +
+
+        Request request = BaseActivity.buildHttpGetRequest("user/upLoadComfort" + type + "?" +
                 "userUid=" + uuid + "&" +
-                "userComfort" + type + "=" + value);
+                "userComfort" + type + "1=" + values[0] + "&" +
+                "userComfort" + type + "2=" + values[1] + "&" +
+                "userComfort" + type + "3=" + values[2] + "&" +
+                "userComfort" + type + "4=" + values[3]);
 
         if (request == null) return;
 
@@ -1003,36 +1049,72 @@ public class UserPresenter implements UserContract.Presenter {
             @Override
             public void onFailure(Call call, IOException e) {
                 if (D) Log.e(TAG, e.getLocalizedMessage());
+                mUserView.hideProgressDialog();
                 mUserView.showInfo("upload comfort interface error");
 
-                switch (type) {
-                    case "A":
-                        sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A, "0.0").apply();
-                        break;
-                    case "B":
-                        sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B, "0.0").apply();
-                        break;
-                    case "C":
-                        sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C, "0.0").apply();
-                        break;
-                    case "D":
-                        sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D, "0.0").apply();
-                        break;
-                }
+                // 定标失败后将该次定标清空
+                saveFixResultWithSharedPref(type, null, false);
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                mUserView.hideProgressDialog();
                 String json = response.body().string();
                 if (D) Log.e(TAG, "response: " + json);
 
                 MiniResponse mini = new Gson().fromJson(json, MiniResponse.class);
                 if (mini.getStatus().equals("200")) {
                     mUserView.showInfo("定标成功");
+
+                    saveFixResultWithSharedPref(type, values, true);
                 } else {
                     mUserView.showInfo("定标数据保存失败");
+                    // 定标失败后将该次定标清空
+                    saveFixResultWithSharedPref(type, null, false);
                 }
             }
         });
+    }
+
+    private void saveFixResultWithSharedPref(String type, String[] values, boolean isSuccess) {
+        if (!isSuccess) {
+            //定标结果失败，这时覆盖 values 为默认值
+            values = new String[4];
+            values[0] = "0.0";
+            values[1] = "0.0";
+            values[2] = "0.0";
+            values[3] = "0.0";
+        }
+
+        switch (type) {
+            case "A":
+                sharedPref.edit().putBoolean(MainActivity.DEVICE_COMFORT_A, isSuccess).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A1, values[0]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A2, values[1]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A3, values[2]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A4, values[3]).apply();
+                break;
+            case "B":
+                sharedPref.edit().putBoolean(MainActivity.DEVICE_COMFORT_B, isSuccess).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B1, values[0]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B2, values[1]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B3, values[2]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B4, values[3]).apply();
+                break;
+            case "C":
+                sharedPref.edit().putBoolean(MainActivity.DEVICE_COMFORT_C, isSuccess).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C1, values[0]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C2, values[1]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C3, values[2]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C4, values[3]).apply();
+                break;
+            case "D":
+                sharedPref.edit().putBoolean(MainActivity.DEVICE_COMFORT_D, isSuccess).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D1, values[0]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D2, values[1]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D3, values[2]).apply();
+                sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D4, values[3]).apply();
+                break;
+        }
     }
 }

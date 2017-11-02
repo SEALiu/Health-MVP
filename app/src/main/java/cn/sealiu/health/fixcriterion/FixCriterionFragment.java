@@ -41,8 +41,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Created by liuyang
  * on 2017/9/19.
+ *
+ * 已废弃！！
  */
-
 public class FixCriterionFragment extends Fragment implements FixCriterionContract.View, View.OnClickListener {
     private static final String TAG = "FixCriterionFragment";
 

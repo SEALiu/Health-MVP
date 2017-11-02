@@ -10,16 +10,26 @@ import android.location.LocationManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import cn.sealiu.health.BaseActivity;
 import cn.sealiu.health.BluetoothLeService;
 import cn.sealiu.health.R;
+import cn.sealiu.health.data.response.MiniResponse;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.util.BoxRequestProtocol;
 import cn.sealiu.health.util.SampleGattAttributes;
 import cn.sealiu.health.util.UnboxResponseProtocol;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
@@ -157,9 +167,9 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
 
         // TODO: 2017/10/18 离线模式下不保存用户mid到服务器，而是只保存在本地。如果需要服务器端时，再恢复下面代码
         // todo 移除下行代码：
-        sharedPref.edit().putString(MainActivity.DEVICE_MID, mid).apply();
+        // sharedPref.edit().putString(MainActivity.DEVICE_MID, mid).apply();
         // todo 解除代码注释：
-        /*
+
         final OkHttpClient okHttpClient = new OkHttpClient();
 
         if (currentMid.equals("")) {
@@ -247,7 +257,6 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
         } else {
             mFindBluetoothView.gotoHome();
         }
-        */
     }
 
     @Override
@@ -299,7 +308,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                             case EXECUTE_SUCCESS:
                                 Log.e(TAG, "bind success");
 
-                                String mid = protocol.getExecuteBindedData().substring(0, 16);
+                                String mid = protocol.getExecuteData(1).substring(0, 16);
                                 String uuid = sharedPref.getString(MainActivity.USER_UID, "");
 
                                 //3330333033353338 to 30303538
@@ -337,104 +346,6 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                 }
             }
         }
-
-        /*
-        Pattern p24 = Pattern.compile("^FF2408[\\dA-F]{22}FF0D0AFF2308");
-        Pattern p = Pattern.compile("[\\dA-F]{22}FF0D0A$");
-
-        if (p24.matcher(data.toUpperCase()).find()) {
-            dataCache = data;
-        } else if (p.matcher(data.toUpperCase()).find() && !dataCache.equals("")) {
-            data = dataCache + data;
-            dataCache = "";
-
-            if (D) Log.e(TAG, "find data: " + data.substring(34, 68));
-            UnboxResponseProtocol protocol = new UnboxResponseProtocol(data.substring(34, 68));
-
-            String resultType = protocol.getExecuteResultType();
-            String result = protocol.getExecuteResult();
-
-            if (D) Log.e(TAG, "type: " + resultType);
-            if (D) Log.e(TAG, "result: " + result);
-
-            String mid = protocol.getExecuteBindedData().substring(10, 18);
-            String uuid = sharedPref.getString(MainActivity.USER_UID, "");
-
-            if (resultType.equals(RE_CERTIFICATION)) {
-                switch (result) {
-                    case EXECUTE_SUCCESS:
-                        Log.e(TAG, "bind success");
-                        if (!uuid.equals("")) {
-                            bindDevice2User(uuid, mid);
-                        } else {
-                            if (D) Log.e(TAG, "user id is empty");
-                        }
-                        break;
-                    case EXECUTE_FAILED_WRONG_UID:
-                        // when uid = 0, user need to re-login
-                        mFindBluetoothView.gotoLogin();
-                        break;
-                    case EXECUTE_FAILED_NUMBER_LIMIT:
-                        mFindBluetoothView.showInfo(R.string.upto_bind_number_limit);
-                        break;
-                    case EXECUTE_FAILED_UID_EXIST://用户ID已存在
-                        mFindBluetoothView.showInfo("用户已通过认证");
-                        mFindBluetoothView.gotoHome();
-                        break;
-                    case EXECUTE_FAILED_WRONG_MID:
-                        // TODO: 2017/9/28 代码完成后需要恢复
-                        Log.e(TAG, "wrong mid");
-                        mFindBluetoothView.showInfo(R.string.input_mid_error);
-                        mFindBluetoothView.bindWithMid();
-
-                        // TODO: 2017/9/28 移除下面的代码
-//                        if (!uuid.equals("")) {
-//                            bindDevice2User(uuid, mid);
-//                        }
-                        break;
-                }
-            }
-
-        }
-        */
-
-
-        // TODO: 2017/10/12 移除下面的代码
-//        if (data.equals("00")) {//认证成功返回00，然后再次点击返回的是：0x230804......
-//            Log.e(TAG, data);
-//
-//            //mFindBluetoothView.requestCompleteMid();
-//            String uuid = sharedPref.getString(MainActivity.USER_UID, "");
-//
-//            if (!uuid.equals("")) {
-//                bindDevice2User(uuid, BIND_SUCCESS);
-//            } else {
-//                if (D) Log.e(TAG, "user id is empty");
-//            }
-//        }
-
-//        switch (data) {
-//            case "00":
-//                mFindBluetoothView.requestCompleteMid();
-//                sharedPref.edit().putString(MainActivity.DEVICE_MID, BIND_SUCCESS).apply();
-//                mFindBluetoothView.gotoHome();
-//                break;
-//            case "01":
-//                mFindBluetoothView.gotoLogin();
-//                break;
-//            case "02":
-//                mFindBluetoothView.showInfo("该设备绑定用户已达到限制");
-//                break;
-//            case "03":
-//                mFindBluetoothView.showInfo("请输入设备ID后8位进行验证");
-//                mFindBluetoothView.bindWithMid();
-//                break;
-//            case "04":
-//                mFindBluetoothView.showInfo("设备ID输入错误，请重新输入");
-//                mFindBluetoothView.bindWithMid();
-//                break;
-//        }
-
     }
 
     @Override

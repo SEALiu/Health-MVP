@@ -111,14 +111,26 @@ public class LoginPresenter implements LoginContract.Presenter {
 
                     sharedPref.edit().putString(MainActivity.DEVICE_START_USING_DATE,
                             result.getFirst_calibtime()).apply();
-                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A, result.getComfort_A())
-                            .apply();
-                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B, result.getComfort_B())
-                            .apply();
-                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C, result.getComfort_C())
-                            .apply();
-                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D, result.getComfort_D())
-                            .apply();
+
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A1, result.getComfort_A1()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A2, result.getComfort_A2()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A3, result.getComfort_A3()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_A4, result.getComfort_A4()).apply();
+
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B1, result.getComfort_B1()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B2, result.getComfort_B2()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B3, result.getComfort_B3()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_B4, result.getComfort_B4()).apply();
+
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C1, result.getComfort_C1()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C2, result.getComfort_C2()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C3, result.getComfort_C3()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_C4, result.getComfort_C4()).apply();
+
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D1, result.getComfort_D1()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D2, result.getComfort_D2()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D3, result.getComfort_D3()).apply();
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMFORT_D4, result.getComfort_D4()).apply();
 
                     if (isRemember) {
                         sharedPref.edit().putString(LoginActivity.USER_PHONE, phone).apply();

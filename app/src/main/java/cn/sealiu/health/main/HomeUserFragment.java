@@ -174,13 +174,6 @@ public class HomeUserFragment extends Fragment implements
                 }
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = BluetoothLeService.STATE_DISCONNECTED;
-                showMessage(getString(R.string.device_disconnected), R.string.reconnect,
-                        new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                manualConnect();
-                            }
-                        });
                 changeMenuBluetoothIcon(R.drawable.ic_bluetooth_waiting_black_24dp);
                 realtimeSwitch.setChecked(false);
                 realtimeSwitch.setEnabled(false);
@@ -376,14 +369,40 @@ public class HomeUserFragment extends Fragment implements
                 }
                 c.close();
             }
-            if (mConnected == BluetoothLeService.STATE_CONNECTED
-                    && mWantedCharacteristic != null
-                    && mBluetoothLeService != null) {
-                mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
-                        BoxRequestProtocol.boxStopUpload());
-                //向设备请求历史数据
-                updateHistoryData();
+
+            // 设备未连接或还未找到可用服务时，停止请求历史数据
+            if (mConnected != BluetoothLeService.STATE_CONNECTED
+                    || mWantedCharacteristic == null
+                    || mBluetoothLeService == null) {
+                showInfo("设备未连接，暂时停止请求历史数据");
+                return;
             }
+
+            // 如果没有设备的完整mid，停止请求历史数据，转而请求设备的完整mid
+            if (sharedPref.getString(MainActivity.DEVICE_COMPLETED_MID, "").equals("")) {
+                mPresenter.requestDeviceLowMID();
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mPresenter.requestDeviceHighMID();
+                    }
+                }, 500);
+
+                showInfo("MID不完整，正在发起请求");
+                return;
+            }
+
+            // 停止实时数据的传输
+            mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
+                    BoxRequestProtocol.boxStopUpload());
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    //向设备请求历史数据
+                    updateHistoryData();
+                }
+            }, 1000);
         }
     }
 
@@ -433,32 +452,38 @@ public class HomeUserFragment extends Fragment implements
             }
 
             if (prepareSyncData() == 0) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-//                builder.setTitle("上传数据")
-//                        .setMessage("监测到本地有未上传的数据，是否现在上传数据?")
-//                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialogInterface, int i) {
-//                                dialogInterface.dismiss();
-//                            }
-//                        }).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialogInterface, int i) {
-//                        showProgressDialog(getString(R.string.upload_data),
-//                                "正在上传数据，请稍候...",
-//                                5 * 60 * 1000);
-//                        uploadHistoryData();
-//                    }
-//                }).show();
 
-                builder.setTitle("上传数据")
-                        .setMessage("当前为离线模式，无法上传数据")
-                        .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-                            }
-                        }).show();
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+                // 离线模式情况下无法上传数据
+                if (sharedPref.getString(MainActivity.SERVER_IP, "").equals("")) {
+                    builder.setTitle("上传数据")
+                            .setMessage("当前为离线模式，无法上传数据")
+                            .setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            }).show();
+                } else {
+                    builder.setTitle("上传数据")
+                            .setMessage("监测到本地有未上传的数据，是否现在上传数据?")
+                            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            })
+                            .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    showProgressDialog("数据上传",
+                                            "正在上传数据，请稍候...",
+                                            5 * 60 * 1000);
+                                    uploadHistoryData();
+                                }
+                            }).show();
+                }
             }
         }
         c.close();
@@ -581,7 +606,6 @@ public class HomeUserFragment extends Fragment implements
                 }
                 break;
             case REQUEST_FIX_CRITERION:
-                // TODO: 2017/10/1 检查定标结果
                 if (D) Log.d(TAG, "fix criterion result: " + resultCode);
                 break;
         }
@@ -612,7 +636,7 @@ public class HomeUserFragment extends Fragment implements
                     break;
                 }
 
-                if (mConnected == BluetoothLeService.STATE_DISCONNECTED) {
+                if (mConnected != BluetoothLeService.STATE_DISCONNECTED) {
                     manualConnect();
                 }
                 break;
@@ -650,24 +674,24 @@ public class HomeUserFragment extends Fragment implements
                 final RadioButton comfortRB = dialogView.findViewById(R.id.fix_comfort);
                 final RadioButton tightRB = dialogView.findViewById(R.id.fix_tight);
 
-                String comfortA = sharedPref.getString(MainActivity.DEVICE_COMFORT_A, "0.0");
-                String comfortB = sharedPref.getString(MainActivity.DEVICE_COMFORT_B, "0.0");
-                String comfortC = sharedPref.getString(MainActivity.DEVICE_COMFORT_C, "0.0");
-                String comfortD = sharedPref.getString(MainActivity.DEVICE_COMFORT_D, "0.0");
+                boolean comfortA = sharedPref.getBoolean(MainActivity.DEVICE_COMFORT_A, false);
+                boolean comfortB = sharedPref.getBoolean(MainActivity.DEVICE_COMFORT_B, false);
+                boolean comfortC = sharedPref.getBoolean(MainActivity.DEVICE_COMFORT_C, false);
+                boolean comfortD = sharedPref.getBoolean(MainActivity.DEVICE_COMFORT_D, false);
 
-                if (!comfortA.equals("0.0")) {
+                if (comfortA) {
                     blankRB.setEnabled(false);
                     blankRB.setText("空载定标已完成");
                 }
-                if (!comfortB.equals("0.0")) {
+                if (comfortB) {
                     looseRB.setEnabled(false);
                     looseRB.setText("松定标已完成");
                 }
-                if (!comfortC.equals("0.0")) {
+                if (comfortC) {
                     comfortRB.setEnabled(false);
                     comfortRB.setText("合适定标已完成");
                 }
-                if (!comfortD.equals("0.0")) {
+                if (comfortD) {
                     tightRB.setEnabled(false);
                     tightRB.setText("紧定标已完成");
                 }
@@ -685,21 +709,32 @@ public class HomeUserFragment extends Fragment implements
                         .setPositiveButton(R.string.fix_criterion, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+                                if (mConnected != BluetoothLeService.STATE_CONNECTED ||
+                                        mWantedCharacteristic == null ||
+                                        mBluetoothLeService == null) {
+                                    showInfo("设备未连接");
+                                    return;
+                                }
+
                                 if (blankRB.isChecked()) {
                                     if (D) Log.e(TAG, "blank");
-                                    requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_ONE);
+                                    //requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_ONE);
+                                    setDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_ONE, "1");
                                     showProgressDialog("正在定标中", "", 3 * 60 * 1000);
                                 } else if (looseRB.isChecked()) {
                                     if (D) Log.e(TAG, "loose");
-                                    requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_TWO);
+                                    //requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_TWO);
+                                    setDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_TWO, "1");
                                     showProgressDialog("正在定标中", "", 3 * 60 * 1000);
                                 } else if (comfortRB.isChecked()) {
                                     if (D) Log.e(TAG, "comfort");
-                                    requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_THREE);
+                                    //requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_THREE);
+                                    setDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_THREE, "1");
                                     showProgressDialog("正在定标中", "", 3 * 60 * 1000);
                                 } else if (tightRB.isChecked()) {
                                     if (D) Log.e(TAG, "tight");
-                                    requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR);
+                                    //requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR);
+                                    setDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR, "1");
                                     showProgressDialog("正在定标中", "", 3 * 60 * 1000);
                                 }
                             }
@@ -733,7 +768,7 @@ public class HomeUserFragment extends Fragment implements
     public void showInfo(String msg) {
         if (getView() == null)
             return;
-        Snackbar.make(getView(), msg, Snackbar.LENGTH_LONG).show();
+        Snackbar.make(getView(), msg, Snackbar.LENGTH_SHORT).show();
     }
 
     @Override
@@ -1068,8 +1103,6 @@ public class HomeUserFragment extends Fragment implements
     }
 
     private void manualConnect() {
-        if (D)
-            Log.d(TAG, "mBluetoothLeService is " + (mBluetoothLeService == null ? "is" : "is not") + " null");
         if (mBluetoothLeService != null) {
             mBluetoothLeService.connect(mChosenBTAddress);
             mConnected = BluetoothLeService.STATE_CONNECTING;
