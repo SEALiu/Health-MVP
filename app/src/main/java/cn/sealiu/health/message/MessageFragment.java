@@ -266,9 +266,11 @@ public class MessageFragment extends Fragment implements MessageContract.View {
 
             TextView contactNameTV = rowView.findViewById(R.id.contact_name);
             TextView content = rowView.findViewById(R.id.content);
+            TextView time = rowView.findViewById(R.id.time);
 
             contactNameTV.setText(msg.getFromWho() == null ? "未命名" : msg.getFromWho());
             content.setText(msg.getContent());
+            time.setText(msg.getTime());
 
             return rowView;
         }
