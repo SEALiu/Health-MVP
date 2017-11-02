@@ -81,6 +81,8 @@ public class FindBluetoothFragment extends Fragment
     BluetoothGattCharacteristic mWantedCharacteristic;
     private BTAdapter mBTAdapter;
 
+    private Intent gattServiceIntent;
+
     /**
      * -1: bluetooth isn't open
      * 0: disconnected
@@ -189,7 +191,7 @@ public class FindBluetoothFragment extends Fragment
                         }
                     };
 
-                    Intent gattServiceIntent = new Intent(getActivity(), BluetoothLeService.class);
+                    gattServiceIntent = new Intent(getActivity(), BluetoothLeService.class);
                     getActivity()
                             .bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
@@ -257,16 +259,16 @@ public class FindBluetoothFragment extends Fragment
     public void onPause() {
         super.onPause();
         scanLeDevice(false);
-        getContext().unregisterReceiver(mGattUpdateReceiver);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        if (mBluetoothLeService != null) {
-            getActivity().unbindService(mServiceConnection);
+        getContext().unregisterReceiver(mGattUpdateReceiver);
+        if (mBluetoothLeService != null && gattServiceIntent != null) {
+            mBluetoothLeService.stopService(gattServiceIntent);
             mBluetoothLeService.disconnect();
+            mBluetoothLeService.close();
         }
     }
 
@@ -441,8 +443,8 @@ public class FindBluetoothFragment extends Fragment
         sharedPref.edit().putString(MainActivity.DEVICE_ADDRESS, mChosenBTAddress).apply();
 
         Intent intent = new Intent(getActivity(), MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
         getActivity().startActivity(intent);
         getActivity().finish();
     }

@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -334,7 +335,12 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                                 break;
                             case EXECUTE_FAILED_UID_EXIST://用户ID已存在
                                 mFindBluetoothView.showInfo("用户已通过认证");
-                                mFindBluetoothView.gotoHome();
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mFindBluetoothView.gotoHome();
+                                    }
+                                }, 1000);
                                 break;
                             case EXECUTE_FAILED_WRONG_MID:
                                 Log.e(TAG, "wrong mid");

@@ -137,7 +137,7 @@ public class MainActivity extends BaseActivity {
                 break;
             case IDENTITY_USER:
 
-                if (sharedPref.getString(DEVICE_MID, "").equals("") ||
+                if (sharedPref.getString(DEVICE_MID, "").equals("") &&
                         sharedPref.getString(DEVICE_ADDRESS, "").equals("")) {
                     startActivity(new Intent(this, FindBluetoothActivity.class));
                     finish();

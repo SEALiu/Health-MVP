@@ -283,6 +283,7 @@ public class StatisticFragment extends Fragment implements
                                 selectedDateRange.setText(chooseDayStr);
 
                                 chooseDateBtn.setVisibility(View.VISIBLE);
+                                chooseDateBtn.performClick();
                                 return true;
                             case R.id.week_statistic:
                                 setupStatisticChart(TYPE_WEEK);

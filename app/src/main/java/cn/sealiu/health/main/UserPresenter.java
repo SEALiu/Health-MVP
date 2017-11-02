@@ -978,7 +978,7 @@ public class UserPresenter implements UserContract.Presenter {
 
         if (executeResultType.equals(ProtocolMsg.RE_RT_DATA_START) &&
                 executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
-            mUserView.showInfo("开始接收实时数据");
+            mUserView.showInfo("开始接收实时数据，请稍后...");
         }
 
         if (executeResultType.equals(ProtocolMsg.RE_RT_DATA_STOP) &&

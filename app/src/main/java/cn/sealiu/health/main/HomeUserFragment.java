@@ -170,7 +170,7 @@ public class HomeUserFragment extends Fragment implements
                 changeMenuBluetoothIcon(R.drawable.ic_bluetooth_connected_black_24dp);
                 if (realtimeSwitch != null) {
                     realtimeSwitch.setEnabled(true);
-                    realtimeSwitch.setChecked(true);
+                    realtimeSwitch.setChecked(false);
                 }
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = BluetoothLeService.STATE_DISCONNECTED;
@@ -636,7 +636,7 @@ public class HomeUserFragment extends Fragment implements
                     break;
                 }
 
-                if (mConnected != BluetoothLeService.STATE_DISCONNECTED) {
+                if (mConnected == BluetoothLeService.STATE_DISCONNECTED) {
                     manualConnect();
                 }
                 break;
