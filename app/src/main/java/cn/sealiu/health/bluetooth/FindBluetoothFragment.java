@@ -266,6 +266,7 @@ public class FindBluetoothFragment extends Fragment
         super.onDestroy();
         getContext().unregisterReceiver(mGattUpdateReceiver);
         if (mBluetoothLeService != null && gattServiceIntent != null) {
+            if (mServiceConnection != null) getActivity().unbindService(mServiceConnection);
             mBluetoothLeService.stopService(gattServiceIntent);
             mBluetoothLeService.disconnect();
             mBluetoothLeService.close();

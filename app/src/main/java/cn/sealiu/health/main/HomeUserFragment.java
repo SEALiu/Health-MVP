@@ -108,6 +108,8 @@ public class HomeUserFragment extends Fragment implements
     private SwitchCompat realtimeSwitch;
     Menu menu;
 
+    private Intent gattServiceIntent;
+
     private HealthDbHelper dbHelper;
     private SQLiteDatabase db;
 
@@ -217,7 +219,7 @@ public class HomeUserFragment extends Fragment implements
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);
+        gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);
         getContext().bindService(gattServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
         getContext().registerReceiver(mGattUpdateReceiver, gattUpdateIntentFilter());
@@ -590,7 +592,9 @@ public class HomeUserFragment extends Fragment implements
 
         if (mServiceConnection != null && mBluetoothLeService != null) {
             getActivity().unbindService(mServiceConnection);
+            if (gattServiceIntent != null) mBluetoothLeService.stopService(gattServiceIntent);
             mBluetoothLeService.disconnect();
+            mBluetoothLeService.close();
         }
     }
 
@@ -638,6 +642,7 @@ public class HomeUserFragment extends Fragment implements
 
                 if (mConnected == BluetoothLeService.STATE_DISCONNECTED) {
                     manualConnect();
+                    showInfo("正在尝试连接蓝牙");
                 }
                 break;
             case R.id.sync:
