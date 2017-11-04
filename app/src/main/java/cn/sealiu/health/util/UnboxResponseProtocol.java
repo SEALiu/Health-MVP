@@ -250,14 +250,11 @@ public class UnboxResponseProtocol extends ProtocolMsg {
 
     /**
      * 获取"0x23"类型报文中响应的指令的"其他"字段内容。
-     * @param type = 1 设备认证返回的设备id(不全)
-     *             = 2 或定标结果（一种舒适度值的4个通道）
+     * 设备认证返回的设备id(不全)或定标结果（一种舒适度值的4个通道）
      */
-    public String getExecuteData(int type) {
+    public String getExecuteData() {
         if (!this.type.equals(RS_EXECUTE_STATUS)) return "";
-        if (type == 1) return this.msg.substring(8, 28);
-        else if (type == 2) return this.msg.substring(10, 28);
-        else return "";
+        return this.msg.substring(8, 28);
     }
 
     /**

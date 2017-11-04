@@ -11,6 +11,7 @@
     <color name="whiteText">#f4f4f4</color>
     <color name="colorDivider">#ececec</color>
     <color name="lightBg">#f4f4f4</color>
+    <color name="lighter">#adffffff</color>
 
     <color name="moonGray">#d6d6d6</color>
 

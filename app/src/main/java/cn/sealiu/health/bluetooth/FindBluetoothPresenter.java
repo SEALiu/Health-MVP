@@ -165,12 +165,6 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
         // 检测当前登录的用户是否已有绑定的设备
         String currentMid = sharedPref.getString(MainActivity.DEVICE_MID, "");
 
-
-        // TODO: 2017/10/18 离线模式下不保存用户mid到服务器，而是只保存在本地。如果需要服务器端时，再恢复下面代码
-        // todo 移除下行代码：
-        // sharedPref.edit().putString(MainActivity.DEVICE_MID, mid).apply();
-        // todo 解除代码注释：
-
         final OkHttpClient okHttpClient = new OkHttpClient();
 
         if (currentMid.equals("")) {
@@ -309,7 +303,7 @@ public class FindBluetoothPresenter implements FindBluetoothContract.Presenter {
                             case EXECUTE_SUCCESS:
                                 Log.e(TAG, "bind success");
 
-                                String mid = protocol.getExecuteData(1).substring(0, 16);
+                                String mid = protocol.getExecuteData().substring(0, 16);
                                 String uuid = sharedPref.getString(MainActivity.USER_UID, "");
 
                                 //3330333033353338 to 30303538

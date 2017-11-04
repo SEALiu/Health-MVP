@@ -122,5 +122,7 @@ public interface UserContract {
         void doSaveHistoryData(HealthDbHelper dbHelper, String historyDate);
 
         void loadWeekBarChartData(HealthDbHelper dbHelper);
+
+        void setCurrentFixIndex(int index);
     }
 }

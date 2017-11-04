@@ -1,5 +1,7 @@
 package cn.sealiu.health.statistic;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -7,12 +9,15 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatButton;
+import android.support.v7.widget.AppCompatSpinner;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.PopupMenu;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
@@ -46,6 +51,7 @@ import cn.sealiu.health.util.MyAxisValueFormatter;
 import cn.sealiu.health.util.WeekDayAxisValueFormatter;
 
 import static android.content.ContentValues.TAG;
+import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -78,6 +84,7 @@ public class StatisticFragment extends Fragment implements
     };
     private String chooseDayStr = "";
     private DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private int chosenMonth;
 
     public StatisticFragment() {
     }
@@ -144,6 +151,18 @@ public class StatisticFragment extends Fragment implements
         setupBarChart(mBarChartB, TYPE_WEEK);
         setupBarChart(mBarChartC, TYPE_WEEK);
         setupBarChart(mBarChartD, TYPE_WEEK);
+
+        List<CardView> cards = new ArrayList<>();
+        cards.add((CardView) root.findViewById(R.id.channel_A_holder));
+        cards.add((CardView) root.findViewById(R.id.channel_B_holder));
+        cards.add((CardView) root.findViewById(R.id.channel_C_holder));
+        cards.add((CardView) root.findViewById(R.id.channel_D_holder));
+
+        int channelNum = sharedPref.getInt(MainActivity.DEVICE_CHANNEL_NUM, 4);
+        for (int i = 0; i < channelNum; i++) {
+            cards.get(i).setVisibility(View.VISIBLE);
+        }
+
         return root;
     }
 
@@ -272,7 +291,7 @@ public class StatisticFragment extends Fragment implements
                                 setupBarChart(mBarChartD, TYPE_WEEK);
 
                                 final String[] dateArray = chooseDayStr.split("-");
-                                Calendar chooseDay = Calendar.getInstance();
+                                final Calendar chooseDay = Calendar.getInstance();
                                 chooseDay.set(Calendar.YEAR, Integer.valueOf(dateArray[0]));
                                 chooseDay.set(Calendar.MONTH, Integer.valueOf(dateArray[1]) - 1);
                                 chooseDay.set(Calendar.DATE, Integer.valueOf(dateArray[2]));
@@ -308,11 +327,43 @@ public class StatisticFragment extends Fragment implements
                                 setupBarChart(mBarChartB, TYPE_YEAR);
                                 setupBarChart(mBarChartC, TYPE_YEAR);
                                 setupBarChart(mBarChartD, TYPE_YEAR);
-                                mPresenter.loadMonthStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_month);
 
+                                LayoutInflater inflater = getActivity().getLayoutInflater();
+                                View dialogView = inflater.inflate(R.layout.choose_month_dia, null);
+                                final AppCompatSpinner spinner = dialogView.findViewById(R.id.month_list);
+                                TextView yearText = dialogView.findViewById(R.id.this_year);
+                                Calendar thisYear = Calendar.getInstance();
+                                yearText.setText(thisYear.get(Calendar.YEAR) + "");
 
-                                selectedDateRange.setText(String.format("%s月", yesterday.get(Calendar.MONTH) + 1));
+                                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                    @Override
+                                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                                        chosenMonth = position;
+                                    }
+
+                                    @Override
+                                    public void onNothingSelected(AdapterView<?> parent) {
+                                        chosenMonth = -1;
+                                    }
+                                });
+
+                                new AlertDialog.Builder(getActivity())
+                                        .setView(dialogView)
+                                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                if (D)
+                                                    Log.e(TAG, "chosen Month index: " + chosenMonth);
+                                                if (chosenMonth != -1) {
+                                                    mPresenter.loadMonthStatistic((chosenMonth + 1) + "");
+                                                    selectedDateRange.setText(mMonths[chosenMonth]);
+                                                } else {
+                                                    showInfo("未选择月份");
+                                                }
+                                            }
+                                        })
+                                        .show();
 
                                 chooseDateBtn.setVisibility(View.GONE);
                                 return true;
@@ -322,10 +373,24 @@ public class StatisticFragment extends Fragment implements
                                 setupBarChart(mBarChartB, TYPE_YEAR);
                                 setupBarChart(mBarChartC, TYPE_YEAR);
                                 setupBarChart(mBarChartD, TYPE_YEAR);
-                                mPresenter.loadYearStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_year);
 
-                                selectedDateRange.setText(String.format("%s年", yesterday.get(Calendar.YEAR)));
+                                Calendar today = Calendar.getInstance();
+                                int year, month, day;
+                                year = today.get(Calendar.YEAR);
+                                month = today.get(Calendar.MONTH);
+                                day = today.get(Calendar.DATE);
+
+                                YearOnlyPicker yp = YearOnlyPicker.newInstance(new DatePickerDialog.OnDateSetListener() {
+                                    @Override
+                                    public void onDateSet(DatePickerDialog datePickerDialog, int i, int i1, int i2) {
+                                        if (D) Log.e(TAG, "YearOnlyPicker: " + i);
+                                        mPresenter.loadYearStatistic(i + "");
+                                        selectedDateRange.setText(String.format("%s年", i + ""));
+                                    }
+                                }, year, month, day);
+                                yp.setAccentColor(getResources().getColor(R.color.colorPrimary));
+                                yp.show(getActivity().getFragmentManager(), "YearPicker");
 
                                 chooseDateBtn.setVisibility(View.GONE);
                                 return true;
@@ -525,5 +590,25 @@ public class StatisticFragment extends Fragment implements
         chooseDay.set(Calendar.DATE, dayOfMonth);
 
         mPresenter.loadDayStatistic(chooseDay);
+    }
+
+    public static class YearOnlyPicker extends DatePickerDialog {
+
+        public static YearOnlyPicker newInstance(OnDateSetListener callBack, int year,
+                                                 int monthOfYear,
+                                                 int dayOfMonth) {
+            YearOnlyPicker ret = new YearOnlyPicker();
+            ret.showYearPickerFirst(true);
+            ret.initialize(callBack, year, monthOfYear, dayOfMonth);
+            return ret;
+        }
+
+        @Override
+        public void onYearSelected(int year) {
+            super.onYearSelected(year);
+            notifyOnDateListener();
+            dismiss();
+
+        }
     }
 }

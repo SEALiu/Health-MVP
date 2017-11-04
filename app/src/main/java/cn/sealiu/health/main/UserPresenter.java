@@ -66,6 +66,7 @@ public class UserPresenter implements UserContract.Presenter {
     private String dataCache = "";
     private String highMid = "", lowMid = "";
     DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private int currentFixIndex = -1;
 
     // 1: realtime data;
     // 2: history data;
@@ -217,7 +218,7 @@ public class UserPresenter implements UserContract.Presenter {
     // 从 datastatus.tb 中找到为同步的数据，按天上传数据至服务器
     @Override
     public void syncLocalDataDaily(final HealthDbHelper dbHelper, String time) {
-        String mid = sharedPref.getString(MainActivity.DEVICE_MID, "");
+        String mid = sharedPref.getString(MainActivity.DEVICE_COMPLETED_MID, "");
         Map<String, Object> historyDataMap = new HashMap<>();
         int count = 0;
 
@@ -326,16 +327,6 @@ public class UserPresenter implements UserContract.Presenter {
     public void onGattServicesDiscovered() {
         int delay = 500;
         final int period = 500;
-
-        // set sync time
-//        mHandler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                syncTime();
-//            }
-//        }, delay);
-//        delay += period;
-        syncTime();
 
         // request device mid, if not complete;
         if (sharedPref.getString(MainActivity.DEVICE_COMPLETED_MID, "").equals("")) {
@@ -465,6 +456,15 @@ public class UserPresenter implements UserContract.Presenter {
             }, delay);
             delay += period;
         }
+
+        // set sync time
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                syncTime();
+            }
+        }, delay);
+        delay += period;
 
 //        mHandler.postDelayed(new Runnable() {
 //            @Override
@@ -685,7 +685,7 @@ public class UserPresenter implements UserContract.Presenter {
     @Override
     public void loadWeekBarChartData(HealthDbHelper dbHelper) {
         boolean visible = false;
-        String mid = sharedPref.getString(MainActivity.DEVICE_MID, "");
+        String mid = sharedPref.getString(MainActivity.DEVICE_COMPLETED_MID, "");
         // 采集率为每30秒一次，故一天的数据总量为：24 * 60 * 2 = 2880
         Float dataNumOneDay = 24 * 60 * 2f;
 
@@ -715,6 +715,11 @@ public class UserPresenter implements UserContract.Presenter {
         }
 
         mUserView.updateWeekBarChart(yVals, visible);
+    }
+
+    @Override
+    public void setCurrentFixIndex(int index) {
+        this.currentFixIndex = index;
     }
 
     /**
@@ -887,6 +892,12 @@ public class UserPresenter implements UserContract.Presenter {
                     if (!lowMid.equals("")) {
                         sharedPref.edit().putString(MainActivity.DEVICE_COMPLETED_MID, highMid + lowMid).apply();
                         mUserView.showInfo("设备完整MID已获取");
+
+                        String uuid = sharedPref.getString(MainActivity.USER_UID, "");
+                        String mid = sharedPref.getString(MainActivity.DEVICE_COMPLETED_MID, "");
+
+                        if (uuid.equals("") || mid.equals("")) return;
+                        bindUserMid(uuid, mid);
                     }
                     break;
                 case ProtocolMsg.DEVICE_PARAM_LOW_MID:
@@ -894,12 +905,54 @@ public class UserPresenter implements UserContract.Presenter {
                     if (!highMid.equals("")) {
                         sharedPref.edit().putString(MainActivity.DEVICE_COMPLETED_MID, highMid + lowMid).apply();
                         mUserView.showInfo("设备完整MID已获取");
+
+                        String uuid = sharedPref.getString(MainActivity.USER_UID, "");
+                        String mid = sharedPref.getString(MainActivity.DEVICE_COMPLETED_MID, "");
+
+                        if (uuid.equals("") || mid.equals("")) return;
+                        bindUserMid(uuid, mid);
                     }
                     break;
                 case ProtocolMsg.DEVICE_PARAM_DOCTOR_ID:
                     break;
             }
         }
+    }
+
+    // 更新用户完整的mid
+    private void bindUserMid(String uuid, String machineId) {
+        final String id = checkNotNull(uuid);
+        final String mid = checkNotNull(machineId);
+
+        Request bindRequest = BaseActivity.buildHttpGetRequest("/user/bindMachine?" +
+                "userUid=" + id + "&" +
+                "userMid=" + mid);
+
+        if (bindRequest == null) return;
+        if (D) Log.e(TAG, bindRequest.url().toString());
+
+        new OkHttpClient().newCall(bindRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                if (D) Log.e(TAG, e.getLocalizedMessage());
+                mUserView.showInfo("bind machine interface error");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String json = response.body().string();
+
+                if (D) Log.e(TAG, json);
+                MiniResponse miniResponse = new Gson().fromJson(json, MiniResponse.class);
+
+                if (miniResponse.getStatus().equals("200")) {
+                    sharedPref.edit().putString(MainActivity.DEVICE_COMPLETED_MID, mid).apply();
+                    mUserView.showInfo("设备完整MID已保存至服务器");
+                } else {
+                    if (D) Log.e(TAG, "can not upload bind info to remote database");
+                }
+            }
+        });
     }
 
     /**
@@ -915,7 +968,7 @@ public class UserPresenter implements UserContract.Presenter {
         // 子指令类型
         String subType = unboxResponseProtocol.getChildExecuteResultType();
         // 内容
-        String contentData = unboxResponseProtocol.getExecuteData(2);
+        String contentData = unboxResponseProtocol.getExecuteData();
 
         if (executeResultType.equals(ProtocolMsg.RE_SYNC_TIME)) {
             if (executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
@@ -927,37 +980,57 @@ public class UserPresenter implements UserContract.Presenter {
         if (executeResultType.equals(ProtocolMsg.RE_DEVICE_PARAM) &&
                 executeResult.equals(ProtocolMsg.EXECUTE_SUCCESS)) {
             // 定标结果
-            switch (subType) {
-                case "04":// 空载定标
+            switch (currentFixIndex) {
+                case 0:// 空载定标
                     String blank1 = contentData.substring(0, 4);
                     String blank2 = contentData.substring(4, 8);
                     String blank3 = contentData.substring(8, 12);
                     String blank4 = contentData.substring(12, 16);
-                    String[] valuesA = {blank1, blank2, blank3, blank4};
+                    int[] valuesA = {
+                            Integer.valueOf(blank1, 16),
+                            Integer.valueOf(blank2, 16),
+                            Integer.valueOf(blank3, 16),
+                            Integer.valueOf(blank4, 16)
+                    };
                     uploadFixResultItem(valuesA, "A");
                     break;
-                case "05":// 松
+                case 1:// 松
                     String loose1 = contentData.substring(0, 4);
                     String loose2 = contentData.substring(4, 8);
                     String loose3 = contentData.substring(8, 12);
                     String loose4 = contentData.substring(12, 16);
-                    String[] valuesB = {loose1, loose2, loose3, loose4};
+                    int[] valuesB = {
+                            Integer.valueOf(loose1, 16),
+                            Integer.valueOf(loose2, 16),
+                            Integer.valueOf(loose3, 16),
+                            Integer.valueOf(loose4, 16)
+                    };
                     uploadFixResultItem(valuesB, "B");
                     break;
-                case "06":// 合适
+                case 2:// 合适
                     String comfort1 = contentData.substring(0, 4);
                     String comfort2 = contentData.substring(4, 8);
                     String comfort3 = contentData.substring(8, 12);
                     String comfort4 = contentData.substring(12, 16);
-                    String[] valuesC = {comfort1, comfort2, comfort3, comfort4};
+                    int[] valuesC = {
+                            Integer.valueOf(comfort1, 16),
+                            Integer.valueOf(comfort2, 16),
+                            Integer.valueOf(comfort3, 16),
+                            Integer.valueOf(comfort4, 16)
+                    };
                     uploadFixResultItem(valuesC, "C");
                     break;
-                case "07":// 紧
+                case 3:// 紧
                     String tight1 = contentData.substring(0, 4);
                     String tight2 = contentData.substring(4, 8);
                     String tight3 = contentData.substring(8, 12);
                     String tight4 = contentData.substring(12, 16);
-                    String[] valuesD = {tight1, tight2, tight3, tight4};
+                    int[] valuesD = {
+                            Integer.valueOf(tight1, 16),
+                            Integer.valueOf(tight2, 16),
+                            Integer.valueOf(tight3, 16),
+                            Integer.valueOf(tight4, 16)
+                    };
                     uploadFixResultItem(valuesD, "D");
                     break;
                 default:
@@ -1023,7 +1096,7 @@ public class UserPresenter implements UserContract.Presenter {
         });
     }
 
-    private void uploadFixResultItem(final String[] values, final String type) {
+    private void uploadFixResultItem(final int[] values, final String type) {
         String uuid = sharedPref.getString(MainActivity.USER_UID, "");
 
         /*
@@ -1034,7 +1107,7 @@ public class UserPresenter implements UserContract.Presenter {
         &userComfortA4=209.00
          */
 
-        Request request = BaseActivity.buildHttpGetRequest("user/upLoadComfort" + type + "?" +
+        Request request = BaseActivity.buildHttpGetRequest("/user/upLoadComfort" + type + "?" +
                 "userUid=" + uuid + "&" +
                 "userComfort" + type + "1=" + values[0] + "&" +
                 "userComfort" + type + "2=" + values[1] + "&" +
@@ -1066,7 +1139,13 @@ public class UserPresenter implements UserContract.Presenter {
                 if (mini.getStatus().equals("200")) {
                     mUserView.showInfo("定标成功");
 
-                    saveFixResultWithSharedPref(type, values, true);
+                    String[] valuesStr = new String[4];
+                    valuesStr[0] = String.valueOf(values[0]);
+                    valuesStr[1] = String.valueOf(values[1]);
+                    valuesStr[2] = String.valueOf(values[2]);
+                    valuesStr[3] = String.valueOf(values[3]);
+
+                    saveFixResultWithSharedPref(type, valuesStr, true);
                 } else {
                     mUserView.showInfo("定标数据保存失败");
                     // 定标失败后将该次定标清空

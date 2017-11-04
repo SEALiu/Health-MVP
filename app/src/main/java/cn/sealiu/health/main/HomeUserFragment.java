@@ -446,12 +446,14 @@ public class HomeUserFragment extends Fragment implements
             showInfo("设备数据请求完毕");
 
             // 继续接收实时数据
+            /*
             if (mConnected == BluetoothLeService.STATE_CONNECTED
                     && mWantedCharacteristic != null
                     && mBluetoothLeService != null) {
                 mPresenter.doSentRequest(mWantedCharacteristic, mBluetoothLeService,
                         BoxRequestProtocol.boxStartUpload());
             }
+            */
 
             if (prepareSyncData() == 0) {
 
@@ -726,21 +728,25 @@ public class HomeUserFragment extends Fragment implements
                                     //requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_ONE);
                                     setDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_ONE, "1");
                                     showProgressDialog("正在定标中", "", 3 * 60 * 1000);
+                                    mPresenter.setCurrentFixIndex(0);
                                 } else if (looseRB.isChecked()) {
                                     if (D) Log.e(TAG, "loose");
                                     //requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_TWO);
                                     setDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_TWO, "1");
                                     showProgressDialog("正在定标中", "", 3 * 60 * 1000);
+                                    mPresenter.setCurrentFixIndex(1);
                                 } else if (comfortRB.isChecked()) {
                                     if (D) Log.e(TAG, "comfort");
                                     //requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_THREE);
                                     setDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_THREE, "1");
                                     showProgressDialog("正在定标中", "", 3 * 60 * 1000);
+                                    mPresenter.setCurrentFixIndex(2);
                                 } else if (tightRB.isChecked()) {
                                     if (D) Log.e(TAG, "tight");
                                     //requestDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR);
                                     setDeviceParam(ProtocolMsg.DEVICE_PARAM_COMFORT_FOUR, "1");
                                     showProgressDialog("正在定标中", "", 3 * 60 * 1000);
+                                    mPresenter.setCurrentFixIndex(3);
                                 }
                             }
                         }).show();
@@ -1140,9 +1146,9 @@ public class HomeUserFragment extends Fragment implements
      */
     private int prepareSyncData() {
         // 检查上次同步时间，同一天:返回1
-        String lastSyncDateStr = sharedPref.getString(MainActivity.HISTORY_DATA_SYNC_DATE, "");
-        String todayStr = df.format(new Date());
-        if (lastSyncDateStr.equals(todayStr)) return 1;
+//        String lastSyncDateStr = sharedPref.getString(MainActivity.HISTORY_DATA_SYNC_DATE, "");
+//        String todayStr = df.format(new Date());
+//        if (lastSyncDateStr.equals(todayStr)) return 1;
 
         // 检查网络，没有网络：返回2
         if (!ActivityUtils.isNetworkAvailable()) return 2;

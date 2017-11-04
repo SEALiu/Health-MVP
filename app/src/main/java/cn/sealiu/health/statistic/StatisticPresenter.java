@@ -36,7 +36,7 @@ public class StatisticPresenter implements StatisticContract.Presenter {
     private HealthDbHelper dbHelper;
     private DateFormat yMd = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
     private DateFormat yMdHms = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-    private String mid = sharedPref.getString(MainActivity.DEVICE_MID, "");
+    private String mid = sharedPref.getString(MainActivity.DEVICE_COMPLETED_MID, "");
 
 
     @Override
@@ -241,9 +241,11 @@ public class StatisticPresenter implements StatisticContract.Presenter {
             MM = M.format(new Date());
         }
 
+        String yyyyMM = Calendar.getInstance().get(Calendar.YEAR) + "-" + Fun.leftPad(MM, 2);
+
         for (int i = 0; i < 31; i++) {
 
-            String dayStr = MM + "-" + Fun.leftPad(i + 1 + "", 2);
+            String dayStr = yyyyMM + "-" + Fun.leftPad(i + 1 + "", 2);
 
             String sql = "SELECT " + DataEntry.COLUMN_NAME_AA + ", " +
                     DataEntry.COLUMN_NAME_BB + ", " +
@@ -384,22 +386,30 @@ public class StatisticPresenter implements StatisticContract.Presenter {
         ArrayList<BarEntry> yValsC = new ArrayList<>();
         ArrayList<BarEntry> yValsD = new ArrayList<>();
 
-        boolean visibleA = false, visibleB = false, visibleC = false, visibleD = false;
+        //boolean visibleA = false, visibleB = false, visibleC = false, visibleD = false;
         for (int j = 0; j < 4; j++) {
+            /*
             if (channelA[j] != 0 && !visibleA) visibleA = true;
             if (channelB[j] != 0 && !visibleB) visibleB = true;
             if (channelC[j] != 0 && !visibleC) visibleC = true;
             if (channelD[j] != 0 && !visibleD) visibleD = true;
+            */
             yValsA.add(new BarEntry(j, channelA[j] / criterion));
             yValsB.add(new BarEntry(j, channelB[j] / criterion));
             yValsC.add(new BarEntry(j, channelC[j] / criterion));
             yValsD.add(new BarEntry(j, channelD[j] / criterion));
         }
 
-        // 一天舒适度的统计，单位应该是小时，所以用 "TYPE_WEEK"
+        /*
         mStatisticView.updateComfortStatistic(yValsA, visibleA, 0);
         mStatisticView.updateComfortStatistic(yValsB, visibleB, 1);
         mStatisticView.updateComfortStatistic(yValsC, visibleC, 2);
         mStatisticView.updateComfortStatistic(yValsD, visibleD, 3);
+        */
+
+        mStatisticView.updateComfortStatistic(yValsA, true, 0);
+        mStatisticView.updateComfortStatistic(yValsB, true, 1);
+        mStatisticView.updateComfortStatistic(yValsC, true, 2);
+        mStatisticView.updateComfortStatistic(yValsD, true, 3);
     }
 }

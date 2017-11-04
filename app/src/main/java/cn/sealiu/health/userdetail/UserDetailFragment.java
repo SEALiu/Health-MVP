@@ -10,6 +10,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatButton;
+import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.PopupMenu;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,6 +19,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -48,9 +50,11 @@ import cn.sealiu.health.data.bean.User;
 import cn.sealiu.health.login.LoginActivity;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.main.MyMarkerView;
+import cn.sealiu.health.statistic.StatisticFragment;
 import cn.sealiu.health.util.MyAxisValueFormatter;
 import cn.sealiu.health.util.WeekDayAxisValueFormatter;
 
+import static cn.sealiu.health.BaseActivity.D;
 import static cn.sealiu.health.BaseActivity.sharedPref;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -88,6 +92,7 @@ public class UserDetailFragment extends Fragment implements
             "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"
     };
     private String chooseDayStr = "";
+    private int chosenMonth;
     private DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
 
@@ -410,6 +415,7 @@ public class UserDetailFragment extends Fragment implements
                                 selectedDateRange.setText(chooseDayStr);
 
                                 chooseDateBtn.setVisibility(View.VISIBLE);
+                                chooseDateBtn.performClick();
                                 return true;
                             case R.id.week_statistic:
                                 setupStatisticChart(TYPE_WEEK);
@@ -434,11 +440,40 @@ public class UserDetailFragment extends Fragment implements
                                 setupBarChart(mBarChartB, TYPE_YEAR);
                                 setupBarChart(mBarChartC, TYPE_YEAR);
                                 setupBarChart(mBarChartD, TYPE_YEAR);
-                                mPresenter.loadMonthStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_month);
 
+                                LayoutInflater inflater = getActivity().getLayoutInflater();
+                                View dialogView = inflater.inflate(R.layout.choose_month_dia, null);
+                                final AppCompatSpinner spinner = dialogView.findViewById(R.id.month_list);
 
-                                selectedDateRange.setText(String.format("%s月", yesterday.get(Calendar.MONTH) + 1));
+                                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                    @Override
+                                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                                        chosenMonth = position;
+                                    }
+
+                                    @Override
+                                    public void onNothingSelected(AdapterView<?> parent) {
+                                        chosenMonth = -1;
+                                    }
+                                });
+
+                                new AlertDialog.Builder(getActivity())
+                                        .setView(dialogView)
+                                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                if (D)
+                                                    Log.e(TAG, "chosen Month index: " + chosenMonth);
+                                                if (chosenMonth != -1) {
+                                                    mPresenter.loadMonthStatistic((chosenMonth + 1) + "");
+                                                    selectedDateRange.setText(mMonths[chosenMonth]);
+                                                } else {
+                                                    showInfo("未选择月份");
+                                                }
+                                            }
+                                        })
+                                        .show();
 
                                 chooseDateBtn.setVisibility(View.GONE);
                                 return true;
@@ -448,8 +483,24 @@ public class UserDetailFragment extends Fragment implements
                                 setupBarChart(mBarChartB, TYPE_YEAR);
                                 setupBarChart(mBarChartC, TYPE_YEAR);
                                 setupBarChart(mBarChartD, TYPE_YEAR);
-                                mPresenter.loadYearStatistic(null);
                                 chooseStatisticBtn.setText(R.string.by_year);
+
+                                Calendar today = Calendar.getInstance();
+                                int year, month, day;
+                                year = today.get(Calendar.YEAR);
+                                month = today.get(Calendar.MONTH);
+                                day = today.get(Calendar.DATE);
+
+                                StatisticFragment.YearOnlyPicker yp = StatisticFragment.YearOnlyPicker.newInstance(new DatePickerDialog.OnDateSetListener() {
+                                    @Override
+                                    public void onDateSet(DatePickerDialog datePickerDialog, int i, int i1, int i2) {
+                                        if (D) Log.e(TAG, "YearOnlyPicker: " + i);
+                                        mPresenter.loadYearStatistic(i + "");
+                                        selectedDateRange.setText(String.format("%s年", i + ""));
+                                    }
+                                }, year, month, day);
+                                yp.setAccentColor(getResources().getColor(R.color.colorPrimary));
+                                yp.show(getActivity().getFragmentManager(), "YearPicker");
 
                                 selectedDateRange.setText(String.format("%s年", yesterday.get(Calendar.YEAR)));
 
