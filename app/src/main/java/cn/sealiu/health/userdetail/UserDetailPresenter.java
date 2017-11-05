@@ -24,6 +24,7 @@ import cn.sealiu.health.data.response.MiniResponse;
 import cn.sealiu.health.data.response.ProfileResponse;
 import cn.sealiu.health.main.MainActivity;
 import cn.sealiu.health.statistic.StatisticFragment;
+import cn.sealiu.health.util.Fun;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -374,7 +375,7 @@ public class UserDetailPresenter implements UserDetailContract.Presenter {
         if (MM == null) {
             yMStr = yM.format(day.getTime());
         } else {
-            yMStr = y.format(day.getTime()) + "-" + MM;
+            yMStr = y.format(day.getTime()) + "-" + Fun.leftPad(MM, 2);
         }
 
         // 获取MM月的最后一天的日期
